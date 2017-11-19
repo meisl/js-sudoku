@@ -41,6 +41,15 @@ require(["scripts/sudoku"], function(sudoku) {
 		assert.equal(s.symbol(6), "7", "translates value 6 to options.symbols[6]");
 		assert.equal(s.symbol(7), "8", "translates value 7 to options.symbols[7]");
 		
+		assert.equal(s.value("1"), 0, "translates options.symbols[0] to value 0");
+		assert.equal(s.value("2"), 1, "translates options.symbols[1] to value 1");
+		assert.equal(s.value("3"), 2, "translates options.symbols[2] to value 2");
+		assert.equal(s.value("4"), 3, "translates options.symbols[3] to value 3");
+		assert.equal(s.value("5"), 4, "translates options.symbols[4] to value 4");
+		assert.equal(s.value("6"), 5, "translates options.symbols[5] to value 5");
+		assert.equal(s.value("7"), 6, "translates options.symbols[6] to value 6");
+		assert.equal(s.value("8"), 7, "translates options.symbols[7] to value 7");
+		
 	});
 
 });

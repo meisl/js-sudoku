@@ -3,13 +3,16 @@ define(["./group"], function(group) {
 	
 	function create(options) {
 		if (options && options.box) {
-			var symbols;
+			
 			var boxW = options.box[0];
 			var boxH = options.box[1];
 			var n = boxW * boxH; // cells per group = nr of rows = nr of cols = nr of boxes
+			var symbols = new Array(n);
+			var values  = {};
 			var out = {
 				cellCount: () => n*n,
-				symbol:    v => symbols[v]
+				symbol:    v => symbols[v],
+				value:     s => values[s]
 			};
 			var rows = new Array(n);
 			var columns = new Array(n);
@@ -27,6 +30,7 @@ define(["./group"], function(group) {
 			if (options.symbols) {
 				for (var i=0; i < n; i++) {
 					symbols[i] = options.symbols[i];
+					values[options.symbols[i]] = i;
 				}
 			} else {
 			
