@@ -18,10 +18,23 @@ require(["scripts/sudoku"], function(sudoku) {
 		bW = 3; bH = 3; n = bW*bH;
 		s = sudoku.create({box: [bW, bH]});
 		assert.equal(typeof s, "object", "returns an object");
+		assert.equal(s.n(), n, ".n() = box.w * box.h");
 		assert.equal(s.cellCount(), n*n, ".cellCount() = (box.w * box.h)^2");
+		
+		for (var y = 0; y < n; y++) {
+			for (var x = 0; x < n; x++) {
+				var cell = s.cell(x, y);
+				var cellStr = ".cell(" + x + ", " + y + ")"
+				assert.equal(typeof cell, "object", 
+					cellStr + " is an object");
+				assert.strictEqual(cell.field(), s, 
+					cellStr + ".field() points to sudoku instance");
+			}
+		}
 		
 		bW = 2; bH = 4; n = bW*bH;
 		s = sudoku.create({box: [bW, bH]});
+		assert.equal(s.n(), n, ".n() = box.w * box.h");
 		assert.equal(s.cellCount(), n*n, ".cellCount() = (box.w * box.h)^2");
 		assert.equal(s.rows.length, n, "has box.w*box.h rows");
 		assert.equal(s.columns.length, n, "has box.w*box.h columns");

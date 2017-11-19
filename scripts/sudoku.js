@@ -9,14 +9,16 @@ define(["./group"], function(group) {
 			var n = boxW * boxH; // cells per group = nr of rows = nr of cols = nr of boxes
 			var symbols = new Array(n);
 			var values  = {};
-			var out = {
-				cellCount: () => n*n,
-				symbol:    v => symbols[v],
-				value:     s => values[s]
-			};
 			var rows = new Array(n);
 			var columns = new Array(n);
 			var boxes = new Array(n);
+			var out = {
+				n:         () => n,
+				cellCount: () => n*n,
+				symbol:    v => symbols[v],
+				value:     s => values[s],
+				cell:      (x,y) => rows[y].cell(x)
+			};
 			for (var i = 0; i < n; i++) {
 				rows[i]    = group.createRow(out)
 				columns[i] = group.createColumn(out)
