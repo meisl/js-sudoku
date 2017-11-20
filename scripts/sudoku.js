@@ -19,12 +19,15 @@ define(["./group"], function(group) {
 				value:     s => values[s],
 				cell:      (x,y) => rows[y].cell(x)
 			};
+			// create rows first since createRow creates cells
 			for (var i = 0; i < n; i++) {
-				rows[i]    = group.createRow(out)
-				columns[i] = group.createColumn(out)
-				boxes[i]   = group.createBox(out)
+				rows[i] = group.createRow(out);
 			}
 			out.rows = rows;
+			for (var i = 0; i < n; i++) {
+				columns[i] = group.createColumn(out);
+				boxes[i]   = group.createBox(out);
+			}
 			out.columns = columns;
 			out.boxes = boxes;
 			
@@ -40,7 +43,7 @@ define(["./group"], function(group) {
 			
 			return out;
 		} else {
-			throw "missing/bad options"
+			throw "sudoku.create: missing/bad options"
 		}
 	}
 

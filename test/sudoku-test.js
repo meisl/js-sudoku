@@ -10,7 +10,14 @@ require(["scripts/sudoku"], function(sudoku) {
 				sudoku.create();
 			},
 			/options/,
-			"throws without options argument"
+			"throws without any argument"
+		);
+		assert.throws(
+			function() {
+				sudoku.create(7);
+			},
+			/options/,
+			"throws with non-object argument"
 		);
 		var s;
 		var bW, bH, n;
@@ -20,6 +27,9 @@ require(["scripts/sudoku"], function(sudoku) {
 		assert.equal(typeof s, "object", "returns an object");
 		assert.equal(s.n(), n, ".n() = box.w * box.h");
 		assert.equal(s.cellCount(), n*n, ".cellCount() = (box.w * box.h)^2");
+		assert.equal(s.rows.length, n, "has box.w*box.h rows");
+		assert.equal(s.columns.length, n, "has box.w*box.h columns");
+		assert.equal(s.boxes.length, n, "has box.w*box.h boxes");
 		
 		for (var y = 0; y < n; y++) {
 			for (var x = 0; x < n; x++) {
@@ -31,19 +41,17 @@ require(["scripts/sudoku"], function(sudoku) {
 					cellStr + ".field() points to sudoku instance");
 			}
 		}
-		
-		bW = 2; bH = 4; n = bW*bH;
-		s = sudoku.create({box: [bW, bH]});
-		assert.equal(s.n(), n, ".n() = box.w * box.h");
-		assert.equal(s.cellCount(), n*n, ".cellCount() = (box.w * box.h)^2");
-		assert.equal(s.rows.length, n, "has box.w*box.h rows");
-		assert.equal(s.columns.length, n, "has box.w*box.h columns");
-		assert.equal(s.boxes.length, n, "has box.w*box.h boxes");
-		
-		s = sudoku.create({
+	});
+
+	QUnit.test(".symbol, .value", function(assert) {
+		var bW = 2; var bH = 4; var n = bW*bH;
+		var s = sudoku.create({
 			box: [bW, bH], 
 			symbols: ["1", "2", "3", "4", "5", "6", "7", "8"]
 		});
+		
+		assert.equal(s.n(), n, ".n() = box.w * box.h");
+		assert.equal(s.cellCount(), n*n, ".cellCount() = (box.w * box.h)^2");
 		
 		assert.equal(s.symbol(0), "1", "translates value 0 to options.symbols[0]");
 		assert.equal(s.symbol(1), "2", "translates value 1 to options.symbols[1]");
@@ -53,7 +61,7 @@ require(["scripts/sudoku"], function(sudoku) {
 		assert.equal(s.symbol(5), "6", "translates value 5 to options.symbols[5]");
 		assert.equal(s.symbol(6), "7", "translates value 6 to options.symbols[6]");
 		assert.equal(s.symbol(7), "8", "translates value 7 to options.symbols[7]");
-		
+
 		assert.equal(s.value("1"), 0, "translates options.symbols[0] to value 0");
 		assert.equal(s.value("2"), 1, "translates options.symbols[1] to value 1");
 		assert.equal(s.value("3"), 2, "translates options.symbols[2] to value 2");
@@ -62,7 +70,6 @@ require(["scripts/sudoku"], function(sudoku) {
 		assert.equal(s.value("6"), 5, "translates options.symbols[5] to value 5");
 		assert.equal(s.value("7"), 6, "translates options.symbols[6] to value 6");
 		assert.equal(s.value("8"), 7, "translates options.symbols[7] to value 7");
-		
 	});
 
 });
