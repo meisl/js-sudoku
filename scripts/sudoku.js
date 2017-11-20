@@ -1,5 +1,5 @@
 
-define(["./group"], function(group) {
+define(["./cell", "./group"], function(cell, group) {
 	
 	function create(options) {
 		if (options && options.box) {
@@ -7,11 +7,11 @@ define(["./group"], function(group) {
 			var boxW = options.box[0];
 			var boxH = options.box[1];
 			var n = boxW * boxH; // cells per group = nr of rows = nr of cols = nr of boxes
-			var symbols = new Array(n);
-			var values  = {};
 			var rows = new Array(n);
 			var columns = new Array(n);
 			var boxes = new Array(n);
+			var symbols = new Array(n);
+			var values  = {};
 			var out = {
 				n:         () => n,
 				cellCount: () => n*n,
@@ -19,16 +19,47 @@ define(["./group"], function(group) {
 				value:     s => values[s],
 				cell:      (x,y) => rows[y].cell(x)
 			};
-			// create rows first since createRow creates cells
-			for (var i = 0; i < n; i++) {
-				rows[i] = group.createRow(out);
+			
+			var cells;
+			var x, y;
+			var row, column, box;
+			for (y = 0; y < n; y++) {
+				cells = new Array(n);
+				row = group.create(out, cells);
+				for (x = 0; x < n; x++) {
+					cells[x] = cell.create(row);
+				}
+				rows[y] = row;
 			}
 			out.rows = rows;
-			for (var i = 0; i < n; i++) {
-				columns[i] = group.createColumn(out);
-				boxes[i]   = group.createBox(out);
+			for (x = 0; x < n; x++) {
+				cells = new Array(n);
+				column = group.create(out, cells);
+				box = group.create(out, cells); // <<<<<<<<<<<<<<<<<<<<
+				for (y = 0; y < n; y++) {
+					cells[y] = out.cell(x, y).initColumn(column);
+					out.cell(x, y).initBox(box); // <<<<<<<<<<<<<<<<<<<<<
+				}
+				columns[x] = column;
 			}
 			out.columns = columns;
+			
+			/*
+			i = 0;
+			for (var bx = 0; bx < boxH; bx++) { // boxH = n/boxW
+				for (var by = 0; by < boxW; by++) { // boxW = n/boxH
+					cells = new Array(n);
+					box = group.create(out, cells);
+					boxes[i++] = box;
+					var k = 0;
+					for (y = by*bH; y < (by+1)*bH; y++) {
+						for (x = bx*bW; x < (bx+1)*bW; x++) {
+							cells[k++] = out.cell(x, y).initBox(box);
+						}
+					}
+				}
+			}
+			*/
 			out.boxes = boxes;
 			
 			symbols = new Array(n);
@@ -55,21 +86,64 @@ define(["./group"], function(group) {
 
 /*
  Elektor 558
- +---------+---------+
- | 0 - 4 - | - - - - |
- | - - - 3 | - 7 1 - |
- | - - - E | - D - 2 |
- | - - - 2 | - 3 E 5 |
- +---------+---------+
- | F - - - | C - D 6 |
- | 9 - A - | 5 F 0 - |
- | - - 2 - | - - - - |
- | - 5 6 - | - 8 B E |
- +---------+---------+
- 
- 
- 0 4      
-    3  71 
-    E  D 2
-    2  3E5
+ +---------+---------+---------+---------+
+ | 0 - 4 - | - - - - | - - - - | - - - - |
+ | - - - 3 | - 7 1 - | - - - - | - - - - |
+ | - - - E | - D - 2 | - - - - | - - - - |
+ | - - - 2 | - 3 E 5 | - - - - | - - - - |
+ +---------+---------+---------+---------+
+ | F - - - | C - D 6 | - - - - | - - - - |
+ | 9 - A - | 5 F 0 - | - - - - | - - - - |
+ | - - 2 - | * * * * | * - - - | - - - - |
+ | - 5 6 - | - 8 B E | - - - - | - - - - |
+ +---------+---------+---------+---------+
+ | - - 7 - | - - - 4 | - - - - | - - - - |
+ | D A - - | - - - - | - - - - | - - - - |
+ | - E - 9 | 8 A - - | - - - - | - - - - |
+ | - 4 - - | 6 E - - | - - - - | - - - - |
+ +---------+---------+---------+---------+
+ | - 0 9 - | - - - - | - - - - | - - - - |
+ | - - D C | - - - - | - - - - | - - - - |
+ | 4 - - F | - - - - | - - - - | - - - - |
+ | 6 7 - - | - - - - | - - - - | - - - - |
+ +---------+---------+---------+---------+
+
+ empty 4x4
+ +---------+---------+---------+---------+
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ +---------+---------+---------+---------+
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ +---------+---------+---------+---------+
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ +---------+---------+---------+---------+
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ | - - - - | - - - - | - - - - | - - - - |
+ +---------+---------+---------+---------+
+
+ empty 3x3
+ +-------+-------+-------+
+ | - - - | - - - | - - - |
+ | - - - | - - - | - - - |
+ | - - - | - - - | - - - |
+ +-------+-------+-------+
+ | - - - | - - - | - - - |
+ | - - - | - - - | - - - |
+ | - - - | - - - | - - - |
+ +-------+-------+-------+
+ | - - - | - - - | - - - |
+ | - - - | - - - | - - - |
+ | - - - | - - - | - - - |
+ +-------+-------+-------+
+
 */

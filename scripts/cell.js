@@ -12,9 +12,14 @@ define(function() {
 				cb(column);
 				cb(box);
 			},
-			initColumn: col => {
-				column = col;
-				out.initColumn = undef;
+			initColumn: c => {
+				column = c;
+				out.initColumn = undefined;
+				return out;
+			},
+			initBox: b => {
+				box = b;
+				out.initBox = undefined;
 				return out;
 			}
 		};

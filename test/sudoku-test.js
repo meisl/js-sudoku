@@ -43,7 +43,10 @@ require(["scripts/sudoku"], function(sudoku) {
 		}
 	});
 
-	QUnit.test(".symbol, .value", function(assert) {
+	QUnit.skip(".symbol, .value (without symbols option)", function(assert) {
+	});
+	
+	QUnit.test(".symbol, .value (with symbols option)", function(assert) {
 		var bW = 2; var bH = 4; var n = bW*bH;
 		var s = sudoku.create({
 			box: [bW, bH], 
