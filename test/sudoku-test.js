@@ -19,11 +19,10 @@ require(["scripts/sudoku"], function(sudoku) {
 			/options/,
 			"throws with non-object argument"
 		);
-		var s;
-		var bW, bH, n;
-		
+		var s, bW, bH, n;
 		bW = 3; bH = 3; n = bW*bH;
 		s = sudoku.create({box: [bW, bH]});
+		
 		assert.equal(typeof s, "object", "returns an object");
 		assert.equal(s.n(), n, ".n() = box.w * box.h");
 		assert.equal(s.cellCount(), n*n, ".cellCount() = (box.w * box.h)^2");
@@ -41,6 +40,21 @@ require(["scripts/sudoku"], function(sudoku) {
 					cellStr + ".field() points to sudoku instance");
 			}
 		}
+	});
+
+	QUnit.test("enumerate cells", function(assert) {
+		var s, bW, bH, n;
+		bW = 3; bH = 3; n = bW*bH;
+		s = sudoku.create({box: [bW, bH]});
+
+		var i = 0;
+		s.forEachCell( (c, x, y) => {
+			assert.equal(x, i % n, "x coord of " + c.id);
+			assert.equal(y, Math.floor(i / n), "y coord of " + c.id);
+			assert.strictEqual(c, s.cell(x, y), c.id + " === .cell(" + x + ", " + y + ")");
+			i++;
+		});
+	
 	});
 
 	QUnit.skip(".symbol, .value (without symbols option)", function(assert) {

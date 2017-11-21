@@ -14,10 +14,19 @@ define(["./cell", "./group"], function(cell, group) {
 			var values  = {};
 			var out = {
 				n:         () => n,
+				boxW:      () => boxW,
+				boxH:      () => boxH,
 				cellCount: () => n*n,
 				symbol:    v => symbols[v],
 				value:     s => values[s],
-				cell:      (x,y) => rows[y].cell(x)
+				cell:      (x,y) => rows[y].cell(x),
+				forEachCell: cb => {
+					for (var y = 0; y < n; y++) {
+						for (var x = 0; x < n; x++) {
+							cb(out.cell(x, y), x, y);
+						}
+					}
+				}
 			};
 			
 			var cells;
@@ -27,7 +36,7 @@ define(["./cell", "./group"], function(cell, group) {
 				cells = new Array(n);
 				row = group.create(out, cells);
 				for (x = 0; x < n; x++) {
-					cells[x] = cell.create(row);
+					cells[x] = cell.create(out, x, y);
 				}
 				rows[y] = row;
 			}
@@ -36,7 +45,7 @@ define(["./cell", "./group"], function(cell, group) {
 				cells = new Array(n);
 				column = group.create(out, cells);
 				for (y = 0; y < n; y++) {
-					cells[y] = out.cell(x, y).initColumn(column);
+					cells[y] = out.cell(x, y);
 				}
 				columns[x] = column;
 			}
@@ -51,7 +60,7 @@ define(["./cell", "./group"], function(cell, group) {
 					var k = 0;
 					for (y = by*boxH; y < (by+1)*boxH; y++) {
 						for (x = bx*boxW; x < (bx+1)*boxW; x++) {
-							cells[k++] = out.cell(x, y).initBox(box);
+							cells[k++] = out.cell(x, y);
 						}
 					}
 				}
