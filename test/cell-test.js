@@ -21,6 +21,25 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			"(make sure strictEqual knows object identity)");
 	});
 
+	QUnit.test(".row, .column, .box", function(assert) {
+		var boxW = 3;
+		var boxH = 2;
+		var n = boxW * boxH;
+		var s = sudoku.create({box: [boxW, boxH]});
+		for (var i = 0; i < s.cellCount(); i++) {
+			var c = s.cell(i % n, Math.floor(i / n));
+			var row = c.row();
+			assert.strictEqual(row.field(), s, "cell " + i + ": "
+				+ ".row().field() points to .field()");
+			var column = c.column();
+			assert.strictEqual(column.field(), s,  "cell " + i + ": "
+				+ ".column().field() points to .field()");
+			var box = c.box();
+			assert.strictEqual(box.field(), s,  "cell " + i + ": "
+				+ ".box().field() points to .field()");
+		}
+	});
+
 	QUnit.test("enumerate groups", function(assert) {
 		var c = sudoku.create({box: [3, 2]}).cell(0,0);
 		var i = 0;
@@ -37,4 +56,5 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		});
 		assert.equal(groups.length, 3, "cell belongs to 3 groups");
 	});
+	
 });

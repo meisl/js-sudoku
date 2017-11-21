@@ -7,6 +7,9 @@ define(function() {
 		var box;
 		var out = {
 			field: row.field,
+			row:    () => row,
+			column: () => column,
+			box:    () => box,
 			forEachGroup: cb => {
 				cb(row);
 				cb(column);

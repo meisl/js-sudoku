@@ -35,31 +35,27 @@ define(["./cell", "./group"], function(cell, group) {
 			for (x = 0; x < n; x++) {
 				cells = new Array(n);
 				column = group.create(out, cells);
-				box = group.create(out, cells); // <<<<<<<<<<<<<<<<<<<<
 				for (y = 0; y < n; y++) {
 					cells[y] = out.cell(x, y).initColumn(column);
-					out.cell(x, y).initBox(box); // <<<<<<<<<<<<<<<<<<<<<
 				}
 				columns[x] = column;
 			}
 			out.columns = columns;
 			
-			/*
 			i = 0;
-			for (var bx = 0; bx < boxH; bx++) { // boxH = n/boxW
-				for (var by = 0; by < boxW; by++) { // boxW = n/boxH
+			for (var by = 0; by < boxW; by++) { // boxW = n/boxH
+				for (var bx = 0; bx < boxH; bx++) { // boxH = n/boxW
 					cells = new Array(n);
 					box = group.create(out, cells);
 					boxes[i++] = box;
 					var k = 0;
-					for (y = by*bH; y < (by+1)*bH; y++) {
-						for (x = bx*bW; x < (bx+1)*bW; x++) {
+					for (y = by*boxH; y < (by+1)*boxH; y++) {
+						for (x = bx*boxW; x < (bx+1)*boxW; x++) {
 							cells[k++] = out.cell(x, y).initBox(box);
 						}
 					}
 				}
 			}
-			*/
 			out.boxes = boxes;
 			
 			symbols = new Array(n);
