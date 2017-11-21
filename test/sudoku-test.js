@@ -56,37 +56,59 @@ require(["scripts/sudoku"], function(sudoku) {
 		});
 	
 	});
+	
+	(() => {
+		function testNewSetOfValues(assert, options) {
+			var s = sudoku.create(options);
+			var n = s.n();
+			
+			var vs1 = s.newSetOfValues();
+			assert.equal(vs1.size, n, "nr of .values() should be " + n);
+			for (var i = 0; i < n; i++) {
+				assert.ok(vs1.has(i), ".values() should contain " + i);
+			}
+			var vs2 = s.newSetOfValues();
+			assert.notStrictEqual(vs2, vs1, "returns new Set each time");
+		}
+		QUnit.test(".newSetOfValues (without symbols option)", function(assert) {
+			var bW = 3; var bH = 2;
+			testNewSetOfValues(assert, {box: [bW, bH]});
+		});
+		
+		QUnit.test(".newSetOfValues (with symbols option)", function(assert) {
+			var bW = 3; var bH = 2;
+			var symbols = ["a", "b", "c", "d", "e", "f"];
+			testNewSetOfValues(assert, {box: [bW, bH], symbols: symbols});
+		});
+	})();
 
-	QUnit.skip(".symbol, .value (without symbols option)", function(assert) {
+	QUnit.test(".symbol, .value (without symbols option)", function(assert) {
+		var bW = 2; var bH = 4; var n = bW*bH;
+		var s = sudoku.create({
+			box: [bW, bH]
+		});
+		
+		for (var v = 0; v < n; v++) {
+			assert.equal(s.symbol(v), v, "translates value " + v + " to symbol" + v);
+			assert.equal(s.value(v), v, "translates symbol " + v + " to value " + v);
+		}
 	});
 	
 	QUnit.test(".symbol, .value (with symbols option)", function(assert) {
 		var bW = 2; var bH = 4; var n = bW*bH;
+		var symbols = ["a", "b", "c", "d", "e", "f", "g", "h"];
 		var s = sudoku.create({
 			box: [bW, bH], 
-			symbols: ["1", "2", "3", "4", "5", "6", "7", "8"]
+			symbols: symbols
 		});
 		
-		assert.equal(s.n(), n, ".n() = box.w * box.h");
-		assert.equal(s.cellCount(), n*n, ".cellCount() = (box.w * box.h)^2");
-		
-		assert.equal(s.symbol(0), "1", "translates value 0 to options.symbols[0]");
-		assert.equal(s.symbol(1), "2", "translates value 1 to options.symbols[1]");
-		assert.equal(s.symbol(2), "3", "translates value 2 to options.symbols[2]");
-		assert.equal(s.symbol(3), "4", "translates value 3 to options.symbols[3]");
-		assert.equal(s.symbol(4), "5", "translates value 4 to options.symbols[4]");
-		assert.equal(s.symbol(5), "6", "translates value 5 to options.symbols[5]");
-		assert.equal(s.symbol(6), "7", "translates value 6 to options.symbols[6]");
-		assert.equal(s.symbol(7), "8", "translates value 7 to options.symbols[7]");
+		for (var v = 0; v < n; v++) {
+			assert.equal(s.symbol(v), symbols[v], 
+				"translates value " + v + " to symbol" + symbols[v]);
+			assert.equal(s.value(symbols[v]), v, 
+				"translates symbol " + symbols[v] + " to value " + v);
+		}
 
-		assert.equal(s.value("1"), 0, "translates options.symbols[0] to value 0");
-		assert.equal(s.value("2"), 1, "translates options.symbols[1] to value 1");
-		assert.equal(s.value("3"), 2, "translates options.symbols[2] to value 2");
-		assert.equal(s.value("4"), 3, "translates options.symbols[3] to value 3");
-		assert.equal(s.value("5"), 4, "translates options.symbols[4] to value 4");
-		assert.equal(s.value("6"), 5, "translates options.symbols[5] to value 5");
-		assert.equal(s.value("7"), 6, "translates options.symbols[6] to value 6");
-		assert.equal(s.value("8"), 7, "translates options.symbols[7] to value 7");
 	});
 
 });

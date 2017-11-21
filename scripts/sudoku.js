@@ -10,15 +10,13 @@ define(["./cell", "./group"], function(cell, group) {
 			var rows = new Array(n);
 			var columns = new Array(n);
 			var boxes = new Array(n);
-			var symbols = new Array(n);
-			var values  = {};
+			var values2symbols = {};
+			var symbols2values = new Array(n);
 			var out = {
 				n:         () => n,
 				boxW:      () => boxW,
 				boxH:      () => boxH,
 				cellCount: () => n*n,
-				symbol:    v => symbols[v],
-				value:     s => values[s],
 				cell:      (x,y) => rows[y].cell(x),
 				forEachCell: cb => {
 					for (var y = 0; y < n; y++) {
@@ -26,7 +24,10 @@ define(["./cell", "./group"], function(cell, group) {
 							cb(out.cell(x, y), x, y);
 						}
 					}
-				}
+				},
+				symbol:    v => symbols2values[v],
+				value:     s => values2symbols[s],
+				newSetOfValues: () => new Set(symbols2values.keys())
 			};
 			
 			var cells;
@@ -67,14 +68,17 @@ define(["./cell", "./group"], function(cell, group) {
 			}
 			out.boxes = boxes;
 			
-			symbols = new Array(n);
+			symbols2values = new Array(n);
 			if (options.symbols) {
-				for (var i=0; i < n; i++) {
-					symbols[i] = options.symbols[i];
-					values[options.symbols[i]] = i;
+				for (var i = 0; i < n; i++) {
+					symbols2values[i] = options.symbols[i];
+					values2symbols[options.symbols[i]] = i;
 				}
 			} else {
-			
+				for (var i = 0; i < n; i++) {
+					symbols2values[i] = i;
+					values2symbols[i] = i;
+				}
 			}
 			
 			return out;

@@ -71,11 +71,12 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			assert.equal(m, n,
 				c.id + ": .choiceCount() should be " + n);
 			k = 0;
-			choices = {};
+			choices = new Set();
 			c.forEachChoice( w => {
 				assert.ok((w >= 0) && (w < n), (k+1) + ". choice value is >= 0 and < " + n);
-				assert.notOk(w in choices, 
+				assert.notOk(choices.has(w), 
 					"no duplicate value " + w + " in " + choices);
+				choices.add(w);
 				k++;
 			});
 			assert.equal(k, m, "nr of values yielded by .forEachChoice(..) should be " + m);
@@ -87,17 +88,17 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			assert.equal(m, n - 1,
 				c.id + ": .choiceCount() after .removeChoice(" + v + ") should be " + (n-1));
 			k = 0;
-			choices = {};
+			choices.clear();
 			c.forEachChoice( w => {
 				assert.ok((w >= 0) && (w < n), (k+1) + ". choice value is >= 0 and < " + n);
-				assert.notOk(w in choices, 
+				assert.notOk(choices.has(w), 
 					"no duplicate value " + w + " in " + choices);
-				choices[w] = 1;
+				choices.add(w);
 				k++;
 			});
 			assert.equal(k, m, "after removeChoice(" + v 
 				+ "): nr of values yielded by .forEachChoice(..) should be " + m);
-			assert.notOk(v in choices, 
+			assert.notOk(choices.has(v), 
 				"removed value " + v + " not anymore contained in " + choices);
 
 			v = (v + 1) % n;
