@@ -5,6 +5,11 @@ define(function() {
 		var row;
 		var column;
 		var box;
+		var choiceCount = f.n();
+		var choices = {};
+		for (var i = 0; i < f.n(); i++) {
+			choices[i] = 1;
+		}
 		var out = {
 			id: "Cell(" + x + "," + y + ")",
 			field: () => f,
@@ -36,6 +41,18 @@ define(function() {
 					cb(box);
 				};
 				return out.forEachGroup(cb);
+			},
+			choiceCount: () => choiceCount,
+			forEachChoice: cb => {
+				for (var i in choices) {
+					cb(i);
+				}
+			},
+			removeChoice: v => {
+				if (choices[v]) {
+					delete choices[v];
+					choiceCount--;
+				}
 			}
 		};
 		return out;

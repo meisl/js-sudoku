@@ -13,12 +13,13 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 	QUnit.test(".field", function(assert) {
 		var s = sudoku.create({box: [2, 3]});
 		var t = sudoku.create({box: [2, 3]});
-		var c = s.cell(0,0);
 
-		assert.strictEqual(c.field(), s, 
-			"returns the sudoku instance that created the cell");
-		assert.notStrictEqual(c.field(), t, 
-			"(make sure strictEqual knows object identity)");
+		s.forEachCell(c => {
+			assert.strictEqual(c.field(), s, 
+				c.id + ": .field() returns the sudoku instance that created the cell");
+			assert.notStrictEqual(c.field(), t, 
+				"(make sure strictEqual knows object identity)");
+		});
 	});
 
 	QUnit.test(".row, .column, .box", function(assert) {
@@ -41,20 +42,66 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 	});
 
 	QUnit.test("enumerate groups", function(assert) {
-		var c = sudoku.create({box: [3, 2]}).cell(0,0);
-		var i = 0;
-		var groups = new Array(3);
-		c.forEachGroup(g => {
-			groups[i++] = g;
-			assert.equal(typeof g, "object", i + ". group is an object");
-			assert.strictEqual(g.field(), c.field(),
-				i + ". group's .field() points to same as cell.field()");
-			for (var k = 0; k < i-1; k++) {
-				assert.notStrictEqual(g, groups[k],
-					i + ". group !== " + (k+1) + ". group");
-			}
+		var s = sudoku.create({box: [3, 2]});
+		s.forEachCell(c => {
+			var i = 0;
+			var groups = new Array(3);
+			c.forEachGroup(g => {
+				groups[i++] = g;
+				assert.equal(typeof g, "object", 
+					c.id + ": " + i + ". group is an object");
+				assert.strictEqual(g.field(), c.field(),
+					c.id + ": " + i + ". group's .field() points to same as cell.field()");
+				for (var k = 0; k < i-1; k++) {
+					assert.notStrictEqual(g, groups[k],
+						c.id + ": " + i + ". group !== " + (k+1) + ". group");
+				}
+			});
+			assert.equal(groups.length, 3, "cell belongs to 3 groups");
 		});
-		assert.equal(groups.length, 3, "cell belongs to 3 groups");
+	});
+
+	QUnit.test(".choiceCount / .removeChoice / .forEachChoice", function(assert) {
+		var s = sudoku.create({box: [2, 3]});
+		var n = s.n();
+		var v = 0;
+		var m, k, choices;
+		s.forEachCell(c => {
+			m = c.choiceCount();
+			assert.equal(m, n,
+				c.id + ": .choiceCount() should be " + n);
+			k = 0;
+			choices = {};
+			c.forEachChoice( w => {
+				assert.ok((w >= 0) && (w < n), (k+1) + ". choice value is >= 0 and < " + n);
+				assert.notOk(w in choices, 
+					"no duplicate value " + w + " in " + choices);
+				k++;
+			});
+			assert.equal(k, m, "nr of values yielded by .forEachChoice(..) should be " + m);
+			
+			// now remove a value from choices
+			c.removeChoice(v);
+			
+			m = c.choiceCount();
+			assert.equal(m, n - 1,
+				c.id + ": .choiceCount() after .removeChoice(" + v + ") should be " + (n-1));
+			k = 0;
+			choices = {};
+			c.forEachChoice( w => {
+				assert.ok((w >= 0) && (w < n), (k+1) + ". choice value is >= 0 and < " + n);
+				assert.notOk(w in choices, 
+					"no duplicate value " + w + " in " + choices);
+				choices[w] = 1;
+				k++;
+			});
+			assert.equal(k, m, "after removeChoice(" + v 
+				+ "): nr of values yielded by .forEachChoice(..) should be " + m);
+			assert.notOk(v in choices, 
+				"removed value " + v + " not anymore contained in " + choices);
+
+			v = (v + 1) % n;
+		});
 	});
 	
 });
