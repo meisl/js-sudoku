@@ -104,5 +104,25 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			v = (v + 1) % n;
 		});
 	});
+
+	QUnit.test(".hasChoice / .removeChoice", function(assert) {
+		var s = sudoku.create({box: [2, 3]});
+		var n = s.n();
+		var v = 0;
+		s.forEachCell(c => {
+			for (var w = 0; w < n; w++) {
+				assert.ok(c.hasChoice(w), c.id + " should have choice " + w);
+			}
+			c.removeChoice(v);
+			for (var w = 0; w < n; w++) {
+				if (w != v) {
+					assert.ok(c.hasChoice(w), c.id + " should have choice " + w);
+				} else {
+					assert.notOk(c.hasChoice(w), c.id + " should NOT have choice " + w);
+				}
+			}
+			v++;
+		});
+	});
 	
 });

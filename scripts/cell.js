@@ -41,7 +41,8 @@ define(function() {
 			},
 			choiceCount: () => choices.size,
 			forEachChoice: cb => choices.forEach(cb),
-			removeChoice: v => choices.delete(v)
+			removeChoice: v => choices.delete(v),
+			hasChoice: v => choices.has(v)
 		};
 		return out;
 	}

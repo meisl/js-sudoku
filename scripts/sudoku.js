@@ -35,19 +35,19 @@ define(["./cell", "./group"], function(cell, group) {
 			var row, column, box;
 			for (y = 0; y < n; y++) {
 				cells = new Array(n);
-				row = group.create(out, cells);
 				for (x = 0; x < n; x++) {
 					cells[x] = cell.create(out, x, y);
 				}
+				row = group.create(out, cells);
 				rows[y] = row;
 			}
 			out.rows = rows;
 			for (x = 0; x < n; x++) {
 				cells = new Array(n);
-				column = group.create(out, cells);
 				for (y = 0; y < n; y++) {
 					cells[y] = out.cell(x, y);
 				}
+				column = group.create(out, cells);
 				columns[x] = column;
 			}
 			out.columns = columns;
@@ -56,14 +56,14 @@ define(["./cell", "./group"], function(cell, group) {
 			for (var by = 0; by < boxW; by++) { // boxW = n/boxH
 				for (var bx = 0; bx < boxH; bx++) { // boxH = n/boxW
 					cells = new Array(n);
-					box = group.create(out, cells);
-					boxes[i++] = box;
 					var k = 0;
 					for (y = by*boxH; y < (by+1)*boxH; y++) {
 						for (x = bx*boxW; x < (bx+1)*boxW; x++) {
 							cells[k++] = out.cell(x, y);
 						}
 					}
+					box = group.create(out, cells);
+					boxes[i++] = box;
 				}
 			}
 			out.boxes = boxes;
