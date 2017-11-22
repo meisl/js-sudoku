@@ -55,45 +55,55 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 	});
 
 	QUnit.test(".candidates / .removeCandidate", function(assert) {
-		var boxW = 3;
-		var boxH = 2;
-		var s = sudoku.create({box: [boxW, boxH]});
-		var n = s.n();
-		var values = s.newSetOfValues();
-		var groups = [...s.rows, ...s.columns, ...s.boxes];
-		groups.forEach(g => {
-			var k = n - 1; // index of candidate to remove (later)
-			values.forEach(v => {
-				cs = g.candidates(v);
-				assert.equal(cs.size, n,
-					".candidates(" + v + ").size should be " + n);
-				var i = 0; // candidate index
-				var toRemove;
-				cs.forEach(c => {
-					assert.ok(c.hasChoice(v), 
-						c.id + " as a candidate for " + v 
-						+ " should have choice " + v);
-					if (i == k) {
-						toRemove = c;
-					}
-					i++;
-				});
-				
-				g.removeCandidate(v, toRemove);
+		// must test overlapping groups separately
+		testGroupKind(s => s.rows);
+		testGroupKind(s => s.columns);
+		testGroupKind(s => s.boxes);
+		
+		function testGroupKind(chooseGroups) {
+			var boxW = 3;
+			var boxH = 2;
+			var s = sudoku.create({box: [boxW, boxH]});
+			var n = s.n();
+			var values = s.newSetOfValues();
+			chooseGroups(s).forEach(g => {
+				var k = n - 1; // index of candidate to remove (later)
+				values.forEach(v => {
+					cs = g.candidates(v);
+					assert.equal(cs.size, n,
+						".candidates(" + v + ").size should be " + n);
+					var i = 0; // candidate index
+					var toRemove;
+					cs.forEach(c => {
+						assert.ok(c.hasChoice(v), 
+							c.id + " as a candidate for " + v 
+							+ " should have choice " + v);
+						if (i == k) {
+							toRemove = c;
+						}
+						i++;
+					});
+					
+					g.removeCandidate(v, toRemove);
+					assert.notOk(toRemove.hasChoice(v), "after removeCandidate(" 
+						+ v + ", " + toRemove.id + "): " + toRemove.id 
+						+ ".hasChoice(" + v + ") should be false");
 
-				cs = g.candidates(v);
-				assert.equal(cs.size, n - 1,
-					".candidates(" + v + ").size after removeCandidate(" 
-					+ v + ", " + toRemove.id + ") should be " + (n-1));
-				cs.forEach(c => {
-					assert.ok(c.hasChoice(v), "after removeCandidate(" 
-						+ v + ", " + toRemove.id + "): "
-						+ c.id + " as a candidate for " + v 
-						+ " should have choice " + v);
+					cs = g.candidates(v);
+					assert.equal(cs.size, n - 1,
+						".candidates(" + v + ").size after removeCandidate(" 
+						+ v + ", " + toRemove.id + ") should be " + (n-1));
+					cs.forEach(c => {
+						assert.ok(c.hasChoice(v), "after removeCandidate(" 
+							+ v + ", " + toRemove.id + "): "
+							+ c.id + " as a candidate for " + v 
+							+ " should have choice " + v);
+					});
+					k--;
 				});
-				k--;
 			});
-		});
+		}
+		
 	});
 	
 });
