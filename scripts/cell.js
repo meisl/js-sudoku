@@ -41,8 +41,12 @@ define(function() {
 			},
 			choiceCount: () => choices.size,
 			forEachChoice: cb => choices.forEach(cb),
-			removeChoice: v => choices.delete(v),
-			hasChoice: v => choices.has(v)
+			hasChoice: v => choices.has(v),
+			removeChoice: v => {
+				if (choices.delete(v)) {
+					out.forEachGroup(g => g.removeCandidate(v, out));
+				}
+			}
 		};
 		return out;
 	}

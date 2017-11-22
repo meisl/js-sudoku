@@ -121,7 +121,14 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 					assert.notOk(c.hasChoice(w), c.id + " should NOT have choice " + w);
 				}
 			}
-			v++;
+			c.forEachGroup(g => {
+				assert.notOk(g.candidates(v).has(c), 
+					c.id + ": after removeChoice(" + v + ")"
+					+ " no more candidate for value " + v 
+					+ " in group " + g);
+			});
+			
+			v = (v + 1) % n;
 		});
 	});
 	

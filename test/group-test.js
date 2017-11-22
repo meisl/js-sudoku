@@ -85,6 +85,7 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 					});
 					
 					g.removeCandidate(v, toRemove);
+					// removeCandidate necessitates update of candidates:
 					assert.notOk(toRemove.hasChoice(v), "after removeCandidate(" 
 						+ v + ", " + toRemove.id + "): " + toRemove.id 
 						+ ".hasChoice(" + v + ") should be false");

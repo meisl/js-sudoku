@@ -33,6 +33,7 @@ define(["./cell", "./group"], function(cell, group) {
 			var cells;
 			var x, y;
 			var row, column, box;
+			
 			for (y = 0; y < n; y++) {
 				cells = new Array(n);
 				for (x = 0; x < n; x++) {
@@ -42,6 +43,7 @@ define(["./cell", "./group"], function(cell, group) {
 				rows[y] = row;
 			}
 			out.rows = rows;
+			
 			for (x = 0; x < n; x++) {
 				cells = new Array(n);
 				for (y = 0; y < n; y++) {
