@@ -57,7 +57,9 @@ define(function() {
 				if (choices.delete(v)) {
 					out.forEachGroup(g => g.removeCandidate(out, v));
 				}
-			}
+			},
+			get isDefinite() { return out.choiceCount() == 1; },
+			set isDefinite(_) { throw "getter only"; }
 		};
 		return out;
 	}

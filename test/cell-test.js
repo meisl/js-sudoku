@@ -133,20 +133,31 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 	});
 
 
-	QUnit.test(".value (set/get)", function(assert) {
+	QUnit.test(".value (set/get) / .isDefinite", function(assert) {
 		var s = sudoku.create({box: [2, 3]});
 		var n = s.n();
 		var v = 0;
 		s.forEachCell(c => {
 			assert.ok(c.choiceCount() > 1, c.id + " should have more than 1 choice");
-			assert.equal(c.value, undefined, c.id + ".value should be undefined");
+			assert.strictEqual(c.value, undefined, c.id + ".value should be undefined");
+			assert.notOk(c.isDefinite, c.id + ".isDefinite should be false");
+			assert.throws( () => { c.isDefinite = true; },
+				".isDefinite is a getter only");
+			assert.throws( () => { c.isDefinite = false; },
+				".isDefinite is a getter only");
 			
 			c.forEachChoice(u => v = u); // just any of its choices
-			assert.equal(c.value = v, v, c.id + ".value = " + v + " returns " + v);
+			c.value = v;
+			
 			assert.equal(c.choiceCount(), 1, 
 				c.id + " should have 1 choice after setting .value = " + v);
 			assert.equal(c.value, v, 
-				c.id + " should have .value = " + v);
+				c.id + " should have .value = " + v + " after setting .value = " + v);
+			assert.ok(c.isDefinite, 
+				c.id + ".isDefinite should be true after setting .value = " + v);
+			assert.ok(c.hasChoice(v), 
+				c.id + " still has choice " + v + " after setting .value = " + v);
+			
 			c.value = v; // setting it again to the same value is ok
 			assert.throws( () => { c.value = (v + 1) % n; },
 				"trying to re-set a cell's .value throws");
