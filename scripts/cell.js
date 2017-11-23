@@ -7,9 +7,20 @@ define(function() {
 		var box;
 		var choiceCount = f.n();
 		var choices = f.newSetOfValues();
+		var value;
 		var out = {
 			id: "Cell(" + x + "," + y + ")",
 			field: () => f,
+			get value() { return value; },
+			set value(v) {
+				if (value === undefined) {
+					out.forEachChoice(u => { if (u != v) out.removeChoice(u) });
+				} else if (value != v) {
+					throw out.id + ": cannot set to " + v 
+						+ " - already set to " + value;
+				}
+				value = v;
+			},
 			row: () => {
 				row = f.rows[y];
 				out.row = () => row;

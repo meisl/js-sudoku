@@ -131,5 +131,26 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			v = (v + 1) % n;
 		});
 	});
+
+
+	QUnit.test(".value (set/get)", function(assert) {
+		var s = sudoku.create({box: [2, 3]});
+		var n = s.n();
+		var v = 0;
+		s.forEachCell(c => {
+			assert.ok(c.choiceCount() > 1, c.id + " should have more than 1 choice");
+			assert.equal(c.value, undefined, c.id + ".value should be undefined");
+			
+			c.forEachChoice(u => v = u); // just any of its choices
+			assert.equal(c.value = v, v, c.id + ".value = " + v + " returns " + v);
+			assert.equal(c.choiceCount(), 1, 
+				c.id + " should have 1 choice after setting .value = " + v);
+			assert.equal(c.value, v, 
+				c.id + " should have .value = " + v);
+			c.value = v; // setting it again to the same value is ok
+			assert.throws( () => { c.value = (v + 1) % n; },
+				"trying to re-set a cell's .value throws");
+		});
+	});
 	
 });
