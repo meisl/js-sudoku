@@ -14,7 +14,15 @@ define(function() {
 			get value() { return value; },
 			set value(v) {
 				if (value === undefined) {
-					out.forEachChoice(u => { if (u != v) out.removeChoice(u) });
+					if ((v >= 0) && (v < f.n())) {
+						if (out.hasChoice(v)) {
+							out.forEachChoice(u => { if (u != v) out.removeChoice(u) });
+						} else {
+							throw out.id + ": " + v + " is not a choice";
+						}
+					} else {
+						throw "not a value: " + v;
+					}
 				} else if (value != v) {
 					throw out.id + ": cannot set to " + v 
 						+ " - already set to " + value;

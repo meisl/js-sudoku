@@ -136,30 +136,41 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 	QUnit.test(".value (set/get) / .isDefinite", function(assert) {
 		var s = sudoku.create({box: [2, 3]});
 		var n = s.n();
-		var v = 0;
+		var v1, v2;
 		s.forEachCell(c => {
-			assert.ok(c.choiceCount() > 1, c.id + " should have more than 1 choice");
+			assert.ok(c.choiceCount() > 2, c.id + " needs at least 2 choices for this test");
 			assert.strictEqual(c.value, undefined, c.id + ".value should be undefined");
 			assert.notOk(c.isDefinite, c.id + ".isDefinite should be false");
 			assert.throws( () => { c.isDefinite = true; },
 				".isDefinite is a getter only");
 			assert.throws( () => { c.isDefinite = false; },
 				".isDefinite is a getter only");
+			assert.throws( () => { c.value = undefined; }, /not a value/,
+				"trying .value = undefined should throw");
+			assert.throws( () => { c.value = -1; }, /not a value/,
+				"trying .value = undefined should throw");
+			assert.throws( () => { c.value = n; }, /not a value/,
+				"trying .value = undefined should throw");
 			
-			c.forEachChoice(u => v = u); // just any of its choices
-			c.value = v;
+			c.forEachChoice(u => { v2 = v1; v1 = u; }); // just any two of its choices
+			
+			c.removeChoice(v2);
+			assert.throws( () => { c.value = v2; }, /not a choice/,
+				"trying .value = x, x not a choice should throw");
+			
+			c.value = v1;
 			
 			assert.equal(c.choiceCount(), 1, 
-				c.id + " should have 1 choice after setting .value = " + v);
-			assert.equal(c.value, v, 
-				c.id + " should have .value = " + v + " after setting .value = " + v);
+				c.id + " should have 1 choice after setting .value = " + v1);
+			assert.equal(c.value, v1, 
+				c.id + " should have .value = " + v1 + " after setting .value = " + v1);
 			assert.ok(c.isDefinite, 
-				c.id + ".isDefinite should be true after setting .value = " + v);
-			assert.ok(c.hasChoice(v), 
-				c.id + " still has choice " + v + " after setting .value = " + v);
+				c.id + ".isDefinite should be true after setting .value = " + v1);
+			assert.ok(c.hasChoice(v1), 
+				c.id + " still has choice " + v1 + " after setting .value = " + v1);
 			
-			c.value = v; // setting it again to the same value is ok
-			assert.throws( () => { c.value = (v + 1) % n; },
+			c.value = v1; // setting it again to the same value is ok
+			assert.throws( () => { c.value = (v1 + 1) % n; },
 				"trying to re-set a cell's .value throws");
 		});
 	});
