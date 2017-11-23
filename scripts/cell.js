@@ -55,7 +55,7 @@ define(function() {
 			hasChoice: v => choices.has(v),
 			removeChoice: v => {
 				if (choices.delete(v)) {
-					out.forEachGroup(g => g.removeCandidate(v, out));
+					out.forEachGroup(g => g.removeCandidate(out, v));
 				}
 			}
 		};

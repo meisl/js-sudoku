@@ -84,19 +84,19 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 						i++;
 					});
 					
-					g.removeCandidate(v, toRemove);
+					g.removeCandidate(toRemove, v);
 					// removeCandidate necessitates update of candidates:
 					assert.notOk(toRemove.hasChoice(v), "after removeCandidate(" 
-						+ v + ", " + toRemove.id + "): " + toRemove.id 
+						+ toRemove.id + ", " + v + "): " + toRemove.id 
 						+ ".hasChoice(" + v + ") should be false");
 
 					cs = g.candidates(v);
 					assert.equal(cs.size, n - 1,
 						".candidates(" + v + ").size after removeCandidate(" 
-						+ v + ", " + toRemove.id + ") should be " + (n-1));
+						+ toRemove.id + ", " + v + ") should be " + (n-1));
 					cs.forEach(c => {
 						assert.ok(c.hasChoice(v), "after removeCandidate(" 
-							+ v + ", " + toRemove.id + "): "
+							+ toRemove.id + ", " + v + "): "
 							+ c.id + " as a candidate for " + v 
 							+ " should have choice " + v);
 					});

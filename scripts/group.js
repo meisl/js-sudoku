@@ -13,7 +13,7 @@ define(["./cell"], function(cell) {
 			candidates: v => {
 				return candidates[v];
 			},
-			removeCandidate: (v, c) => {
+			removeCandidate: (c, v) => {
 				candidates[v].delete(c);
 				c.removeChoice(v);
 			}
