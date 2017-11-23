@@ -16,7 +16,19 @@ define(function() {
 				if (value === undefined) {
 					if ((v >= 0) && (v < f.n())) {
 						if (out.hasChoice(v)) {
-							out.forEachChoice(u => { if (u != v) out.removeChoice(u) });
+							out.forEachChoice(u => { 
+								if (u != v) {
+									console.log(out.id + ".value = " + v
+									+ " ~> .removeChoice(" + u + ")");
+									out.removeChoice(u);
+								}
+							});
+							out.forEachGroup(g => {
+								g.candidates(v).forEach(c => {
+									if (c !== out)
+										c.removeChoice(v);
+								})
+							});
 						} else {
 							throw out.id + ": " + v + " is not a choice";
 						}
@@ -63,6 +75,7 @@ define(function() {
 			hasChoice: v => choices.has(v),
 			removeChoice: v => {
 				if (choices.delete(v)) {
+					console.log(out.id + ".removeChoice(" + v + ")");
 					out.forEachGroup(g => g.removeCandidate(out, v));
 				}
 			},

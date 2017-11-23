@@ -183,6 +183,27 @@ require(["scripts/sudoku"], function(sudoku) {
 			+ "| - - | - - | - f |\n"
 			+ "+-----+-----+-----+\n"
 		);
+		
+		var mySymbols = ["F", "E", "D", "C", "B", "A"];
+		act = s.stringify(c => {
+			if (c.value !== undefined) {
+				return mySymbols[c.value];
+			} else {
+				return "-"
+			}
+		});
+		assert.equal(act,
+			  "+-----+-----+-----+\n"
+			+ "| F - | - - | - - |\n"
+			+ "| - E | - - | - - |\n"
+			+ "| - - | D - | - - |\n"
+			+ "+-----+-----+-----+\n"
+			+ "| - - | - C | - - |\n"
+			+ "| - - | - - | B - |\n"
+			+ "| - - | - - | - A |\n"
+			+ "+-----+-----+-----+\n"
+		);
+
 
 		s = sudoku.create({
 			box: [3, 3],
@@ -270,6 +291,15 @@ require(["scripts/sudoku"], function(sudoku) {
 			+ "| 7 5 - | - - 1 | - 4 - |\n"
 			+ "+-------+-------+-------+\n"
 		;
+		s = sudoku.parse(t);
+		console.log(s.stringify(c => {
+			if (c.value !== undefined) {
+				return String.fromCharCode(c.value + 65);
+			} else {
+				//return "-"
+				return c.choiceCount();
+			}
+		}));
 	});
 
 });

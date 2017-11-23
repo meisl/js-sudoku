@@ -168,6 +168,13 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 				c.id + ".isDefinite should be true after setting .value = " + v1);
 			assert.ok(c.hasChoice(v1), 
 				c.id + " still has choice " + v1 + " after setting .value = " + v1);
+			c.forEachGroup(g => {
+				assert.ok(g.hasCandidate(c, v1),
+					"group " + g + " still has it as candidate for " + v1);
+				assert.equal(g.candidates(v1).size, 1, 
+					"group " + g + " has only " + c.id + " as candidate for " + v1);
+			});
+			
 			
 			c.value = v1; // setting it again to the same value is ok
 			assert.throws( () => { c.value = (v1 + 1) % n; },

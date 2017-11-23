@@ -28,7 +28,15 @@ define(["./cell", "./group"], function(cell, group) {
 				symbol:    v => symbols2values[v],
 				value:     s => values2symbols[s],
 				newSetOfValues: () => new Set(symbols2values.keys()),
-				stringify: () => {
+				stringify: cellCb => {
+					if (cellCb === undefined) {
+						cellCb = c => {
+							let v = c.value;
+							return (v === undefined)
+								? "-"
+								: out.symbol(v);
+						};
+					}
 					var hSep = "+" + "-".repeat(boxW * 2 + 1);
 					hSep = hSep.repeat(boxH) + "+\n";
 					var result = hSep;
@@ -39,10 +47,7 @@ define(["./cell", "./group"], function(cell, group) {
 							for (let bx = 0; bx < boxH; bx++) {
 								result += "| ";
 								for (let x0 = 0; x0 < boxW; x0++) {
-									let v = out.cell(x, y).value;
-									result += (v === undefined)
-										? "- "
-										: out.symbol(v) + " ";
+									result += cellCb(out.cell(x, y)) + " ";
 									x++;
 								}
 							}

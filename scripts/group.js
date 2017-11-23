@@ -14,6 +14,7 @@ define(["./cell"], function(cell) {
 				return candidates[v];
 			},
 			removeCandidate: (c, v) => {
+				console.log(out + ".removeCandidate(" + c.id + ", " + v + ")");
 				candidates[v].delete(c);
 				c.removeChoice(v);
 			},
