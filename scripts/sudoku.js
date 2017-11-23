@@ -115,7 +115,66 @@ define(["./cell", "./group"], function(cell, group) {
 	}
 
 	return {
-		create: create
+		create: create,
+		parse: s => {
+			var boxW, boxH, n, options, result;
+			var lines = s.split("\n");
+			var hSep = lines[0];
+			var t = hSep.split("+");
+			boxH = t.length - 2;
+			boxW = (t[1].length - 1)/2;
+			n = boxW * boxH;
+			
+			var symbols = new Set();
+			
+			lines.filter(line => line.startsWith("|"))
+				.forEach(line => {
+					line.split(/[- +|\r\n]/)
+						.filter(ch => ch != "")
+						.forEach(ch => symbols.add(ch));
+					;
+				})
+			;
+			if (symbols.size > n) {
+				throw "too many symbols found: " + [...symbols];
+			}
+			let ch = 1;
+			while (symbols.size < n) {
+				while (symbols.has(ch + "")) {
+					if (ch < 9) {
+						ch++;
+					} else if (ch == 9) {
+						ch = "A"
+					} else {
+						ch = String.fromCharCode(ch.charCodeAt(0) + 1);
+					}
+				}
+				symbols.add(ch + "");
+			}
+
+			options = { box: [boxW, boxH], symbols: [...symbols] };
+			result = create(options);
+			
+			let y = 0;
+			lines.filter(line => line.startsWith("|"))
+				.forEach(line => {
+					let x = 0;
+					line.split(/[| \r\n]+/)
+						.filter(ch => ch != "")
+						.forEach(ch => {
+							if (symbols.has(ch)) {
+								result.cell(x, y).value = result.value(ch);
+							}
+							x++;
+						});
+					;
+					y++;
+				})
+			;
+			
+			return result;
+		}
+
 	};
 });
 
