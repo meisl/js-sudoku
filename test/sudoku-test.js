@@ -108,7 +108,77 @@ require(["scripts/sudoku"], function(sudoku) {
 			assert.equal(s.value(symbols[v]), v, 
 				"translates symbol " + symbols[v] + " to value " + v);
 		}
-
+	});
+	
+	QUnit.test(".stringify (without symbols option)", function(assert) {
+		var bW = 2; var bH = 3; var n = bW*bH;
+		var s = sudoku.create({
+			box: [bW, bH]
+		});
+		var act;
+		
+		act = s.stringify();
+		assert.equal(act,
+			  "+-----+-----+-----+\n"
+			+ "| - - | - - | - - |\n"
+			+ "| - - | - - | - - |\n"
+			+ "| - - | - - | - - |\n"
+			+ "+-----+-----+-----+\n"
+			+ "| - - | - - | - - |\n"
+			+ "| - - | - - | - - |\n"
+			+ "| - - | - - | - - |\n"
+			+ "+-----+-----+-----+\n");
+			
+		for (let v = 0; v < n; v++) {
+			s.cell(v, v).value = v;
+		}
+		act = s.stringify();
+		assert.equal(act,
+			  "+-----+-----+-----+\n"
+			+ "| 0 - | - - | - - |\n"
+			+ "| - 1 | - - | - - |\n"
+			+ "| - - | 2 - | - - |\n"
+			+ "+-----+-----+-----+\n"
+			+ "| - - | - 3 | - - |\n"
+			+ "| - - | - - | 4 - |\n"
+			+ "| - - | - - | - 5 |\n"
+			+ "+-----+-----+-----+\n");
+	});
+	
+	QUnit.test(".stringify (with symbols option)", function(assert) {
+		var bW = 2; var bH = 3; var n = bW*bH;
+		var s = sudoku.create({
+			box: [bW, bH],
+			symbols: ["a", "b", "c", "d", "e", "f"],
+		});
+		var act;
+		
+		act = s.stringify();
+		assert.equal(act,
+			  "+-----+-----+-----+\n"
+			+ "| - - | - - | - - |\n"
+			+ "| - - | - - | - - |\n"
+			+ "| - - | - - | - - |\n"
+			+ "+-----+-----+-----+\n"
+			+ "| - - | - - | - - |\n"
+			+ "| - - | - - | - - |\n"
+			+ "| - - | - - | - - |\n"
+			+ "+-----+-----+-----+\n");
+			
+		for (let v = 0; v < n; v++) {
+			s.cell(v, v).value = v;
+		}
+		act = s.stringify();
+		assert.equal(act,
+			  "+-----+-----+-----+\n"
+			+ "| a - | - - | - - |\n"
+			+ "| - b | - - | - - |\n"
+			+ "| - - | c - | - - |\n"
+			+ "+-----+-----+-----+\n"
+			+ "| - - | - d | - - |\n"
+			+ "| - - | - - | e - |\n"
+			+ "| - - | - - | - f |\n"
+			+ "+-----+-----+-----+\n");
 	});
 
 });

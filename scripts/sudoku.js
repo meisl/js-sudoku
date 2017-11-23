@@ -27,7 +27,32 @@ define(["./cell", "./group"], function(cell, group) {
 				},
 				symbol:    v => symbols2values[v],
 				value:     s => values2symbols[s],
-				newSetOfValues: () => new Set(symbols2values.keys())
+				newSetOfValues: () => new Set(symbols2values.keys()),
+				stringify: () => {
+					var hSep = "+" + "-".repeat(boxW * 2 + 1);
+					hSep = hSep.repeat(boxH) + "+\n";
+					var result = hSep;
+					var y = 0;
+					for (let by = 0; by < boxW; by++) {
+						for (let y0 = 0; y0 < boxH; y0++) {
+							let x = 0;
+							for (let bx = 0; bx < boxH; bx++) {
+								result += "| ";
+								for (let x0 = 0; x0 < boxW; x0++) {
+									let v = out.cell(x, y).value;
+									result += (v === undefined)
+										? "- "
+										: out.symbol(v) + " ";
+									x++;
+								}
+							}
+							result += "|\n";
+							y++;
+						}
+						result += hSep;
+					}
+					return result;
+				}
 			};
 			
 			var cells;
