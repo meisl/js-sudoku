@@ -85,10 +85,16 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 					});
 					
 					g.removeCandidate(toRemove, v);
-					// removeCandidate necessitates update of candidates:
+					
+					// removeCandidate necessitates update of candidate's choices:
 					assert.notOk(toRemove.hasChoice(v), "after removeCandidate(" 
 						+ toRemove.id + ", " + v + "): " + toRemove.id 
 						+ ".hasChoice(" + v + ") should be false");
+					toRemove.forEachGroup(h => {
+						assert.notOk(g.hasCandidate(toRemove, v),
+							+ toRemove.id + " should not be a candidate for " + v
+							+ "in group " + h + " anymore");
+					});
 
 					cs = g.candidates(v);
 					assert.equal(cs.size, n - 1,

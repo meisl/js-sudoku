@@ -122,7 +122,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 				}
 			}
 			c.forEachGroup(g => {
-				assert.notOk(g.candidates(v).has(c), 
+				assert.notOk(g.hasCandidate(c, v), 
 					c.id + ": after removeChoice(" + v + ")"
 					+ " no more candidate for value " + v 
 					+ " in group " + g);
