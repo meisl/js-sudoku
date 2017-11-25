@@ -18,8 +18,6 @@ define(function() {
 						if (out.hasChoice(v)) {
 							out.forEachChoice(u => { 
 								if (u != v) {
-									console.log(out.id + ".value = " + v
-									+ " ~> .removeChoice(" + u + ")");
 									out.removeChoice(u);
 								}
 							});
@@ -73,14 +71,15 @@ define(function() {
 			choiceCount: () => choices.size,
 			forEachChoice: cb => choices.forEach(cb),
 			hasChoice: v => choices.has(v),
+			get isFixated() { return out.value !== undefined; },
+			set isFixated(_) { throw "getter only"; },
+			get canBeFixated() { return !out.isFixated && (out.choiceCount() == 1); },
+			set canBeFixated(_) { throw "getter only"; },
 			removeChoice: v => {
 				if (choices.delete(v)) {
-					console.log(out.id + ".removeChoice(" + v + ")");
 					out.forEachGroup(g => g.removeCandidate(out, v));
 				}
-			},
-			get isDefinite() { return out.choiceCount() == 1; },
-			set isDefinite(_) { throw "getter only"; }
+			}
 		};
 		return out;
 	}

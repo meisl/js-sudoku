@@ -293,8 +293,10 @@ require(["scripts/sudoku"], function(sudoku) {
 		;
 		s = sudoku.parse(t);
 		console.log(s.stringify(c => {
-			if (c.value !== undefined) {
+			if (c.isFixated) {
 				return String.fromCharCode(c.value + 65);
+			} else if (c.canBeFixated) {
+				return "*";
 			} else {
 				//return "-"
 				return c.choiceCount();

@@ -133,18 +133,36 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 	});
 
 
-	QUnit.test(".value (set/get) / .isDefinite", function(assert) {
+	QUnit.test(".value (set/get) / .isFixated", function(assert) {
 		var s = sudoku.create({box: [2, 3]});
 		var n = s.n();
 		var v1, v2;
+		var values = [
+			0,1, 2,3, 4,5,
+			2,3, 4,5, 0,1,
+			4,5, 0,1, 2,3,
+			
+			1,2, 3,4, 5,0,
+			3,4, 5,0, 1,2,
+			5,0, 1,2, 3,4
+		];
+		var i = 0;
 		s.forEachCell(c => {
-			assert.ok(c.choiceCount() > 2, c.id + " needs at least 2 choices for this test");
+			assert.ok(c.choiceCount() >= 1, 
+				c.id + " needs at least 1 choices for this test: " + c.choiceCount());
 			assert.strictEqual(c.value, undefined, c.id + ".value should be undefined");
-			assert.notOk(c.isDefinite, c.id + ".isDefinite should be false");
-			assert.throws( () => { c.isDefinite = true; },
-				".isDefinite is a getter only");
-			assert.throws( () => { c.isDefinite = false; },
-				".isDefinite is a getter only");
+			assert.notOk(c.isFixated, c.id + ".isFixated should be false");
+			assert.equal(c.canBeFixated, c.choiceCount() == 1, 
+				c.id + ".canBeFixated should be " + (c.choiceCount() == 1) 
+				+ " (choiceCount == " + c.choiceCount() + ")");
+			assert.throws( () => { c.isFixated = true; },
+				".isFixated is a getter only");
+			assert.throws( () => { c.isFixated = false; },
+				".isFixated is a getter only");
+			assert.throws( () => { c.canBeFixated = true; },
+				".canBeFixated is a getter only");
+			assert.throws( () => { c.canBeFixated = false; },
+				".isFixated is a getter only");
 			assert.throws( () => { c.value = undefined; }, /not a value/,
 				"trying .value = undefined should throw");
 			assert.throws( () => { c.value = -1; }, /not a value/,
@@ -152,20 +170,22 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			assert.throws( () => { c.value = n; }, /not a value/,
 				"trying .value = undefined should throw");
 			
-			c.forEachChoice(u => { v2 = v1; v1 = u; }); // just any two of its choices
-			
+			v1 = values[i++];
+			v2 = (v1 + 1) % n; // just anything != v1
 			c.removeChoice(v2);
 			assert.throws( () => { c.value = v2; }, /not a choice/,
 				"trying .value = x, x not a choice should throw");
 			
 			c.value = v1;
-			
+		
 			assert.equal(c.choiceCount(), 1, 
 				c.id + " should have 1 choice after setting .value = " + v1);
 			assert.equal(c.value, v1, 
 				c.id + " should have .value = " + v1 + " after setting .value = " + v1);
-			assert.ok(c.isDefinite, 
-				c.id + ".isDefinite should be true after setting .value = " + v1);
+			assert.ok(c.isFixated, 
+				c.id + ".isFixated should be true after setting .value = " + v1);
+			assert.notOk(c.canBeFixated, 
+				c.id + ".canBeFixated should be false after setting .value = " + v1);
 			assert.ok(c.hasChoice(v1), 
 				c.id + " still has choice " + v1 + " after setting .value = " + v1);
 			c.forEachGroup(g => {
@@ -179,7 +199,12 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			c.value = v1; // setting it again to the same value is ok
 			assert.throws( () => { c.value = (v1 + 1) % n; },
 				"trying to re-set a cell's .value throws");
+				
 		});
+		console.log(s.stringify(d => {
+			return (d.choiceCount() == 1 ? d.value + "/" : "?/") + d.choiceCount();
+		}));
+
 	});
 	
 });
