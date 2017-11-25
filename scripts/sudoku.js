@@ -12,7 +12,7 @@ define(["./cell", "./group"], function(cell, group) {
 			var boxes = new Array(n);
 			var values2symbols = {};
 			var symbols2values = new Array(n);
-			var todos = new Set();
+			var todos = [];
 			var out = {
 				n:         () => n,
 				boxW:      () => boxW,
@@ -59,13 +59,27 @@ define(["./cell", "./group"], function(cell, group) {
 					}
 					return result;
 				},
-				addTodo: todo => todos.add(todo),
-				todos: todos,
-				printTodos: () => {
-					let i = 1;
-					[...todos].forEach(td => {
-						console.log(i + ": " + td);
-						i++;
+				addTodo: todo => todos.push(todo),
+				do: (...is) => {
+					let ts;
+					if (is.length == 0) {
+						ts = todos;
+					} else {
+						ts = is.map(i => todos[i]);
+					}
+					ts.forEach((t, i) => {
+						if (typeof t == "function") {
+							t();
+							todos[i] = "* " + t.toString();
+						}
+					});
+					return out.print().printTodos();
+				},
+				printTodos: showDone => {
+					todos.forEach((td, i) => {
+						if (showDone || (typeof td == "function")) {
+							console.log(i + ": " + td);
+						}
 					});
 					return out;
 				},
@@ -78,13 +92,14 @@ define(["./cell", "./group"], function(cell, group) {
 						} else if (c.isLastCandidate) {
 							return "\\";
 						} else {
-							return " ";
+							//return " ";
 							//return "-";
-							//return c.choiceCount();
+							return c.choiceCount();
 						}
 					}));
 					return out;
 				},
+				toString: () => out.stringify(),
 				set: (x, y, v) => {
 					out.cell(x, y).value = v;
 					return out.print().printTodos();

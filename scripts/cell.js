@@ -41,6 +41,13 @@ define(function() {
 				return out.forEachGroup(cb);
 			},
 			choiceCount: () => choices.size,
+			get str() { 
+				let result = String.fromCharCode(x + "A".charCodeAt(0)) + y
+					+ "{" + [...choices].join(",") + "}"
+				;
+				return result;
+			
+			},
 			forEachChoice: cb => choices.forEach(cb),
 			hasChoice: v => choices.has(v),
 			get isFixated() { return out.value !== undefined; },
@@ -60,7 +67,9 @@ define(function() {
 					out.forEachGroup(g => g.removeCandidate(out, v));
 					if (out.canBeFixated) {
 						let u = [...choices].pop();
-						f.todos.add(out.id + ": last choice " + u);
+						let todo = () => out.value = u;
+						todo.toString = () => out.id + ": last choice " + u;
+						f.addTodo(todo);
 					}
 				}
 			},

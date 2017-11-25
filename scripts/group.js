@@ -13,6 +13,19 @@ define(["./cell"], function(cell) {
 			candidates: v => {
 				return candidates[v];
 			},
+			get cs() {
+				let x = {};
+				for (let v = 0; v < n; v++) {
+					let cs = candidates[v];
+					if (cs.size > 1) {
+						x[v] = [...cs]
+							.map(c => c.str)
+							.join(", ")
+						;
+					}
+				}
+				return x;
+			},
 			removeCandidate: (c, v) => {
 				let cs = candidates[v];
 				if (candidates[v].delete(c)) {
@@ -20,8 +33,12 @@ define(["./cell"], function(cell) {
 					if (cs.size == 1) {
 						let d = [...cs].pop();
 						if (!d.isFixated) {
-							field.todos.add(d.id 
-								+ ": last candidate for " + v + " in " + out);
+							let todo = () => { d.value = v; };
+							todo.toString = () => d.id 
+								+ ": last candidate for " + v + " in " + out;
+							field.addTodo(todo, 
+								d.id + ": last candidate for " + v + " in " + out
+							);
 							/*
 							d.forEachChoice(u => {
 								if (u != v) {
