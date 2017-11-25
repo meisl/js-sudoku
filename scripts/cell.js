@@ -11,34 +11,6 @@ define(function() {
 		var out = {
 			id: "Cell(" + x + "," + y + ")",
 			field: () => f,
-			get value() { return value; },
-			set value(v) {
-				if (value === undefined) {
-					if ((v >= 0) && (v < f.n())) {
-						if (out.hasChoice(v)) {
-							out.forEachChoice(u => { 
-								if (u != v) {
-									out.removeChoice(u);
-								}
-							});
-							out.forEachGroup(g => {
-								g.candidates(v).forEach(c => {
-									if (c !== out)
-										c.removeChoice(v);
-								})
-							});
-						} else {
-							throw out.id + ": " + v + " is not a choice";
-						}
-					} else {
-						throw "not a value: " + v;
-					}
-				} else if (value != v) {
-					throw out.id + ": cannot set to " + v 
-						+ " - already set to " + value;
-				}
-				value = v;
-			},
 			row: () => {
 				row = f.rows[y];
 				out.row = () => row;
@@ -75,9 +47,53 @@ define(function() {
 			set isFixated(_) { throw "getter only"; },
 			get canBeFixated() { return !out.isFixated && (out.choiceCount() == 1); },
 			set canBeFixated(_) { throw "getter only"; },
+			get isLastCandidate() {
+				return [...choices].some(
+					v => [out.row(), out.column(), out.box()].some(
+						g => g.candidates(v).size == 1
+					)
+				);
+			},
+			set isLastCandidate(_) { throw "getter only"; },
 			removeChoice: v => {
 				if (choices.delete(v)) {
 					out.forEachGroup(g => g.removeCandidate(out, v));
+					if (out.canBeFixated) {
+						let u = [...choices].pop();
+						f.todos.add(out.id + ": last choice " + u);
+					}
+				}
+			},
+			get value() { return value; },
+			set value(v) {
+				if (value === undefined) {
+					if ((v >= 0) && (v < f.n())) {
+						if (out.hasChoice(v)) {
+							value = v;
+							out.forEachChoice(u => { 
+								if (u != v) {
+									out.removeChoice(u);
+								}
+							});
+							out.forEachGroup(g => {
+								g.candidates(v).forEach(c => {
+									if (c !== out)
+										c.removeChoice(v);
+								})
+							});
+						} else {
+							throw out.id + ": " + v 
+								+ " (\"" + f.symbol(v) + "\")"
+								+ " not in choices "
+								+ [...choices].map(u => f.symbol(u))
+							;
+						}
+					} else {
+						throw "not a value: " + v;
+					}
+				} else if (value != v) {
+					throw out.id + ": cannot set to " + v 
+						+ " - already set to " + value;
 				}
 			}
 		};

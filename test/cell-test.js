@@ -173,7 +173,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			v1 = values[i++];
 			v2 = (v1 + 1) % n; // just anything != v1
 			c.removeChoice(v2);
-			assert.throws( () => { c.value = v2; }, /not a choice/,
+			assert.throws( () => { c.value = v2; }, /not.+choice/,
 				"trying .value = x, x not a choice should throw");
 			
 			c.value = v1;
@@ -201,9 +201,10 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 				"trying to re-set a cell's .value throws");
 				
 		});
-		console.log(s.stringify(d => {
-			return (d.choiceCount() == 1 ? d.value + "/" : "?/") + d.choiceCount();
-		}));
+		
+		//console.log(s.stringify(d => {
+		//	return (d.choiceCount() == 1 ? d.value + "/" : "?/") + d.choiceCount();
+		//}));
 
 	});
 	

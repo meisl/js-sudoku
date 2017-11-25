@@ -12,6 +12,7 @@ define(["./cell", "./group"], function(cell, group) {
 			var boxes = new Array(n);
 			var values2symbols = {};
 			var symbols2values = new Array(n);
+			var todos = new Set();
 			var out = {
 				n:         () => n,
 				boxW:      () => boxW,
@@ -57,6 +58,36 @@ define(["./cell", "./group"], function(cell, group) {
 						result += hSep;
 					}
 					return result;
+				},
+				addTodo: todo => todos.add(todo),
+				todos: todos,
+				printTodos: () => {
+					let i = 1;
+					[...todos].forEach(td => {
+						console.log(i + ": " + td);
+						i++;
+					});
+					return out;
+				},
+				print: () => {
+					console.log(out.stringify(c => {
+						if (c.isFixated) {
+							return String.fromCharCode(c.value + "a".charCodeAt(0));
+						} else if (c.canBeFixated) {
+							return "/";
+						} else if (c.isLastCandidate) {
+							return "\\";
+						} else {
+							return " ";
+							//return "-";
+							//return c.choiceCount();
+						}
+					}));
+					return out;
+				},
+				set: (x, y, v) => {
+					out.cell(x, y).value = v;
+					return out.print().printTodos();
 				}
 			};
 			
@@ -185,28 +216,7 @@ define(["./cell", "./group"], function(cell, group) {
 
 
 /*
- Elektor 558
- +---------+---------+---------+---------+
- | 0 - 4 - | - - - - | - - - D | F 3 7 E |
- | - - - 3 | - 7 1 - | - - - - | - - - 9 |
- | - - - E | - D - 2 | 1 F 6 3 | - 4 - 5 |
- | - - - 2 | - 3 E 5 | - - - B | C - - 6 |
- +---------+---------+---------+---------+
- | F - - - | C - D 6 | - - 5 - | 7 9 - 4 |
- | 9 - A - | 5 F 0 - | B C - E | - 1 - - |
- | - - 2 - | * * * * | * - 3 - | - E - - |
- | - 5 6 - | - 8 B E | - - 1 - | - 8 - - |
- +---------+---------+---------+---------+
- | - - 7 - | - - - 4 | 9 - - A | E 8 - - |
- | D A - - | - - - - | 0 - 2 5 | 1 - 4 - |
- | - E - 9 | 8 A - - | 6 - B - | 2 5 F - |
- | - 4 - - | 6 E - - | - - F 8 | - - - - |
- +---------+---------+---------+---------+
- | - 0 9 - | - 5 - - | - - - - | D F 8 - |
- | - - D C | - - - F | 3 5 0 - | - - - 7 |
- | 4 - - F | B 2 C - | A - - - | - - - - |
- | 6 7 - - | - - 4 - | - - D F | - - - 1 |
- +---------+---------+---------+---------+
+ 
 
  empty 4x4
  +---------+---------+---------+---------+
