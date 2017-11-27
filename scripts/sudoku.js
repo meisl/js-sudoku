@@ -38,13 +38,25 @@ define(["./cell", "./group"], function(cell, group) {
 								: out.symbol(v);
 						};
 					}
-					var hSep = "+" + "-".repeat(boxW * 2 + 1);
-					hSep = hSep.repeat(boxH) + "+\n";
+					function yStr(y) {
+						//return ((y + 1) + "").padStart((n+"").length, " ");
+						let result = (y + 1) + "";
+						return " ".repeat((n+"").length - result.length)
+							+ result;
+					}
+					let yPad = " ".repeat(yStr(0).length + 1);
+					var hSep = yPad
+						+ ("+" + "-".repeat(boxW * 2 + 1)).repeat(boxH)
+						+ "+"
+						//+ " " + yPad
+						+ "\n"
+					;
 					var result = hSep;
 					var y = 0;
 					for (let by = 0; by < boxW; by++) {
 						for (let y0 = 0; y0 < boxH; y0++) {
 							let x = 0;
+							result += yStr(y) + " ";
 							for (let bx = 0; bx < boxH; bx++) {
 								result += "| ";
 								for (let x0 = 0; x0 < boxW; x0++) {
@@ -52,7 +64,7 @@ define(["./cell", "./group"], function(cell, group) {
 									x++;
 								}
 							}
-							result += "|\n";
+							result += "| " + yStr(y) + "\n";
 							y++;
 						}
 						result += hSep;
@@ -164,34 +176,84 @@ define(["./cell", "./group"], function(cell, group) {
 			throw "sudoku.create: missing/bad options"
 		}
 	}
+	
+	function parseRow(params, y, line) {
+		console.log('"' + line + '"');
+		let c = params.start;
+		function fail(err) {
+			let myErr = err + "\n" + line + "\n" + " ".repeat(c-1) + "^";
+			console.log(params);
+			console.log(myErr);
+			throw myErr;
+		}
+		function chr(ch) {
+			if (line[c++] != ch)
+				fail("expected \"" + ch + "\" - found \"" + line[c-1] + "\"");
+		}
+		function addTodo(x, sym) {
+			let str = String.fromCharCode(65 + x) + (y+1) + "<-" + sym + "";
+			let todo = field => (field.cell(x, y).value = field.value(sym));
+			Object.defineProperty(todo, 'name', { writable: true });
+			todo.name = str
+			params.todos.push(todo);
+			params.todosStr.push(str);
+		}
+		let x = 0;
+		for (let bx = 0; bx < params.boxH; bx++) {
+			chr("|");
+			chr(" ");
+			for (let k = 0; k < params.boxW; k++) {
+				let sym = line[c++].match(/([0-9A-Za-z])|[ -]/);
+				if (sym) {
+					if (sym[1]) { // was [0-9A-Za-z]
+						params.symbols.add(sym[1]);
+						if (params.symbols.size > params.n)
+							fail("too many symbols found (" + [...params.symbols] + ")");
+						addTodo(x, sym[1]);
+					}
+				} else {
+					fail("expected /[- 0-9A-Za-z]/ - found \"" + line[c-1] + "\"");
+				}
+				chr(" ");
+				x++;
+			}
+		}
+		chr("|");
+		return params;
+	}
 
 	return {
 		create: create,
 		parse: s => {
-			var boxW, boxH, n, options, result;
 			var lines = s.split("\n");
 			var hSep = lines[0];
 			var t = hSep.split("+");
-			boxH = t.length - 2;
-			boxW = (t[1].length - 1)/2;
-			n = boxW * boxH;
-			
-			var symbols = new Set();
-			
-			lines.filter(line => line.startsWith("|"))
-				.forEach(line => {
-					line.split(/[- +|\r\n]/)
-						.filter(ch => ch != "")
-						.forEach(ch => symbols.add(ch));
-					;
-				})
-			;
-			if (symbols.size > n) {
-				throw "too many symbols found: " + [...symbols];
+			let p = {
+				boxH: t.length - 2,
+				boxW: (t[1].length - 1)/2,
+				start: t[0].length,
+				symbols: new Set(),
+				todos: [],
+				todosStr: []
 			}
+			p.n = p.boxW * p.boxH;
+			p.end = p.start + p.n*2 + p.boxH*2;
+			
+			let lineIdx = 1;
+			let y = 0;
+			for (let by = 0; by < p.boxW; by++) {
+				for (let k = 0; k < p.boxH; k++) {
+					parseRow(p, y, lines[lineIdx]);
+					y++;
+					lineIdx++;
+				}
+				// consume an hSep
+				lineIdx++;
+			}
+			
 			let ch = 1;
-			while (symbols.size < n) {
-				while (symbols.has(ch + "")) {
+			while (p.symbols.size < p.n) {
+				while (p.symbols.has(ch + "")) {
 					if (ch < 9) {
 						ch++;
 					} else if (ch == 9) {
@@ -200,28 +262,15 @@ define(["./cell", "./group"], function(cell, group) {
 						ch = String.fromCharCode(ch.charCodeAt(0) + 1);
 					}
 				}
-				symbols.add(ch + "");
+				p.symbols.add(ch + "");
 			}
 
-			options = { box: [boxW, boxH], symbols: [...symbols] };
-			result = create(options);
+			let options = { box: [p.boxW, p.boxH], symbols: [...p.symbols].sort() };
+			let result = create(options);
 			
-			let y = 0;
-			lines.filter(line => line.startsWith("|"))
-				.forEach(line => {
-					let x = 0;
-					line.split(/[| \r\n]+/)
-						.filter(ch => ch != "")
-						.forEach(ch => {
-							if (symbols.has(ch)) {
-								result.cell(x, y).value = result.value(ch);
-							}
-							x++;
-						});
-					;
-					y++;
-				})
-			;
+			p.todos.forEach(t => t(result));
+			console.log(options);
+			console.log(result.stringify());
 			
 			return result;
 		}
