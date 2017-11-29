@@ -181,7 +181,8 @@ define(["./cell", "./group"], function(cell, group) {
 		console.log('"' + line + '"');
 		let c = params.start;
 		function fail(err) {
-			let myErr = err + "\n" + line + "\n" + " ".repeat(c-1) + "^";
+			let myErr = err + "\n\"" + line + "\"\n" 
+				+ " ".repeat(c) + "^";
 			console.log(params);
 			console.log(myErr);
 			throw myErr;
@@ -225,13 +226,26 @@ define(["./cell", "./group"], function(cell, group) {
 	return {
 		create: create,
 		parse: s => {
-			var lines = s.split("\n");
-			var hSep = lines[0];
-			var t = hSep.split("+");
+			let lines = s.split("\n");
+			let lineIdx = 0;
+			let match;
+			while (!match) {
+				if (lineIdx >= lines.length) {
+					throw "expected horizontal separator \"+---..\"";
+				} else {
+					match = lines[lineIdx++].match(
+						/^( *)((\+((?:--)+)-)\3+\+) *$/);
+					if (match) {
+						break;
+					}
+				}
+			}
+
 			let p = {
-				boxH: t.length - 2,
-				boxW: (t[1].length - 1)/2,
-				start: t[0].length,
+				start: match[1].length,
+				hSep: match[2],
+				boxW: match[4].length / 2,
+				boxH: (match[2].length - 1) / match[3].length,
 				symbols: new Set(),
 				todos: [],
 				todosStr: []
@@ -239,7 +253,6 @@ define(["./cell", "./group"], function(cell, group) {
 			p.n = p.boxW * p.boxH;
 			p.end = p.start + p.n*2 + p.boxH*2;
 			
-			let lineIdx = 1;
 			let y = 0;
 			for (let by = 0; by < p.boxW; by++) {
 				for (let k = 0; k < p.boxH; k++) {
