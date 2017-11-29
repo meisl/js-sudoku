@@ -1,5 +1,48 @@
 
 define(["./cell", "./group"], function(cell, group) {
+
+	
+	function fromXcoord(xc) {
+		return xc.charCodeAt(0) - "A".charCodeAt(0);
+	}
+
+	function fromYcoord(yc) {
+		let result = Number.parseInt(yc);
+		result -= 1;
+		return result;
+	}
+
+	function toXcoord(x) {
+		return String.fromCharCode(x + 65);
+	}
+
+	function toYcoord(y) {
+		return (y + 1) + "";
+	}
+
+	function Field() {
+		
+	}
+	let p = Field.prototype = {};
+	function addAccessor(x, y) {
+		let coord = toXcoord(x) + toYcoord(y);
+		Object.defineProperty(p, coord, {
+			get: function () { return this.cell(x, y);  },
+			set: function (sym) {
+				let val = this.value(sym);
+				if (val === undefined)
+					throw coord + ".setValue: not a symbol: \"" + sym + "\"";
+				return (this.cell(x, y).value = val);  
+			},
+			enumerable: false,
+			configurable: false
+		});
+	}
+	for (let y = 0; y < 36; y++) {
+		for (let x = 0; x < 36; x++) {
+			addAccessor(x, y);
+		}
+	}
 	
 	function create(options) {
 		if (options && options.box) {
@@ -10,9 +53,23 @@ define(["./cell", "./group"], function(cell, group) {
 			var rows = new Array(n);
 			var columns = new Array(n);
 			var boxes = new Array(n);
-			var values2symbols = {};
-			var symbols2values = new Array(n);
 			var todos = [];
+			
+			let values2symbols = new Array(n);
+			let symbols2values = {};
+			if (options.symbols) {
+				for (let val = 0; val < n; val++) {
+					let sym = options.symbols[val];
+					values2symbols[val] = sym;
+					symbols2values[sym] = val;
+				}
+			} else {
+				for (var i = 0; i < n; i++) {
+					values2symbols[i] = i;
+					symbols2values[i] = i;
+				}
+			}
+
 			var out = {
 				n:         () => n,
 				boxW:      () => boxW,
@@ -26,9 +83,9 @@ define(["./cell", "./group"], function(cell, group) {
 						}
 					}
 				},
-				symbol:    v => symbols2values[v],
-				value:     s => values2symbols[s],
-				newSetOfValues: () => new Set(symbols2values.keys()),
+				symbol:    v => values2symbols[v],
+				value:     s => symbols2values[s],
+				newSetOfValues: () => new Set(values2symbols.keys()),
 				stringify: cellCb => {
 					if (cellCb === undefined) {
 						cellCb = c => {
@@ -169,18 +226,7 @@ define(["./cell", "./group"], function(cell, group) {
 			}
 			out.boxes = boxes;
 			
-			symbols2values = new Array(n);
-			if (options.symbols) {
-				for (var i = 0; i < n; i++) {
-					symbols2values[i] = options.symbols[i];
-					values2symbols[options.symbols[i]] = i;
-				}
-			} else {
-				for (var i = 0; i < n; i++) {
-					symbols2values[i] = i;
-					values2symbols[i] = i;
-				}
-			}
+			Object.setPrototypeOf(out, Field.prototype);
 			
 			return out;
 		} else {
@@ -235,6 +281,10 @@ define(["./cell", "./group"], function(cell, group) {
 	}
 
 	return {
+		fromXcoord: fromXcoord,
+		fromYcoord: fromYcoord,
+		toXcoord:   toXcoord,
+		toYcoord:   toYcoord,
 		create: create,
 		parse: s => {
 			let lines = s.split("\n");

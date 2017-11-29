@@ -110,6 +110,57 @@ require(["scripts/sudoku"], function(sudoku) {
 		}
 	});
 	
+	QUnit.test(".fromXcoord", function(assert) {
+		let xs = "ABCDEFGHI";
+		for (let x = 0; x < xs.length; x++) {
+			let cx = xs[x];
+			assert.equal(sudoku.fromXcoord(cx), x, 
+				"should map \"" + cx + "\" to " + x);
+		}
+	});
+	
+	QUnit.test(".toXcoord", function(assert) {
+		let xs = "ABCDEFGHI";
+		for (let x = 0; x < xs.length; x++) {
+			let cx = xs[x];
+			assert.equal(sudoku.toXcoord(x), cx, 
+				"should map x=" + x + " to \"" + cx + "\"");
+		}
+	});
+	
+	QUnit.test(".fromYcoord", function(assert) {
+		for (let y = 0; y < 16; y++) {
+			let cy = (y + 1) + "";
+			assert.equal(sudoku.fromYcoord(cy + ""), y, 
+				"should map \"" + cy + "\" to " + y);
+		}
+	});
+	
+	QUnit.test(".toYcoord", function(assert) {
+		for (let y = 0; y < 25; y++) {
+			let cy = (y + 1) + "";
+			assert.equal(sudoku.toYcoord(y), cy, 
+				"should map y=" + y + " to \"" + cy + "\"");
+		}
+	});
+
+	QUnit.test("accessing cells via field[coord]", function(assert) {
+		let xs = "ABCDEFGHIJKLMNOP";
+		let s = sudoku.create({ box: [4, 4]});
+		for (let y = 0; y < s.n(); y++) {
+			let cy = (y + 1) + "";
+			for (let x = 0; x < s.n(); x++) {
+				let cx = xs[x];
+				let c = cx + cy;
+				assert.strictEqual(s[c], s.cell(x,y), 
+					"cell (" + x + ", " + y + ") should be addressable via ." + c);
+			}
+		}
+		//s.A1 = "foo";
+		//console.log("xxxx ");
+		console.log(s);
+	});
+	
 	QUnit.test(".stringify (without symbols option)", function(assert) {
 		var bW = 2; var bH = 3; var n = bW*bH;
 		var s = sudoku.create({
