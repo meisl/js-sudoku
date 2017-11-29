@@ -45,17 +45,27 @@ define(["./cell", "./group"], function(cell, group) {
 							+ result;
 					}
 					let yPad = " ".repeat(yStr(0).length + 1);
-					var hSep = yPad
+					let xCoords = yPad;
+					let x = 0;
+					for (let bx = 0; bx < boxH; bx++) {
+						xCoords += "  ";
+						for (let x0 = 0; x0 < boxW; x0++) {
+							xCoords += String.fromCharCode(65 + x) + " ";
+							x++;
+						}
+					}
+					xCoords = xCoords.substring(0, xCoords.length - 1) + "\n";
+					let hSep = yPad
 						+ ("+" + "-".repeat(boxW * 2 + 1)).repeat(boxH)
 						+ "+"
 						//+ " " + yPad
 						+ "\n"
 					;
-					var result = hSep;
-					var y = 0;
+					let result = xCoords + hSep;
+					let y = 0;
 					for (let by = 0; by < boxW; by++) {
 						for (let y0 = 0; y0 < boxH; y0++) {
-							let x = 0;
+							x = 0;
 							result += yStr(y) + " ";
 							for (let bx = 0; bx < boxH; bx++) {
 								result += "| ";
@@ -69,6 +79,7 @@ define(["./cell", "./group"], function(cell, group) {
 						}
 						result += hSep;
 					}
+					result += xCoords;
 					return result;
 				},
 				addTodo: todo => todos.push(todo),
