@@ -278,7 +278,7 @@ require(["scripts/sudoku"], function(sudoku) {
 			+ "  +-----+-----+-----+"	+ "\n"
 			+ "    A B   C D   E F"		+ "\n"
 		;
-		symbols = ["1", "2", "a", "b", "c", "d"];
+		let symbols = ["1", "2", "a", "b", "c", "d"];
 		
 		s = sudoku.parse(t);
 		

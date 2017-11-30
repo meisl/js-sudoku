@@ -71,19 +71,19 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 		testGroupKind(s => s.boxes);
 		
 		function testGroupKind(chooseGroups) {
-			var boxW = 3;
-			var boxH = 2;
-			var s = sudoku.create({box: [boxW, boxH]});
-			var n = s.n();
-			var values = s.newSetOfValues();
+			let boxW = 3;
+			let boxH = 2;
+			let s = sudoku.create({box: [boxW, boxH]});
+			let n = s.n();
+			let values = s.newSetOfValues();
 			chooseGroups(s).forEach(g => {
-				var k = n - 1; // index of candidate to remove (later)
+				let k = n - 1; // index of candidate to remove (later)
 				values.forEach(v => {
-					cs = g.candidates(v);
+					let cs = g.candidates(v);
 					assert.equal(cs.size, n,
 						".candidates(" + v + ").size should be " + n);
-					var i = 0; // candidate index
-					var toRemove;
+					let i = 0; // candidate index
+					let toRemove;
 					cs.forEach(c => {
 						assert.ok(c.hasChoice(v), 
 							c.id + " as a candidate for " + v 
