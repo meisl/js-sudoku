@@ -3,6 +3,16 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 	QUnit.module("group");
 
 
+	QUnit.todo("row .id", function(assert) {
+		let boxW = 3;
+		let boxH = 2;
+		let s = sudoku.create({box: [boxW, boxH]});
+		for (let y = 0; y < boxW * boxH; y++) {
+			assert.equal(s.rows[y].id, "Row" + s.toYcoord(y),
+				"rows[" + y + "].id");
+		}
+	});
+
 	QUnit.test("assignment of cells to rows", function(assert) {
 		var boxW = 3;
 		var boxH = 2;

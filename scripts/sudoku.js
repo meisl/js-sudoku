@@ -41,8 +41,30 @@ define(["./cell", "./group"], function(cell, group) {
 			configurable: false
 		});
 	}
+	let xIdx2coord = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+				  ..."abcdefghijklmnopqrstuvwxyz"];
+	let xCoord2idx = {};
+	xIdx2coord.forEach( (cx, x) => xCoord2idx[cx] = x);
 	let p = Field.prototype = {
-		toCoord: (x,y) => toXcoord(x) + toYcoord(y)
+		fromXcoord: function (cx) {
+			if (typeof cx == "string") {
+				let x = xCoord2idx[cx];
+				if (x >= 0 && x < this.n())
+					return x;
+			}
+			throw "invalid x coord \"" + cx + "\"";
+		},
+		toXcoord: function (x) {
+			if (typeof x == "number") {
+				if (Math.floor(x) == x && x >= 0 && x < this.n())
+					return xIdx2coord[x];
+			}
+			throw "invalid x index " + x;
+		},
+		toCoord: function(x,y) {
+			return this.toXcoord(x) + toYcoord(y)
+		},
+		
 	};
 	function addAccessor(x, y) {
 		let coord = toXcoord(x) + toYcoord(y);
