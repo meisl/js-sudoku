@@ -9,7 +9,6 @@ define(function() {
 		var choices = f.newSetOfValues();
 		var value;
 		var out = {
-			id: "Cell(" + x + "," + y + ")",
 			field: () => f,
 			row: () => {
 				row = f.rows[y];
@@ -106,6 +105,13 @@ define(function() {
 				}
 			}
 		};
+		Object.defineProperty(out, "id", {
+			value: f.toCoord(x, y),
+			enumerable: true,
+			writable: false,
+			configurable: false
+
+		});
 		return out;
 	}
 

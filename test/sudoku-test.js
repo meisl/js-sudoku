@@ -49,9 +49,8 @@ require(["scripts/sudoku"], function(sudoku) {
 
 		var i = 0;
 		s.forEachCell( (c, x, y) => {
-			assert.equal(x, i % n, "x coord of " + c.id);
-			assert.equal(y, Math.floor(i / n), "y coord of " + c.id);
-			assert.strictEqual(c, s.cell(x, y), c.id + " === .cell(" + x + ", " + y + ")");
+			assert.equal(x, i % n, "x of cell " + c.id);
+			assert.equal(y, Math.floor(i / n), "y of cell " + c.id);
 			i++;
 		});
 	

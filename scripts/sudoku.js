@@ -20,10 +20,30 @@ define(["./cell", "./group"], function(cell, group) {
 		return (y + 1) + "";
 	}
 
-	function Field() {
-		
+	function Field(boxW, boxH) {
+		let n = boxW * boxH;
+		Object.defineProperty(this, "boxW", {
+			value: boxW,
+			enumerable: true,
+			writable: false,
+			configurable: false
+		});
+		Object.defineProperty(this, "boxH", {
+			value: boxH,
+			enumerable: true,
+			writable: false,
+			configurable: false
+		});
+		Object.defineProperty(this, "n", {
+			value: n,
+			enumerable: true,
+			writable: false,
+			configurable: false
+		});
 	}
-	let p = Field.prototype = {};
+	let p = Field.prototype = {
+		toCoord: (x,y) => toXcoord(x) + toYcoord(y)
+	};
 	function addAccessor(x, y) {
 		let coord = toXcoord(x) + toYcoord(y);
 		Object.defineProperty(p, coord, {
@@ -185,7 +205,8 @@ define(["./cell", "./group"], function(cell, group) {
 					return out.print().printTodos();
 				}
 			};
-			
+			Object.setPrototypeOf(out, Field.prototype);
+
 			var cells;
 			var x, y;
 			var row, column, box;
@@ -226,7 +247,6 @@ define(["./cell", "./group"], function(cell, group) {
 			}
 			out.boxes = boxes;
 			
-			Object.setPrototypeOf(out, Field.prototype);
 			
 			return out;
 		} else {

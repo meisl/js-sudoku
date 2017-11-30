@@ -22,6 +22,16 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		});
 	});
 
+	QUnit.test(".id", function(assert) {
+		var s = sudoku.create({box: [2, 3]});
+		
+		for (let y = 0; y < s.n(); y++) {
+			for (let x = 0; x < s.n(); x++) {
+				assert.equal(s.cell(x, y).id, sudoku.toXcoord(x) + sudoku.toYcoord(y));
+			}
+		}
+	});
+
 	QUnit.test(".row, .column, .box", function(assert) {
 		var boxW = 3;
 		var boxH = 2;
