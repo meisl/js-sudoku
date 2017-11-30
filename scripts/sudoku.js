@@ -75,6 +75,13 @@ define(["./cell", "./group"], function(cell, group) {
 			}
 			throw "invalid y coord \"" + cy + "\"";
 		},
+		toYcoord: function (y) {
+			if (typeof y == "number") {
+				if (Math.floor(y) == y && y >= 0 && y < this.n())
+					return yIdx2coord[y];
+			}
+			throw "invalid y index " + y;
+		},
 		toCoord: function(x,y) {
 			return this.toXcoord(x) + toYcoord(y)
 		},
