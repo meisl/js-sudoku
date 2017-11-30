@@ -48,33 +48,62 @@ require(["scripts/sudoku"], function(sudoku) {
 		
 	QUnit.test(".fromXcoord with invalid arg", function(assert) {
 		let s, xs;
-		s = sudoku.create({ box: [2, 4] });
-		xs = [..."IJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz[\\]^_`0123456789",
-			0,1,2,3,4,5,6,7,8,9];
-
-		assert.throws( () => s.fromXcoord(), "with no arg");
-		assert.throws( () => s.fromXcoord(undefined), "with undefined");
-		assert.throws( () => s.fromXcoord(null), "with null");
-		assert.throws( () => s.fromXcoord({}), "with an object");
-		assert.throws( () => s.fromXcoord(["A"]), "with an array");
-		assert.throws( () => s.fromXcoord(""), "with empty string");
-		assert.throws( () => s.fromXcoord("AB"), "with string longer than 1 char");
-		assert.throws( () => s.fromXcoord(3.1415), "with a non-integer number");
-
-		for (let x = 0; x < xs.length; x++) {
-			let cx = xs[x];
-			assert.throws( () => s.fromXcoord(cx), /invalid/, 
-				s.boxW() + "x" + s.boxH() + ": with x-coord out of range: " + cx);
+		function test(boxW, boxH, xs) {
+			let s = sudoku.create({ box: [boxW, boxH] });
+			let n = boxW * boxH;
+			let prefix = boxW + "x" + boxH + ": ";
+			assert.throws( () => s.fromXcoord(), prefix + "with no arg");
+			assert.throws( () => s.fromXcoord(undefined), prefix + "with undefined");
+			assert.throws( () => s.fromXcoord(null), prefix + "with null");
+			assert.throws( () => s.fromXcoord({}), prefix + "with an object");
+			assert.throws( () => s.fromXcoord(["A"]), prefix + "with an array");
+			assert.throws( () => s.fromXcoord(""), prefix + "with empty string");
+			assert.throws( () => s.fromXcoord("AB"), prefix + "with string longer than 1 char");
+			assert.throws( () => s.fromXcoord(3.1415), prefix + "with a non-integer number");
+			for (let x = 0; x < n; x++) {
+				let cx = xs[x];
+				assert.throws( () => s.fromXcoord(cx), /invalid/, 
+					prefix + "with x-coord out of range: " + cx);
+			}
 		}
-
-		s = sudoku.create({ box: [6, 6] });
-		xs = [..."klmnopqrstuvwxyz[\\]^_`0123456789",
-			0,1,2,3,4,5,6,7,8,9];
-		for (let x = 0; x < xs.length; x++) {
-			let cx = xs[x];
-			assert.throws( () => s.fromXcoord(cx), /invalid/, 
-				s.boxW() + "x" + s.boxH() + ": with x-coord out of range: " + cx);
+		test(2, 4, [
+			...range("I", "Z"), ...range("a", "z"), ..."[\\]^_`",
+			...range("0", "9"), ...range(0, 9)
+		]);
+		test(6, 6, [
+			                    ...range("k", "z"), ..."[\\]^_`",
+			...range("0", "9"), ...range(0, 9)
+		]);
+	});
+		
+	QUnit.test(".fromYcoord with invalid arg", function(assert) {
+		let s, ys;
+		function test(boxW, boxH, ys) {
+			let s = sudoku.create({ box: [boxW, boxH] });
+			let n = boxW * boxH;
+			let prefix = boxW + "x" + boxH + ": ";
+			assert.throws( () => s.fromYcoord(), prefix + "with no arg");
+			assert.throws( () => s.fromYcoord(undefined), prefix + "with undefined");
+			assert.throws( () => s.fromYcoord(null), prefix + "with null");
+			assert.throws( () => s.fromYcoord({}), prefix + "with an object");
+			assert.throws( () => s.fromYcoord(["A"]), prefix + "with an array");
+			assert.throws( () => s.fromYcoord(""), prefix + "with empty string");
+			assert.throws( () => s.fromYcoord("AB"), prefix + "with string longer than 1 char");
+			assert.throws( () => s.fromYcoord(3.1415), prefix + "with a non-integer number");
+			for (let y = 0; y < n; y++) {
+				let cy = ys[y];
+				assert.throws( () => s.fromYcoord(cy), /invalid/, 
+					prefix + "with y-coord out of range: " + cy);
+			}
 		}
+		test(2, 4, [
+			...range("A", "Z"), ...range("a", "z"), ..."[\\]^_`",
+			"0", "9", 0, ...range(9, 49)
+		]);
+		test(6, 6, [
+			...range("A", "Z"), ...range("a", "z"), ..."[\\]^_`",
+			"0", "9", 0, ...range(37, 49)
+		]);
 	});
 	
 	QUnit.test(".toXcoord", function(assert) {
