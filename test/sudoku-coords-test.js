@@ -1,27 +1,51 @@
 require(["scripts/sudoku"], function(sudoku) {
 
+	function* range(lo, hi) {
+		if (typeof lo == "string") {
+			lo = lo.charCodeAt(0);
+			hi = hi.charCodeAt(0);
+			while (lo <= hi) yield String.fromCharCode(lo++);
+		} else {
+			while (lo <= hi) yield lo++;
+		}
+	}
+
 	QUnit.module("sudoku-coords");
 	
 	QUnit.test(".fromXcoord", function(assert) {
-		let s, xs;
-		s = sudoku.create({ box: [2, 4] });
-		xs = "ABCDEFGH";
-		assert.equal(xs.length, s.n(), "testing all " + xs.length + " valid x-coords");
-		for (let x = 0; x < xs.length; x++) {
-			let cx = xs[x];
-			assert.equal(s.fromXcoord(cx), x, 
-				"should map \"" + cx + "\" to " + x);
+		function test(boxW, boxH, xs) {
+			let s = sudoku.create({ box: [boxW, boxH] });
+			let n = boxW * boxH;
+			let prefix = boxW + "x" + boxH + ": ";
+			assert.equal(xs.length, n,
+				prefix + "testing all " + n + " valid x-coords");
+			for (let x = 0; x < n; x++) {
+				let cx = xs[x];
+				assert.equal(s.fromXcoord(cx), x, 
+					prefix + "should map x-coord \"" + cx + "\" to x-index " + x);
+			}
 		}
-		s = sudoku.create({ box: [6, 6] });
-		xs = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij";
-		assert.equal(xs.length, s.n(), "testing all " + xs.length + " valid x-coords");
-		for (let x = 0; x < xs.length; x++) {
-			let cx = xs[x];
-			assert.equal(s.fromXcoord(cx), x, 
-				"should map \"" + cx + "\" to " + x);
-		}
+		test(2, 4, [...range("A", "H")]);
+		test(6, 6, [...range("A", "Z"), ...range("a", "j")]);
 	});
-	
+
+	QUnit.test(".fromYcoord", function(assert) {
+		function test(boxW, boxH, ys) {
+			let s = sudoku.create({ box: [boxW, boxH] });
+			let n = boxW * boxH;
+			let prefix = boxW + "x" + boxH + ": ";
+			assert.equal(ys.length, n, 
+				prefix + "testing all " + n + " valid y-coords");
+			for (let y = 0; y < n; y++) {
+				let cy = ys[y];
+				assert.equal(s.fromYcoord(cy), y, 
+					prefix + "should map y-coord \"" + cy + "\" to y-index " + y);
+			}
+		}
+		test(2, 4, [...range(1, 8)]);
+		test(6, 6, [...range(1, 36)]);
+	});
+		
 	QUnit.test(".fromXcoord with invalid arg", function(assert) {
 		let s, xs;
 		s = sudoku.create({ box: [2, 4] });
@@ -104,14 +128,10 @@ require(["scripts/sudoku"], function(sudoku) {
 		}
 
 	});
+
+
 	
-	QUnit.test(".fromYcoord", function(assert) {
-		for (let y = 0; y < 16; y++) {
-			let cy = (y + 1) + "";
-			assert.equal(sudoku.fromYcoord(cy + ""), y, 
-				"should map \"" + cy + "\" to " + y);
-		}
-	});
+
 	
 	QUnit.test(".toYcoord", function(assert) {
 		for (let y = 0; y < 25; y++) {

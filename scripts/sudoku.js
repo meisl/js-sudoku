@@ -41,10 +41,16 @@ define(["./cell", "./group"], function(cell, group) {
 			configurable: false
 		});
 	}
-	let xIdx2coord = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-				  ..."abcdefghijklmnopqrstuvwxyz"];
+	
+	let xIdx2coord = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", ..."abcdefghijklmnopqrstuvwxyz"];
 	let xCoord2idx = {};
 	xIdx2coord.forEach( (cx, x) => xCoord2idx[cx] = x);
+
+	let yIdx2coord = xIdx2coord.map( (cx, i) => (i + 1) + "");
+	let yCoord2idx = {};
+	yIdx2coord.forEach( (cy, y) => yCoord2idx[cy] = y);
+	
+
 	let p = Field.prototype = {
 		fromXcoord: function (cx) {
 			if (typeof cx == "string") {
@@ -60,6 +66,14 @@ define(["./cell", "./group"], function(cell, group) {
 					return xIdx2coord[x];
 			}
 			throw "invalid x index " + x;
+		},
+		fromYcoord: function (cy) {
+			if ((typeof cy == "string") || (typeof cy == "number")) {
+				let y = yCoord2idx[cy];
+				if (y >= 0 && y < this.n())
+					return y;
+			}
+			throw "invalid y coord \"" + cy + "\"";
 		},
 		toCoord: function(x,y) {
 			return this.toXcoord(x) + toYcoord(y)
