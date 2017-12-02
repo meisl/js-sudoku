@@ -32,10 +32,7 @@ define(["./cell"], function(cell) {
 				for (let v = 0; v < n; v++) {
 					let cs = candidates[v];
 					if (cs.size > 1) {
-						x[v] = [...cs]
-							.map(c => c.str)
-							.join(", ")
-						;
+						x[field.symbol(v)] = [...cs].join(", ");
 					}
 				}
 				return x;

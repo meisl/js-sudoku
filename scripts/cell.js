@@ -40,12 +40,13 @@ define(function() {
 				return out.forEachGroup(cb);
 			},
 			choiceCount: () => choices.size,
-			get str() { 
-				let result = String.fromCharCode(x + "A".charCodeAt(0)) + y
-					+ "{" + [...choices].join(",") + "}"
-				;
-				return result;
-			
+			toString: function () {
+				return this.id + "{" 
+					+ [...choices]
+						.map(v => f.symbol(v))
+						.sort()
+						.join(",")
+					+ "}";
 			},
 			forEachChoice: cb => choices.forEach(cb),
 			hasChoice: v => choices.has(v),

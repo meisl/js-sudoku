@@ -218,6 +218,13 @@ define(["./cell", "./group"], function(cell, group) {
 					});
 					return out.print().printTodos();
 				},
+				do_fp: function () {
+					let n;
+					do {
+						n = todos.length;
+						this.do();
+					} while (n < todos.length);
+				},
 				printTodos: showDone => {
 					todos.forEach((td, i) => {
 						if (showDone || (typeof td == "function")) {

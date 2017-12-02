@@ -32,6 +32,22 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		}
 	});
 
+	QUnit.test(".toString", function(assert) {
+		var s = sudoku.create({box: [2, 3], symbols: [..."ABCDEF"]});
+		
+		s.forEachCell(c => {
+			let choices = [];
+			c.forEachChoice(v => choices.push(v));
+			choicesStr = choices
+				.map(v => s.symbol(v))
+				.sort()
+				.join(",")
+			;
+			assert.equal(c.toString(), 
+				c.id + "{" + choicesStr + "}", c.id + "{" + choicesStr + "}");
+		});
+	});
+
 	QUnit.test(".row, .column, .box", function(assert) {
 		var boxW = 3;
 		var boxH = 2;
