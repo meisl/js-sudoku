@@ -259,7 +259,7 @@ define(["./cell", "./group"], function(cell, group) {
 				for (x = 0; x < n; x++) {
 					cells[x] = cell.create(out, x, y);
 				}
-				row = group.create(out, cells);
+				row = group.create(out, cells, "Row_" + out.toYcoord(y));
 				rows[y] = row;
 			}
 			out.rows = rows;
@@ -269,7 +269,7 @@ define(["./cell", "./group"], function(cell, group) {
 				for (y = 0; y < n; y++) {
 					cells[y] = out.cell(x, y);
 				}
-				column = group.create(out, cells);
+				column = group.create(out, cells, "Col_" + out.toXcoord(x));
 				columns[x] = column;
 			}
 			out.columns = columns;
@@ -284,7 +284,7 @@ define(["./cell", "./group"], function(cell, group) {
 							cells[k++] = out.cell(x, y);
 						}
 					}
-					box = group.create(out, cells);
+					box = group.create(out, cells, "Box_" + toXcoord(bx) + toYcoord(by));
 					boxes[i++] = box;
 				}
 			}

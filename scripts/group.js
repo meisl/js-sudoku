@@ -1,19 +1,33 @@
 
 define(["./cell"], function(cell) {
-	
-	function createGroup(field, cells) {
+
+	function Group (field, cells, id) {
+		Object.defineProperty(this, "id", {
+			value: id,
+			enumerable: true,
+			writable: false,
+			configurable: false
+		})
+	}
+	Group.prototype = {
+
+
+	};
+
+	function createGroup(field, cells, id) {
 		var n = field.n();
 		var candidates = new Array(n);
 		for (var i = 0; i < n; i++) {
 			candidates[i] = new Set(cells);
 		}
-		var out = {
-			field: () => field,
-			cell:  i => cells[i],
-			candidates: v => {
-				return candidates[v];
-			},
-			get cs() {
+		var out = new Group(field, cells, id);
+		out.field = () => field;
+		out.cell =  i => cells[i];
+		out.candidates = v => {
+			return candidates[v];
+		};
+		Object.defineProperty(out, "cs", {
+			get: function () {
 				let x = {};
 				for (let v = 0; v < n; v++) {
 					let cs = candidates[v];
@@ -25,33 +39,34 @@ define(["./cell"], function(cell) {
 					}
 				}
 				return x;
-			},
-			removeCandidate: (c, v) => {
-				let cs = candidates[v];
-				if (candidates[v].delete(c)) {
-					c.removeChoice(v);
-					if (cs.size == 1) {
-						let d = [...cs].pop();
-						if (!d.isFixated) {
-							let todo = () => { d.value = v; };
-							todo.toString = () => d.id 
-								+ ": last candidate for " + v + " in " + out;
-							field.addTodo(todo, 
-								d.id + ": last candidate for " + v + " in " + out
-							);
-							/*
-							d.forEachChoice(u => {
-								if (u != v) {
-									d.removeChoice(u);
-								}
-							});
-							*/
-						}
+			}
+		});
+		out.removeCandidate = function (c, v) {
+			let cs = candidates[v];
+			if (candidates[v].delete(c)) {
+				c.removeChoice(v);
+				if (cs.size == 1) {
+					let d = [...cs].pop();
+					if (!d.isFixated) {
+						let todo = () => { d.value = v; };
+						let desc = d.id 
+							+ " := " + field.symbol(v) 
+							+ " (last candidate in " + id + ")";
+						todo.toString = () => desc;
+						field.addTodo(todo, desc);
+						/*
+						d.forEachChoice(u => {
+							if (u != v) {
+								d.removeChoice(u);
+							}
+						});
+						*/
 					}
 				}
-			},
-			hasCandidate: (c, v) => candidates[v].has(c)
+			}
 		};
+		out.hasCandidate = (c, v) => candidates[v].has(c);
+
 		return out;
 	}
 	

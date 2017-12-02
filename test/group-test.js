@@ -2,14 +2,36 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 
 	QUnit.module("group");
 
-
-	QUnit.todo("row .id", function(assert) {
+	QUnit.test("row .id", function(assert) {
 		let boxW = 3;
 		let boxH = 2;
 		let s = sudoku.create({box: [boxW, boxH]});
 		for (let y = 0; y < boxW * boxH; y++) {
-			assert.equal(s.rows[y].id, "Row" + s.toYcoord(y),
+			assert.equal(s.rows[y].id, "Row_" + s.toYcoord(y),
 				"rows[" + y + "].id");
+		}
+	});
+
+	QUnit.test("column .id", function(assert) {
+		let boxW = 3;
+		let boxH = 2;
+		let s = sudoku.create({box: [boxW, boxH]});
+		for (let x = 0; x < boxW * boxH; x++) {
+			assert.equal(s.columns[x].id, "Col_" + s.toXcoord(x),
+				"columns[" + x + "].id");
+		}
+	});
+
+
+	QUnit.test("box .id", function(assert) {
+		let boxW = 3;
+		let boxH = 2;
+		let s = sudoku.create({box: [boxW, boxH]});
+		for (let i = 0; i < boxW * boxH; i++) {
+			let bx = i % boxH;
+			let by = Math.floor(i / boxH);
+			assert.equal(s.boxes[i].id, "Box_" + s.toXcoord(bx) + s.toYcoord(by),
+				"columns[" + i + "].id");
 		}
 	});
 
