@@ -122,7 +122,7 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 					assert.notOk(toRemove.hasChoice(v), "after removeCandidate(" 
 						+ toRemove.id + ", " + v + "): " + toRemove.id 
 						+ ".hasChoice(" + v + ") should be false");
-					toRemove.forEachGroup(h => {
+					toRemove.groups.forEach(h => {
 						assert.notOk(g.hasCandidate(toRemove, v),
 							+ toRemove.id + " should not be a candidate for " + v
 							+ "in group " + h + " anymore");

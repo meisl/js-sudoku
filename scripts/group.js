@@ -3,10 +3,9 @@ define(["./cell"], function(cell) {
 
 	function Group (field, cells, id) {
 		Object.defineProperty(this, "id", {
-			value: id,
-			enumerable: true,
-			writable: false,
-			configurable: false
+			value: id,		writable: false,
+							enumerable: true,
+							configurable: false
 		})
 	}
 	Group.prototype = {

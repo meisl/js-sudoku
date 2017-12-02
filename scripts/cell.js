@@ -11,28 +11,27 @@ define(function() {
 		};
 		Object.defineProperties(this, {
 			id: {
-				value: field.toCoord(x, y),
-				enumerable: true,
-				writable: false,
-				configurable: false
+				value: field.toCoord(x, y),	writable: false,
+											enumerable: true,
+											configurable: false
 			},
 			x: {
-				value: x,
-				enumerable: true,
-				writable: false,
-				configurable: false
+				value: x,	writable: false,
+							enumerable: true,
+							configurable: false
 			},
 			y: {
-				value: y,
-				enumerable: true,
-				writable: false,
-				configurable: false
+				value: y,	writable: false,
+							enumerable: true,
+							configurable: false
 			},
 			field: {
-				get () { return field; },
-				enumerable: true,
-				configurable: false
+				//get () { return field; },
+				value: field, 	writable: false,
+								enumerable: true,
+								configurable: false
 			},
+
 			value: {
 				get () { return value; },
 				set (v) {
@@ -45,7 +44,7 @@ define(function() {
 										this.removeChoice(u);
 									}
 								});
-								this.forEachGroup(g => {
+								this.groups.forEach(g => {
 									g.candidates(v).forEach(c => {
 										if (c !== this)
 											c.removeChoice(v);
@@ -103,11 +102,12 @@ define(function() {
 			removeChoice: {
 				value: function (v) {
 					if (choices.delete(v)) {
-						this.forEachGroup(g => g.removeCandidate(this, v));
+						this.groups.forEach(g => g.removeCandidate(this, v));
 						if (this.canBeFixated) {
 							let u = [...this.choices].pop();
 							let todo = () => this.value = u;
-							todo.toString = () => this.id + ":=" + this.field.symbol(v) + " (last choice)";
+							todo.toString = () => this.id + " := " + this.field.symbol(v)
+								+ " (last choice)";
 							this.field.addTodo(todo);
 						}
 					}
@@ -123,20 +123,18 @@ define(function() {
 		row: function row() {
 			let g = this.field.rows[this.y];
 			Object.defineProperty(this, "row", {
-				value: function () { return g; },
-				enumerable: true,
-				writable: false,
-				configurable: false
+				value: function () { return g; },	writable: false,
+													enumerable: true,
+													configurable: false
 			});
 			return g;
 		},
 		column: function column() {
 			let g = this.field.columns[this.x];
 			Object.defineProperty(this, "column", {
-				value: function () { return g; },
-				enumerable: true,
-				writable: false,
-				configurable: false
+				value: function () { return g; },	writable: false,
+													enumerable: true,
+													configurable: false
 			});
 			return g;
 		},
@@ -145,12 +143,29 @@ define(function() {
 				+ Math.floor(this.y / this.field.boxH()) * this.field.boxH();
 			let g = this.field.boxes[i];
 			Object.defineProperty(this, "box", {
-				value: function () { return g; },
-				enumerable: true,
-				writable: false,
-				configurable: false
+				value: function () { return g; },	writable: false,
+													enumerable: true,
+													configurable: false
 			});
 			return g;
+		},
+		get groups() {
+			let gsAr = [this.row(), this.column(), this.box()];
+			let gsIt = gsAr[Symbol.iterator]();
+			let gs = {
+				[Symbol.iterator]: () => gsIt,
+				size:    gsAr.length,
+				length:  gsAr.length,
+				forEach: cb => gsAr.forEach(cb),
+				filter:  cb => gsAr.filter(cb),
+				map:     cb => gsAr.map(cb),
+			};
+			Object.defineProperty(this, "groups", {
+				value: gs,	writable: false,
+							enumerable: true,
+							configurable: false
+			});
+			return gs;
 		},
 		toString: function () {
 			return this.id + "{" 
@@ -165,25 +180,8 @@ define(function() {
 		hasChoice: function (v) { return this.choices.has(v); }
 
 	};
-	
-	function create(f, x, y) {
-		var out = new Cell(f, x, y);
-		out.forEachGroup = cb => {
-			let row = out.row();
-			let column = out.column();
-			let box = out.box();
-			out.forEachGroup = cb => {
-				cb(row);
-				cb(column);
-				cb(box);
-			};
-			return out.forEachGroup(cb);
-		};
-			
-		return out;
-	}
 
 	return {
-		create: (field, x, y) => create(field, x, y),
+		create: (field, x, y) => new Cell(field, x, y),
 	};
 });

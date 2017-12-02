@@ -76,7 +76,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		s.forEachCell(c => {
 			var i = 0;
 			var groups = new Array(3);
-			c.forEachGroup(g => {
+			c.groups.forEach(g => {
 				groups[i++] = g;
 				assert.equal(typeof g, "object", 
 					c.id + ": " + i + ". group is an object");
@@ -151,7 +151,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 					assert.notOk(c.hasChoice(w), c.id + " should NOT have choice " + w);
 				}
 			}
-			c.forEachGroup(g => {
+			c.groups.forEach(g => {
 				assert.notOk(g.hasCandidate(c, v), 
 					c.id + ": after removeChoice(" + v + ")"
 					+ " no more candidate for value " + v 
@@ -210,7 +210,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 				c.id + ".canBeFixated should be false after setting .value = " + v1);
 			assert.ok(c.hasChoice(v1), 
 				c.id + " still has choice " + v1 + " after setting .value = " + v1);
-			c.forEachGroup(g => {
+			c.groups.forEach(g => {
 				assert.ok(g.hasCandidate(c, v1),
 					g.id + " still has " + c + " as candidate for " + v1);
 				assert.equal(g.candidates(v1).size, 1, 
