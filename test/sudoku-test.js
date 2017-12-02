@@ -262,10 +262,8 @@ require(["scripts/sudoku"], function(sudoku) {
 		*/
 	});
 	
-	QUnit.test(".parse", function(assert) {
-		var t, s;
-		
-		t = ""
+	QUnit.test(".parse 2x3", function(assert) {
+		let t = ""
 			+ "    A B   C D   E F"		+ "\n"
 			+ "  +-----+-----+-----+"	+ "\n"
 			+ "1 | a - | - - | - - | 1"	+ "\n"
@@ -280,7 +278,7 @@ require(["scripts/sudoku"], function(sudoku) {
 		;
 		let symbols = ["1", "2", "a", "b", "c", "d"];
 		
-		s = sudoku.parse(t);
+		let s = sudoku.parse(t);
 		
 		assert.equal(s.n(), 6, "n");
 		assert.equal(s.boxW(), 2, "boxW");
@@ -291,8 +289,10 @@ require(["scripts/sudoku"], function(sudoku) {
 		}
 		
 		//assert.equal(s.stringify(), t, ".parse(s).stringify() should equal s");
+	});
 
-		t = ""
+	QUnit.test(".parse 3x3", function(assert) {
+		let t = ""
 			+ "    A B C   D E F   G H I"		+ "\n"
 			+ "  +-------+-------+-------+"		+ "\n"
 			+ "1 | - 4 - | 8 - - | - 7 3 | 1"	+ "\n"
@@ -309,8 +309,16 @@ require(["scripts/sudoku"], function(sudoku) {
 			+ "  +-------+-------+-------+"		+ "\n"
 			+ "    A B C   D E F   G H I"		+ "\n"
 		;
+
+		let s = sudoku.parse(t);
+
+		assert.equal(s.n(), 9, "n");
+		assert.equal(s.boxW(), 3, "boxW");
+		assert.equal(s.boxH(), 3, "boxH");
+	});
 		
-		t = "" // Elektor 558
+	QUnit.test(".parse 4x4 (Elektor 558)", function(assert) {
+		let t = "" 
  			+ "     A B C D   E F G H   I J K L   M N O P     "	+ "\n"
 			+ "   +---------+---------+---------+---------+"	+ "\n"
  			+ " 1 | 0 - 4 - | - - - - | - - - D | F 3 7 E |  1"	+ "\n" // 0
@@ -337,7 +345,12 @@ require(["scripts/sudoku"], function(sudoku) {
 		;	//   0 1 2 3   4 5 6 7   8 9 A B   C D E F
 		
 		
-		s = sudoku.parse(t);
+		let s = sudoku.parse(t);
+		
+		assert.equal(s.n(), 16, "n");
+		assert.equal(s.boxW(), 4, "boxW");
+		assert.equal(s.boxH(), 4, "boxH");
+
 		
 		s.print().printTodos();
 		

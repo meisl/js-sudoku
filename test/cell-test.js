@@ -42,7 +42,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		s.forEachCell(c => {
 			let choices = [];
 			c.forEachChoice(v => choices.push(v));
-			choicesStr = choices
+			let choicesStr = choices
 				.map(v => s.symbol(v))
 				.sort()
 				.join(",")
@@ -185,14 +185,6 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			assert.equal(c.canBeFixated, c.choiceCount() == 1, 
 				c.id + ".canBeFixated should be " + (c.choiceCount() == 1) 
 				+ " (choiceCount == " + c.choiceCount() + ")");
-			assert.throws( () => { c.isFixated = true; },
-				".isFixated is a getter only");
-			assert.throws( () => { c.isFixated = false; },
-				".isFixated is a getter only");
-			assert.throws( () => { c.canBeFixated = true; },
-				".canBeFixated is a getter only");
-			assert.throws( () => { c.canBeFixated = false; },
-				".isFixated is a getter only");
 			assert.throws( () => { c.value = undefined; }, /not a value/,
 				"trying .value = undefined should throw");
 			assert.throws( () => { c.value = -1; }, /not a value/,
@@ -220,9 +212,9 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 				c.id + " still has choice " + v1 + " after setting .value = " + v1);
 			c.forEachGroup(g => {
 				assert.ok(g.hasCandidate(c, v1),
-					"group " + g + " still has it as candidate for " + v1);
+					g.id + " still has " + c + " as candidate for " + v1);
 				assert.equal(g.candidates(v1).size, 1, 
-					"group " + g + " has only " + c.id + " as candidate for " + v1);
+					g.id + " has only " + c + " as candidate for " + v1);
 			});
 			
 			
