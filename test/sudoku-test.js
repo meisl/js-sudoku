@@ -36,8 +36,8 @@ require(["scripts/sudoku"], function(sudoku) {
 				var cellStr = ".cell(" + x + ", " + y + ")"
 				assert.equal(typeof cell, "object", 
 					cellStr + " is an object");
-				assert.strictEqual(cell.field(), s, 
-					cellStr + ".field() points to sudoku instance");
+				assert.strictEqual(cell.field, s, 
+					cellStr + "cell.field points to sudoku instance");
 			}
 		}
 	});

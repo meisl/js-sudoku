@@ -9,7 +9,7 @@ define(function() {
 		var choices = f.newSetOfValues();
 		var value;
 		var out = {
-			field: () => f,
+			get field() { return f; },
 			row: () => {
 				row = f.rows[y];
 				out.row = () => row;
@@ -106,12 +106,25 @@ define(function() {
 				}
 			}
 		};
-		Object.defineProperty(out, "id", {
-			value: f.toCoord(x, y),
-			enumerable: true,
-			writable: false,
-			configurable: false
-
+		Object.defineProperties(out, {
+			id: {
+				value: f.toCoord(x, y),
+				enumerable: true,
+				writable: false,
+				configurable: false
+			},
+			x: {
+				value: x,
+				enumerable: true,
+				writable: false,
+				configurable: false
+			},
+			y: {
+				value: y,
+				enumerable: true,
+				writable: false,
+				configurable: false
+			}
 		});
 		return out;
 	}

@@ -15,10 +15,13 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		var t = sudoku.create({box: [2, 3]});
 
 		s.forEachCell(c => {
-			assert.strictEqual(c.field(), s, 
-				c.id + ": .field() returns the sudoku instance that created the cell");
-			assert.notStrictEqual(c.field(), t, 
+			assert.strictEqual(c.field, s, 
+				c.id + ": .field returns the sudoku instance that created the cell");
+			assert.notStrictEqual(c.field, t, 
 				"(make sure strictEqual knows object identity)");
+			c.field = null;
+			assert.strictEqual(c.field, s, 
+				"assigning " + c.id + ": .field does nothing");
 		});
 	});
 
@@ -27,7 +30,8 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		
 		for (let y = 0; y < s.n(); y++) {
 			for (let x = 0; x < s.n(); x++) {
-				assert.equal(s.cell(x, y).id, sudoku.toXcoord(x) + sudoku.toYcoord(y));
+				let c = s.cell(x, y);
+				assert.equal(c.id, sudoku.toXcoord(x) + sudoku.toYcoord(y));
 			}
 		}
 	});
@@ -76,8 +80,8 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 				groups[i++] = g;
 				assert.equal(typeof g, "object", 
 					c.id + ": " + i + ". group is an object");
-				assert.strictEqual(g.field(), c.field(),
-					c.id + ": " + i + ". group's .field() points to same as cell.field()");
+				assert.strictEqual(g.field(), c.field,
+					c.id + ": " + i + ". group's .field() points to same as cell.field");
 				for (var k = 0; k < i-1; k++) {
 					assert.notStrictEqual(g, groups[k],
 						c.id + ": " + i + ". group !== " + (k+1) + ". group");
