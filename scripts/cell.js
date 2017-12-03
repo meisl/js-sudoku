@@ -4,32 +4,25 @@ define(function() {
 	function Cell(field, x, y) {
 		let value;
 		let choices = field.newSetOfValues();
-		let choicesRO = {
-			get size() { return choices.size; },
-			has: v => choices.has(v),
-			[Symbol.iterator]: () => choices[Symbol.iterator](),
-		};
+		let choicesRO = Object.create(null, {
+			size: {
+				get () { return choices.size; }
+			},
+			has: {
+				value: v => choices.has(v),
+			},
+			[Symbol.iterator]: {
+				value: () => choices[Symbol.iterator]()
+			}
+		});
+
 		Object.defineProperties(this, {
-			id: {
-				value: field.toCoord(x, y),	writable: false,
-											enumerable: true,
-											configurable: false
-			},
-			x: {
-				value: x,	writable: false,
-							enumerable: true,
-							configurable: false
-			},
-			y: {
-				value: y,	writable: false,
-							enumerable: true,
-							configurable: false
-			},
+			id: { value: field.toCoord(x, y),	enumerable: true },
+			x:  { value: x },
+			y:  { value: y },
 			field: {
 				//get () { return field; },
 				value: field, 	writable: false,
-								enumerable: true,
-								configurable: false
 			},
 
 			value: {
@@ -73,29 +66,11 @@ define(function() {
 			},
 		});
 		Object.defineProperties(this, {
-			isFixated: {
-				get () { return value !== undefined },
-				enumerable: true,
-				configurable: false
-			},
-			canBeFixated: {
-				get () { return !this.isFixated && choices.size == 1 },
-				enumerable: true,
-				configurable: false
-			},
-			isLastCandidate: {
-				get () {
-					return [...this.choices].some(
-						v => [...this.groups].some(
-							g => g.candidates(v).size == 1
-						)
-					);
-				},
-				enumerable: true,
-				configurable: false
-			},
+
 			choices: {
-				get () { return choicesRO },
+				get () { 
+					return choicesRO;
+				},
 				enumerable: true,
 				configurable: false
 			},
@@ -124,7 +99,7 @@ define(function() {
 			let g = this.field.rows[this.y];
 			Object.defineProperty(this, "row", {
 				value: g,	writable: false,
-							enumerable: true,
+							enumerable: false,
 							configurable: false
 			});
 			return g;
@@ -133,7 +108,7 @@ define(function() {
 			let g = this.field.columns[this.x];
 			Object.defineProperty(this, "col", {
 				value: g,	writable: false,
-							enumerable: true,
+							enumerable: false,
 							configurable: false
 			});
 			return g;
@@ -144,7 +119,7 @@ define(function() {
 			let g = this.field.boxes[i];
 			Object.defineProperty(this, "box", {
 				value: g,	writable: false,
-							enumerable: true,
+							enumerable: false,
 							configurable: false
 			});
 			return g;
@@ -161,9 +136,7 @@ define(function() {
 				map:     cb => gsAr.map(cb),
 			};
 			Object.defineProperty(this, "groups", {
-				value: gs,	writable: false,
-							enumerable: true,
-							configurable: false
+				value: gs
 			});
 			return gs;
 		},
@@ -177,8 +150,20 @@ define(function() {
 		},
 		choiceCount: function () { return this.choices.size; },
 		forEachChoice: function (cb) { [...this.choices].forEach(cb); },
-		hasChoice: function (v) { return this.choices.has(v); }
-
+		hasChoice: function (v) { return this.choices.has(v); },
+		get isFixated() {
+			return this.value !== undefined
+		},
+		get canBeFixated() {
+			return !this.isFixated && this.choices.size == 1
+		},
+		get isLastCandidate () {
+			return [...this.choices].some(
+				v => [...this.groups].some(
+					g => g.candidates(v).size == 1
+				)
+			);
+		},
 	};
 
 	return {
