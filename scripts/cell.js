@@ -139,8 +139,8 @@ define(function() {
 			return g;
 		},
 		get box() {
-			let i = Math.floor(this.x / this.field.boxW()) 
-				+ Math.floor(this.y / this.field.boxH()) * this.field.boxH();
+			let i = Math.trunc(this.x / this.field.boxW()) 
+				+ Math.trunc(this.y / this.field.boxH()) * this.field.boxH();
 			let g = this.field.boxes[i];
 			Object.defineProperty(this, "box", {
 				value: g,	writable: false,

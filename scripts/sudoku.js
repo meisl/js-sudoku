@@ -62,7 +62,7 @@ define(["./cell", "./group"], function(cell, group) {
 		},
 		toXcoord: function (x) {
 			if (typeof x == "number") {
-				if (Math.floor(x) == x && x >= 0 && x < this.n())
+				if (Math.trunc(x) == x && x >= 0 && x < this.n())
 					return xIdx2coord[x];
 			}
 			throw "invalid x index " + x;
@@ -77,7 +77,7 @@ define(["./cell", "./group"], function(cell, group) {
 		},
 		toYcoord: function (y) {
 			if (typeof y == "number") {
-				if (Math.floor(y) == y && y >= 0 && y < this.n())
+				if (Math.trunc(y) == y && y >= 0 && y < this.n())
 					return yIdx2coord[y];
 			}
 			throw "invalid y index " + y;

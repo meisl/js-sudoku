@@ -76,8 +76,8 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			assert.equal(typeof box, "object", "typeof " + c.id + ".box");
 			assert.strictEqual(box.field(), s,
 				c.id + ".box=" + box.id + ": " + ".box.field() points to .field");
-			let boxX = Math.floor(c.x / s.boxW());
-			let boxY = Math.floor(c.y / s.boxH());
+			let boxX = Math.trunc(c.x / s.boxW());
+			let boxY = Math.trunc(c.y / s.boxH());
 			let boxIdx = boxX + boxY * s.boxH(); // there are boxH (!) boxes in a row
 			assert.strictEqual(box, s.boxes[boxIdx],
 				c.id + ".box=" + box.id + ": should be same as .field.boxes[" + boxIdx + "]");

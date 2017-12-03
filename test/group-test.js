@@ -27,9 +27,9 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 		let boxW = 3;
 		let boxH = 2;
 		let s = sudoku.create({box: [boxW, boxH]});
-		for (let i = 0; i < boxW * boxH; i++) {
+		for (let i = 0; i < s.n(); i++) {
 			let bx = i % boxH;
-			let by = Math.floor(i / boxH);
+			let by = Math.trunc(i / boxH);
 			assert.equal(s.boxes[i].id, "Box_" + s.toXcoord(bx) + s.toYcoord(by),
 				"boxes[" + i + "].id");
 		}
@@ -75,7 +75,7 @@ require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
 		for (let i = 0; i < s.n(); i++) {
 			let box = s.boxes[i];
 			let cellXoffset = (i % boxH) * boxW;
-			let cellYoffset = Math.floor(i / boxH) * boxH;
+			let cellYoffset = Math.trunc(i / boxH) * boxH;
 			for (let y = cellYoffset; y < cellYoffset + boxH; y++) {
 				for (let x = cellXoffset; x < cellXoffset + boxW; x++) {
 					let c = s.cell(x, y);
