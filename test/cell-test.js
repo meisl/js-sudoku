@@ -25,13 +25,15 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		});
 	});
 
-	QUnit.test(".id", function(assert) {
+	QUnit.test(".id / .x / .y", function(assert) {
 		var s = sudoku.create({box: [2, 3]});
 		
 		for (let y = 0; y < s.n(); y++) {
 			for (let x = 0; x < s.n(); x++) {
 				let c = s.cell(x, y);
-				assert.equal(c.id, sudoku.toXcoord(x) + sudoku.toYcoord(y));
+				assert.equal(c.x, x, c.id + ".x");
+				assert.equal(c.y, y, c.id + ".y");
+				assert.equal(c.id, s.toXcoord(x) + s.toYcoord(y), c.id + ".id");
 			}
 		}
 	});
@@ -53,36 +55,65 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 	});
 
 	QUnit.test(".row, .column, .box", function(assert) {
-		var boxW = 3;
-		var boxH = 2;
-		var n = boxW * boxH;
-		var s = sudoku.create({box: [boxW, boxH]});
-		for (var i = 0; i < s.cellCount(); i++) {
-			var c = s.cell(i % n, Math.floor(i / n));
-			var row = c.row();
-			assert.strictEqual(row.field(), s, "cell " + i + ": "
-				+ ".row().field() points to .field()");
-			var column = c.column();
-			assert.strictEqual(column.field(), s,  "cell " + i + ": "
-				+ ".column().field() points to .field()");
-			var box = c.box();
-			assert.strictEqual(box.field(), s,  "cell " + i + ": "
-				+ ".box().field() points to .field()");
-		}
+		let s = sudoku.create({box: [3, 2]});
+		s.forEachCell(c => {
+			
+			let row = c.row;
+			assert.equal(typeof row, "object", "typeof " + c.id + ".row");
+			assert.strictEqual(row.field(), s, 
+				c.id + ".row=" + row.id + ": " + ".row.field() points to .field");
+			assert.strictEqual(row, s.rows[c.y],
+				c.id + ".row=" + row.id + ": should be same as .field.rows[" + c.y + "]");
+			
+			let col = c.col;
+			assert.equal(typeof col, "object", "typeof " + c.id + ".col");
+			assert.strictEqual(col.field(), s,
+				c.id + ".col=" + col.id + ": " + ".col.field() points to .field");
+			assert.strictEqual(col, s.columns[c.x],
+				c.id + ".col=" + col.id + ": should be same as .field.columns[" + c.x + "]");
+			
+			let box = c.box;
+			assert.equal(typeof box, "object", "typeof " + c.id + ".box");
+			assert.strictEqual(box.field(), s,
+				c.id + ".box=" + box.id + ": " + ".box.field() points to .field");
+			let boxX = Math.floor(c.x / s.boxW());
+			let boxY = Math.floor(c.y / s.boxH());
+			let boxIdx = boxX + boxY * s.boxH(); // there are boxH (!) boxes in a row
+			assert.strictEqual(box, s.boxes[boxIdx],
+				c.id + ".box=" + box.id + ": should be same as .field.boxes[" + boxIdx + "]");
+		});
 	});
 
-	QUnit.test("enumerate groups", function(assert) {
-		var s = sudoku.create({box: [3, 2]});
+	QUnit.todo(".groups.some", function(assert) {
+		let s = sudoku.create({box: [3, 2]});
 		s.forEachCell(c => {
-			var i = 0;
-			var groups = new Array(3);
+			f = c.groups.some;
+			assert.equal(typeof f, "function",
+				"typeof " + c.id + ".groups.function");
+		});
+	});
+	
+	QUnit.todo(".choices.some", function(assert) {
+		let s = sudoku.create({box: [3, 2]});
+		s.forEachCell(c => {
+			f = c.choices.some;
+			assert.equal(typeof f, "function",
+				"typeof " + c.id + ".choices.function");
+		});
+	});
+	
+	QUnit.test("enumerate groups", function(assert) {
+		let s = sudoku.create({box: [3, 2]});
+		s.forEachCell(c => {
+			let i = 0;
+			let groups = new Array(3);
 			c.groups.forEach(g => {
 				groups[i++] = g;
 				assert.equal(typeof g, "object", 
 					c.id + ": " + i + ". group is an object");
 				assert.strictEqual(g.field(), c.field,
 					c.id + ": " + i + ". group's .field() points to same as cell.field");
-				for (var k = 0; k < i-1; k++) {
+				for (let k = 0; k < i-1; k++) {
 					assert.notStrictEqual(g, groups[k],
 						c.id + ": " + i + ". group !== " + (k+1) + ". group");
 				}
@@ -90,6 +121,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			assert.equal(groups.length, 3, "cell belongs to 3 groups");
 		});
 	});
+
 
 	QUnit.test(".choiceCount / .removeChoice / .forEachChoice", function(assert) {
 		var s = sudoku.create({box: [2, 3]});

@@ -86,7 +86,7 @@ define(function() {
 			isLastCandidate: {
 				get () {
 					return [...this.choices].some(
-						v => [this.row(), this.column(), this.box()].some(
+						v => [...this.groups].some(
 							g => g.candidates(v).size == 1
 						)
 					);
@@ -120,37 +120,37 @@ define(function() {
 	}
 
 	Cell.prototype = {
-		row: function row() {
+		get row() {
 			let g = this.field.rows[this.y];
 			Object.defineProperty(this, "row", {
-				value: function () { return g; },	writable: false,
-													enumerable: true,
-													configurable: false
+				value: g,	writable: false,
+							enumerable: true,
+							configurable: false
 			});
 			return g;
 		},
-		column: function column() {
+		get col() {
 			let g = this.field.columns[this.x];
-			Object.defineProperty(this, "column", {
-				value: function () { return g; },	writable: false,
-													enumerable: true,
-													configurable: false
+			Object.defineProperty(this, "col", {
+				value: g,	writable: false,
+							enumerable: true,
+							configurable: false
 			});
 			return g;
 		},
-		box: function box() {
+		get box() {
 			let i = Math.floor(this.x / this.field.boxW()) 
 				+ Math.floor(this.y / this.field.boxH()) * this.field.boxH();
 			let g = this.field.boxes[i];
 			Object.defineProperty(this, "box", {
-				value: function () { return g; },	writable: false,
-													enumerable: true,
-													configurable: false
+				value: g,	writable: false,
+							enumerable: true,
+							configurable: false
 			});
 			return g;
 		},
 		get groups() {
-			let gsAr = [this.row(), this.column(), this.box()];
+			let gsAr = [this.row, this.col, this.box];
 			let gsIt = gsAr[Symbol.iterator]();
 			let gs = {
 				[Symbol.iterator]: () => gsIt,
