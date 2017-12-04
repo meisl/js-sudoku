@@ -7,9 +7,7 @@ define(function() {
 	    }
 	    this[Symbol.iterator] = () => getIterator(iterable);
 	    this.map = function map(f) {
-            let out = new Sequence(iterable, i => mapIterator(getIterator(i), f));
-            out.transform = { map: f };
-            return out;
+            return new Sequence(iterable, i => mapIterator(getIterator(i), f));
         };
         this.inner = iterable;
 	}
@@ -22,22 +20,29 @@ define(function() {
         get size() {
             return this.length;
         },
-        filter: function (cb, thisValue) {
-        	let out = new Sequence(this, inner => {
-        		let it = inner[Symbol.iterator]();
-				let origNext = it.next;
-				let i = 0;
-				it.next = function() {
-					let e;
-					do {
-						e = origNext.call(this);
-					} while (!e.done && !cb.call(thisValue, e.value, i++));
-					return e;
-				}
-				return it;
-        	});
-        	out.transform = { filter: cb };
-        	return out;
+        filter: function (cb) {
+        	if (arguments.length == 2) {
+        		cb = cb.bind(arguments[1])
+        	}
+			return Object.create(this, {
+				inner:             { value: this },
+				filterFn:          { value: cb },
+				[Symbol.iterator]: {
+					value: function () {
+						let it = this.inner[Symbol.iterator]();
+						let origNext = it.next;
+						let i = 0;
+						it.next = function () {
+							let e;
+							do {
+								e = origNext.call(it);
+							} while (!e.done && !cb(e.value, i++));
+							return e;
+						}
+						return it;		
+					}
+				},
+			});
         },
         forEach: function (cb, thisValue) {
             let it = this[Symbol.iterator]();
