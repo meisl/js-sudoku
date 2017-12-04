@@ -15,6 +15,16 @@ define(function() {
 		};
 	}
 
+	function makeTransformedSeq(inner, cb, makeTransformedNext, cbName) {
+		return Object.create(inner, {
+			inner:    { value: inner },
+			[cbName]: { value: cb },
+			[Symbol.iterator]: {
+				value: makeGetIterator(inner, cb, makeTransformedNext)
+			},
+		});
+	}
+
 	Sequence.prototype = {
 		get values() { return [...this] },
         get length() {
@@ -27,25 +37,13 @@ define(function() {
         	if (arguments.length == 2) {
         		cb = cb.bind(arguments[1])
         	}
-			return Object.create(this, {
-				inner: { value: this },
-				mapFn: { value: cb },
-				[Symbol.iterator]: {
-					value: makeGetIterator(this, cb, makeNextMap)
-				},
-			});
+			return makeTransformedSeq(this, cb, makeNextMap, "mapFn");
         },
         filter: function (cb) {
         	if (arguments.length == 2) {
         		cb = cb.bind(arguments[1])
         	}
-			return Object.create(this, {
-				inner:    { value: this },
-				filterFn: { value: cb },
-				[Symbol.iterator]: {
-					value: makeGetIterator(this, cb, makeNextFilter)
-				},
-			});
+			return makeTransformedSeq(this, cb, makeNextFilter, "filterFn");
         },
         forEach: function (cb, thisValue) {
             let it = this[Symbol.iterator]();
