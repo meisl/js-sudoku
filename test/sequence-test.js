@@ -2,7 +2,10 @@ require(["scripts/sequence"], function(Sequence) {
 
 	QUnit.module("sequence");
 
-    function basicTest(assert, sq, expectedIterator, expectedLength) {
+    function basicTest(assert, sq, expected) {
+        if (!Array.isArray(expected)) {
+            throw "need expected values as an Array - got typeof " + expected;
+        }
         assert.equal(typeof sq[Symbol.iterator], "function", 
             "typeof new Sequence([..])[Symbol.iterator]");
         let it1 = sq[Symbol.iterator]();
@@ -19,28 +22,31 @@ require(["scripts/sequence"], function(Sequence) {
 
         assert.notStrictEqual(it1, it2, "should return new iterator on each call");
 
-        let actualLength = -1;
+        let expectedLength = expected.length;
+        assert.equal(sq.length, expectedLength, "sequence.length");
+        assert.equal(sq.size,   expectedLength, "sequence.size");
+
+        let expectedIterator = expected[Symbol.iterator]();
         let expElem;
+        let index = 0;
         do {
             expElem = expectedIterator.next();
             let e1 = it1.next();
             let e2 = it2.next();
-            assert.strictEqual(e1.value, expElem.value, ".value (1)");
-            assert.strictEqual(e1.done,  expElem.done,  ".done (1)");
+            assert.strictEqual(e1.value, expElem.value, ".value @ index" + index + " (a)");
+            assert.strictEqual(e1.done,  expElem.done,  ".done @ index" + index + " (a)");
             
-            assert.strictEqual(e2.value, expElem.value, ".value (2)");
-            assert.strictEqual(e2.done,  expElem.done,  ".done (2)");
-            actualLength++;
+            assert.strictEqual(e2.value, expElem.value, ".value @ index" + index + " (b)");
+            assert.strictEqual(e2.done,  expElem.done,  ".done @ index" + index + " (b)");
+            index++;
         } while (!expElem.done);
 
-        assert.equal(sq.length, expectedLength, "sequence.length");
-        assert.equal(sq.size,   expectedLength, "sequence.size");
     }
     
     QUnit.test("from empty Array", function(assert) {
         let inner = [];
         let s = new Sequence(inner);
-        basicTest(assert, s, inner[Symbol.iterator](), 0);
+        basicTest(assert, s, inner);
 
         inner.push(1984);
         assert.equal(inner.length, 1, "underlying array was pushed");
@@ -50,7 +56,7 @@ require(["scripts/sequence"], function(Sequence) {
     QUnit.test("from singleton Array", function(assert) {
         let inner = [42];
         let s = new Sequence(inner);
-        basicTest(assert, s, inner[Symbol.iterator](), 1);
+        basicTest(assert, s, inner);
 
         inner.push(1984);
         assert.equal(inner.length, 2, "underlying array was pushed");
@@ -65,7 +71,7 @@ require(["scripts/sequence"], function(Sequence) {
     QUnit.test("from larger Array", function(assert) {
         let inner = [2,1,3];
         let s = new Sequence(inner);
-        basicTest(assert, s, inner[Symbol.iterator](), 3);
+        basicTest(assert, s, inner);
 
         inner.push(1984);
         assert.equal(inner.length, 4, "underlying array was pushed");
@@ -80,14 +86,48 @@ require(["scripts/sequence"], function(Sequence) {
     function test_map(title, inner, mapFn) {
         QUnit.test(".map " + title, function(assert) {
             let s = new Sequence(inner).map(mapFn);
-            let expected = [...inner].map(mapFn)[Symbol.iterator]();
+            let expected = [...inner].map(mapFn);
 
-            basicTest(assert, s, expected, 3);
+            basicTest(assert, s, expected);
         });
     }
 
-    test_map("from Array", [2, 1, 3], x => x + 1);
     test_map("from Array, using index arg in callback", [2, 1, 3], (x,i) => i + ": " + x);
+    test_map("from Array", [2, 1, 3], x => x + 1);
+
+    QUnit.test(".map.map from Array", function(assert) {
+        let orig = [2, 1, 3];
+        let f1 = x => x + 1;
+        let f2 = x => x + "|" + x;
+        let s = new Sequence(orig).map(f1).map(f2);
+        let expected = orig.map(f1).map(f2);
+
+        basicTest(assert, s, expected);
+    });
+
+    function test_filter(title, inner, predicateFn) {
+        QUnit.test(".filter " + title, function(assert) {
+            let s = new Sequence(inner).filter(predicateFn);
+            let expected = [...inner].filter(predicateFn);
+
+            basicTest(assert, s, expected);
+        });
+    }
+
+    test_filter("from Array", [2, 1, 4], x => (x % 2) === 0);
+    test_filter("from Array, all elems filtered out", [2, 1, 4], x => false);
+    test_filter("from Array, consecutive elems filtered out", [2, 1, 3, 4], x => (x % 2) === 0);
+    test_filter("from Array, using index arg in callback", [2, 1, 3], (x,i) => (i % 2) === 0);
+
+    QUnit.test(".filter.filter from Array", function(assert) {
+        let orig = [2, 1, 3, 4, 6, 8];
+        let f1 = x => (x % 2) === 0;
+        let f2 = (x, i) => (i % 2) === 0;
+        let s = new Sequence(orig).filter(f1).filter(f2);
+        let expected = orig.filter(f1).filter(f2);
+
+        basicTest(assert, s, expected);
+    });
 
 
     function test_forEach(title, inner, thisValue) {

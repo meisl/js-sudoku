@@ -7,16 +7,37 @@ define(function() {
 	    }
 	    this[Symbol.iterator] = () => getIterator(iterable);
 	    this.map = function map(f) {
-            return new Sequence(iterable, inner => mapIterator(inner[Symbol.iterator](), f));
-        }
+            let out = new Sequence(iterable, i => mapIterator(getIterator(i), f));
+            out.transform = { map: f };
+            return out;
+        };
+        this.inner = iterable;
 	}
 
 	Sequence.prototype = {
+		get values() { return [...this] },
         get length() {
             return [...this].length;
         },
         get size() {
             return this.length;
+        },
+        filter: function (cb, thisValue) {
+        	let out = new Sequence(this, inner => {
+        		let it = inner[Symbol.iterator]();
+				let origNext = it.next;
+				let i = 0;
+				it.next = function() {
+					let e;
+					do {
+						e = origNext.call(this);
+					} while (!e.done && !cb.call(thisValue, e.value, i++));
+					return e;
+				}
+				return it;
+        	});
+        	out.transform = { filter: cb };
+        	return out;
         },
         forEach: function (cb, thisValue) {
             let it = this[Symbol.iterator]();
