@@ -6,6 +6,15 @@ define(function() {
         this.inner = iterable;
 	}
 
+	function makeGetIterator(inner, cb, makeTransformedNext) {
+		return () => {
+			let it = inner[Symbol.iterator]();
+			let origNext = it.next.bind(it);
+			it.next = makeTransformedNext(origNext, cb);
+			return it;
+		};
+	}
+
 	Sequence.prototype = {
 		get values() { return [...this] },
         get length() {
@@ -22,12 +31,7 @@ define(function() {
 				inner: { value: this },
 				mapFn: { value: cb },
 				[Symbol.iterator]: {
-					value: function () {
-						let it = this.inner[Symbol.iterator]();
-						let origNext = it.next.bind(it);
-						it.next = makeNextMap(origNext, cb);
-						return it;		
-					}
+					value: makeGetIterator(this, cb, makeNextMap)
 				},
 			});
         },
@@ -39,20 +43,7 @@ define(function() {
 				inner:    { value: this },
 				filterFn: { value: cb },
 				[Symbol.iterator]: {
-					value: function () {
-						let it = this.inner[Symbol.iterator]();
-						let origNext = it.next.bind(it);
-						let i = 0;
-						it.next = function () {
-							let e;
-							do {
-								e = origNext();
-							} while (!e.done && !cb(e.value, i++));
-							return e;
-						}
-						it.next = makeNextFilter(origNext, cb);
-						return it;
-					}
+					value: makeGetIterator(this, cb, makeNextFilter)
 				},
 			});
         },
