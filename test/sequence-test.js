@@ -129,6 +129,56 @@ require(["scripts/sequence"], function(Sequence) {
         basicTest(assert, s, expected);
     });
 
+    QUnit.test(".first from singleton Array", function(assert){
+        let s = new Sequence([42]);
+        assert.equal(s.first(), 42, "should return the (only) value");
+    });
+
+    QUnit.test(".first from larger Array", function(assert){
+        let s = new Sequence([42, 7, 5]);
+        assert.equal(s.first(), 42, "should return the first value");
+    });
+
+    QUnit.test(".first from empty Array", function(assert){
+        let s = new Sequence([]);
+        assert.throws( () => s.first(), /empty/, "should throw");
+    });
+
+    QUnit.test(".first from filtered Array (then empty)", function(assert){
+        let s = new Sequence([42, 6]).filter(x => x < 0);
+        assert.throws( () => s.first(), /empty/, "should throw");
+    });
+
+    QUnit.test(".first from filtered (initially empty) Array", function(assert){
+        let s = new Sequence([]).filter(x => x < 0);
+        assert.throws( () => s.first(), /empty/, "should throw");
+    });
+    
+    QUnit.test(".first from filtered Array (then non-empty)", function(assert){
+        let s = new Sequence([42, -6, -5, 72]).filter(x => x < 0);
+        assert.equal(s.first(), -6);
+    });
+
+    QUnit.test(".first from mapped (initially empty) Array", function(assert){
+        let s = new Sequence([]).map(x => x + 1);
+        assert.throws( () => s.first(), /empty/, "should throw");
+    });
+    
+    QUnit.test(".first from mapped Array", function(assert){
+        let s = new Sequence([42, -6, -5, 72]).map(x => x + 1);
+        assert.equal(s.first(), 43);
+    });
+
+    QUnit.test(".first from mapped, then filtered Array (then empty)", function(assert){
+        let s = new Sequence([42, -1, 0, 6]).map(x => x + 1).filter(x => x < 0);
+        assert.throws( () => s.first(), /empty/, "should throw");
+    });
+
+    QUnit.test(".first from mapped, then filtered Array (then non-empty)", function(assert){
+        let s = new Sequence([42, -1, 0, -6, -5, 72]).map(x => x + 1).filter(x => x < 0);
+        assert.equal(s.first(), -5);
+    });
+    
 
     function test_forEach(title, inner, thisValue) {
         QUnit.test(".forEach " + title + " args.length=" + arguments.length, function(assert) {

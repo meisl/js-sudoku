@@ -45,6 +45,12 @@ define(function() {
         	}
 			return makeTransformedSeq(this, cb, makeNextFilter, "filterFn");
         },
+        first: function () {
+        	let e = this[Symbol.iterator]().next();
+        	if (e.done)
+        		throw "no first element in empty sequence";
+        	return e.value;
+        },
         forEach: function (cb, thisValue) {
             let it = this[Symbol.iterator]();
             let e = it.next();
