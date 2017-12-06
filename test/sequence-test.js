@@ -227,5 +227,19 @@ require(["scripts/sequence"], function(Sequence) {
         let s = new Sequence([42, -1, 0, -6, -5, 72]).map(x => x + 1).filter(x => x < 0);
         assert.equal(s.first(), -5);
     });
-    
+
+
+    QUnit.module("sequence.cons()");
+
+    QUnit.test("from empty Array", function(assert) {
+        let s = new Sequence([]).cons(42);
+        basicTest(assert, s, [42]);
+    });
+
+    QUnit.test("from non-empty Array", function(assert) {
+        let s = new Sequence([74, 4711]).cons(42);
+        basicTest(assert, s, [42, 74, 4711]);
+    });
+
+
 });

@@ -45,6 +45,30 @@ define(function() {
         	}
 			return makeTransformedSeq(this, cb, makeNextFilter, "filterFn");
         },
+        cons: function (elem) {
+        	const inner = this;
+			return Object.create(inner, {
+				inner:    { value: inner },
+				[Symbol.iterator]: {
+					value: function () {
+						let it = inner[Symbol.iterator]();
+						let origNext = it.next.bind(it);
+						let index = 0;
+						it.next = () => {
+							if (index++ === 0) {
+								return {
+									value: elem,
+									done:  false
+								}
+							} else {
+								return origNext();
+							}
+						}
+						return it;
+					}
+				},
+			});
+        },
         first: function () {
         	let e = this[Symbol.iterator]().next();
         	if (e.done)
