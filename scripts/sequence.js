@@ -51,8 +51,8 @@ define(function() {
 				inner:    { value: inner },
 				[Symbol.iterator]: {
 					value: function () {
-						let it = inner[Symbol.iterator]();
-						let origNext = it.next.bind(it);
+						const it = inner[Symbol.iterator]();
+						const origNext = it.next.bind(it);
 						let index = 0;
 						it.next = () => {
 							if (index++ === 0) {
@@ -63,6 +63,30 @@ define(function() {
 							} else {
 								return origNext();
 							}
+						}
+						return it;
+					}
+				},
+			});
+        },
+        skip: function (n) {
+        	if (!Number.isInteger(n) || n < 0) {
+        		throw "invalid n = " + n + " - must be positive integer";
+        	}
+        	const inner = this;
+			return Object.create(inner, {
+				inner:    { value: inner },
+				[Symbol.iterator]: {
+					value: function () {
+						const it = inner[Symbol.iterator]();
+						const origNext = it.next.bind(it);
+						let index = 0;
+						it.next = () => {
+							let e;
+							do {
+								e = origNext();
+							} while (!e.done && (index++ < n));
+							return e;
 						}
 						return it;
 					}

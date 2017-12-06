@@ -23,8 +23,8 @@ require(["scripts/sequence"], function(Sequence) {
         assert.notStrictEqual(it1, it2, "should return new iterator on each call");
 
         let expectedLength = expected.length;
-        assert.equal(sq.length, expectedLength, "sequence.length");
-        assert.equal(sq.size,   expectedLength, "sequence.size");
+        assert.equal(sq.length, expectedLength, "sequence.length should be " + expectedLength);
+        assert.equal(sq.size,   expectedLength, "sequence.size should be " + expectedLength);
 
         let expectedIterator = expected[Symbol.iterator]();
         let expElem;
@@ -237,9 +237,48 @@ require(["scripts/sequence"], function(Sequence) {
     });
 
     QUnit.test("from non-empty Array", function(assert) {
-        let s = new Sequence([74, 4711]).cons(42);
-        basicTest(assert, s, [42, 74, 4711]);
+        let s = new Sequence([74, 4711]);
+        basicTest(assert, s.cons(42), [42, 74, 4711]);
     });
 
 
+    QUnit.module("sequence.skip()");
+
+    QUnit.test("from empty Array", function(assert) {
+        let s = new Sequence([]);
+        basicTest(assert, s.skip(0), []);
+        basicTest(assert, s.skip(1), []);
+        basicTest(assert, s.skip(2), []);
+        basicTest(assert, s.skip(3), []);
+    });
+
+    QUnit.test("from non-empty Array", function(assert) {
+        let s = new Sequence([42, 4711]);
+        basicTest(assert, s.skip(0), [42, 4711]);
+        basicTest(assert, s.skip(1), [4711]);
+        basicTest(assert, s.skip(2), []);
+        basicTest(assert, s.skip(3), []);
+    });
+
+    QUnit.test("from empty Array, with ridiculously large n", function(assert) {
+        let s = new Sequence([]);
+        basicTest(assert, s.skip(1 << 26), []);
+    });
+
+    QUnit.test("from non-empty Array, with ridiculously large n", function(assert) {
+        let s = new Sequence([42, 4711]);
+        basicTest(assert, s.skip(1 << 26), []);
+
+    });
+
+
+    QUnit.test("with invalid n", function(assert) {
+        [[], [4711]].forEach(a => {
+            let s = new Sequence([]);
+            assert.throws(() => s.skip(), /invalid/, ".skip() should throw");
+            assert.throws(() => s.skip(null), /invalid/, ".skip(null) should throw");
+            assert.throws(() => s.skip(-1), /invalid/, ".skip(-1) should throw");
+            assert.throws(() => s.skip(-42), /invalid/, ".skip(-42) should throw");
+        });
+    });
 });
