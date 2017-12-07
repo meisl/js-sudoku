@@ -26,7 +26,7 @@ define(function() {
 	}
 
 	Sequence.prototype = {
-		get values() { return [...this] },
+		get values() { return this[Symbol.iterator]() },
         get length() {
             return [...this].length;
         },
@@ -46,8 +46,11 @@ define(function() {
 			return makeTransformedSeq(this, cb, makeNextMap, "mapFn");
         },
         mapMany: function (f) {
+        	if (typeof f !== "function") {
+        		throw "invalid mapping function: " + f;
+        	}
         	const inner = this;
-			return Object.create(inner, {
+			let a = Object.create(inner, {
 				inner:    { value: inner },
 				[Symbol.iterator]: {
 					value: function* () {
@@ -60,6 +63,30 @@ define(function() {
 					}
 				}
 			});
+			/*
+			let b = makeTransformedSeq(this, f, 
+				(origNext, g) => {
+					let e;
+					let subIt;
+					let subE = { done: true };
+					const next = () => {
+						while (subE.done) {
+							if (!e) {
+								e = origNext();
+								if (e.done)
+									return e;
+							}
+							subIt = e.value[Symbol.iterator]();
+							subE = subIt.next();
+						}
+						????
+					};
+					return next;
+				},
+				"mapManyFn"
+			);
+			*/
+			return a;
         },
         cons: function (elem) {
         	const inner = this;

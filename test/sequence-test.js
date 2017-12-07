@@ -284,7 +284,7 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.module("sequence.take()");
 
-    QUnit.test("with invalid n", function(assert) {
+    QUnit.test("with invalid argument n", function(assert) {
         [[], [4711]].forEach(a => {
             let s = new Sequence([]);
             assert.throws(() => s.take(), /invalid/, ".take() should throw");
@@ -362,6 +362,16 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.module("sequence.mapMany()");
 
+    QUnit.test("with invalid function argument", function(assert) {
+        [[], [4711]].forEach(a => {
+            let s = new Sequence([]);
+            assert.throws(() => s.mapMany(), /invalid/, ".mapMany() should throw");
+            assert.throws(() => s.mapMany(null), /invalid/, ".mapMany(null) should throw");
+            assert.throws(() => s.mapMany(-1), /invalid/, ".mapMany(-1) should throw");
+            assert.throws(() => s.mapMany(-42), /invalid/, ".mapMany(-42) should throw");
+        });
+    });
+
     QUnit.test("from empty Array", function(assert) {
         let s = new Sequence([]);
         function* f(x) { 
@@ -371,13 +381,21 @@ require(["scripts/sequence"], function(Sequence) {
         basicTest(assert, s.mapMany(f), []);
     });
 
-    QUnit.test("from non-empty Array", function(assert) {
+    QUnit.test("from non-empty Array with generator fn", function(assert) {
         let s = new Sequence([3,2,0,1]);
         function* f(x) { 
             for (let i = 0; i < x; i++) yield x;
         }
 
         basicTest(assert, s.mapMany(f), [3,3,3,2,2,1]);
+    });
+
+    QUnit.test("from Array of Arrays", function(assert) {
+        let parts = [[],[1,2],[],[3],[4,5]];
+        let s = new Sequence(parts.map((_,i) => i));
+        assert.equal("" + [...s.values], "" + [0, 1, 2, 3, 4],
+            "should be sequence of indices into parts");
+        basicTest(assert, s.mapMany(i => parts[i]), [1,2,3,4,5]);
     });
 
 
