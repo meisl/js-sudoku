@@ -73,6 +73,8 @@ define(function() {
         skip: function (n) {
         	if (!Number.isInteger(n) || n < 0) {
         		throw "invalid n = " + n + " - must be non-negative integer";
+        	} else if (n === 0) {
+        		return this;
         	}
         	const inner = this;
 			return Object.create(inner, {
