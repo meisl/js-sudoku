@@ -244,6 +244,16 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.module("sequence.skip()");
 
+    QUnit.test("with invalid n", function(assert) {
+        [[], [4711]].forEach(a => {
+            let s = new Sequence([]);
+            assert.throws(() => s.skip(), /invalid/, ".skip() should throw");
+            assert.throws(() => s.skip(null), /invalid/, ".skip(null) should throw");
+            assert.throws(() => s.skip(-1), /invalid/, ".skip(-1) should throw");
+            assert.throws(() => s.skip(-42), /invalid/, ".skip(-42) should throw");
+        });
+    });
+
     QUnit.test("from empty Array", function(assert) {
         let s = new Sequence([]);
         basicTest(assert, s.skip(0), []);
@@ -268,17 +278,55 @@ require(["scripts/sequence"], function(Sequence) {
     QUnit.test("from non-empty Array, with ridiculously large n", function(assert) {
         let s = new Sequence([42, 4711]);
         basicTest(assert, s.skip(1 << 26), []);
-
     });
 
+
+    QUnit.module("sequence.take()");
 
     QUnit.test("with invalid n", function(assert) {
         [[], [4711]].forEach(a => {
             let s = new Sequence([]);
-            assert.throws(() => s.skip(), /invalid/, ".skip() should throw");
-            assert.throws(() => s.skip(null), /invalid/, ".skip(null) should throw");
-            assert.throws(() => s.skip(-1), /invalid/, ".skip(-1) should throw");
-            assert.throws(() => s.skip(-42), /invalid/, ".skip(-42) should throw");
+            assert.throws(() => s.take(), /invalid/, ".take() should throw");
+            assert.throws(() => s.take(null), /invalid/, ".take(null) should throw");
+            assert.throws(() => s.take(-1), /invalid/, ".take(-1) should throw");
+            assert.throws(() => s.take(-42), /invalid/, ".take(-42) should throw");
         });
+    });
+
+    QUnit.test("from empty Array", function(assert) {
+        let s = new Sequence([]);
+        basicTest(assert, s.take(0), []);
+        basicTest(assert, s.take(1), []);
+        basicTest(assert, s.take(2), []);
+        basicTest(assert, s.take(3), []);
+
+        basicTest(assert, s.take(0).take(1), []);
+        basicTest(assert, s.take(2).take(1), []);
+        basicTest(assert, s.take(1).take(2), []);
+    });
+
+    QUnit.test("from non-empty Array", function(assert) {
+        let s = new Sequence([42, 4711, 1974]);
+        basicTest(assert, s.take(0), []);
+        basicTest(assert, s.take(1), [42]);
+        basicTest(assert, s.take(2), [42, 4711]);
+        basicTest(assert, s.take(3), [42, 4711, 1974]);
+        basicTest(assert, s.take(4), [42, 4711, 1974]);
+
+        basicTest(assert, s.take(0).take(1), []);
+        basicTest(assert, s.take(2).take(0), []);
+        basicTest(assert, s.take(2).take(1), [42]);
+        basicTest(assert, s.take(1).take(2), [42]);
+        basicTest(assert, s.take(2).take(2), [42, 4711]);
+    });
+
+    QUnit.test("from empty Array, with ridiculously large n", function(assert) {
+        let s = new Sequence([]);
+        basicTest(assert, s.take(1 << 26), []);
+    });
+
+    QUnit.test("from non-empty Array, with ridiculously large n", function(assert) {
+        let s = new Sequence([42, 4711]);
+        basicTest(assert, s.take(1 << 26), [42, 4711]);
     });
 });

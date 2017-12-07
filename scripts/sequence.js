@@ -69,9 +69,10 @@ define(function() {
 				},
 			});
         },
+        // function f(cb, n, s) { const k = s.size; s.filter( (e,i) => i < k-n).forEach( (e,i) => cb(e, s.skip(i+1))) }
         skip: function (n) {
         	if (!Number.isInteger(n) || n < 0) {
-        		throw "invalid n = " + n + " - must be positive integer";
+        		throw "invalid n = " + n + " - must be non-negative integer";
         	}
         	const inner = this;
 			return Object.create(inner, {
@@ -87,6 +88,34 @@ define(function() {
 								e = origNext();
 							} while (!e.done && (index++ < n));
 							return e;
+						}
+						return it;
+					}
+				},
+			});
+        },
+        take: function (n) {
+        	if (!Number.isInteger(n) || n < 0) {
+        		throw "invalid n = " + n + " - must be non-negative integer";
+        	}
+        	const inner = this;
+			return Object.create(inner, {
+				inner:    { value: inner },
+				[Symbol.iterator]: {
+					value: function () {
+						const it = inner[Symbol.iterator]();
+						const origNext = it.next.bind(it);
+						let index = 0;
+						it.next = () => {
+							let e = origNext();
+							if ((index < n) && !e.done) {
+								index++;
+								return e;
+							}
+							return {
+								value: undefined,
+								done: true
+							};
 						}
 						return it;
 					}
