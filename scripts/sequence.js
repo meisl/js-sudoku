@@ -91,13 +91,14 @@ define(function() {
         cons: function (elem) {
         	const inner = this;
 			return Object.create(inner, {
-				inner:    { value: inner },
+				inner:     { value: inner },
+				consedVal: { value: elem },
 				[Symbol.iterator]: {
 					value: function () {
 						const it = inner[Symbol.iterator]();
 						const origNext = it.next.bind(it);
 						let index = 0;
-						it.next = () => {
+						const newNext = () => {
 							if (index++ === 0) {
 								return {
 									value: elem,
@@ -106,7 +107,10 @@ define(function() {
 							} else {
 								return origNext();
 							}
-						}
+						};
+						it.next = newNext;
+						if (it.next !== newNext)
+							throw "unable to overwrite .next";
 						return it;
 					}
 				},
@@ -178,7 +182,20 @@ define(function() {
             for (let i = 0; !e.done; e = it.next()) {
                 cb.call(thisValue, e.value, i++);
             }
-        }
+        },
+        toString: function () {
+        	function f(x) {
+        		if (Array.isArray(x)) {
+        			return "[" + x.map(f).join(",") + "]"
+        		} else if (x instanceof Set) {
+        			return "Set{" + new seq(x).toString() + "}"
+        		} else {
+        			return x.toString();
+        		}
+        	}
+        	return "<" + [...this.map(f)].join(",") + ">";
+        },
+        get str() { return this.toString(); }
 	};
 
 	const emptyGeneratorResult = Object.defineProperties({}, {
@@ -198,7 +215,9 @@ define(function() {
 	const emptySequence = Object.create(Sequence.prototype, {
 		[Symbol.iterator]: {
 			value: () => emptyGenerator
-		}
+		},
+		length: { value: 0 },
+		cons:	{ value: x => new Sequence([x]) },
 	});
 	Object.defineProperty(Sequence, "empty", {
 		value: emptySequence,

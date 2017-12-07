@@ -359,6 +359,15 @@ require(["scripts/sequence"], function(Sequence) {
             "empty.filter(..) should return same thing");
     });
 
+    QUnit.test(".cons", function(assert) {
+        let s = Sequence.empty;
+
+        assert.equal(s.cons(5).length, 1, "empty.cons(..).length");
+
+        basicTest(assert, s.cons(5),           [5]);
+        basicTest(assert, s.cons(5).cons(6), [6,5]);
+    });
+
 
     QUnit.module("sequence.mapMany()");
 
