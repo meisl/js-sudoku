@@ -33,17 +33,33 @@ define(function() {
         get size() {
             return this.length;
         },
+        filter: function (cb) {
+        	if (arguments.length == 2) {
+        		cb = cb.bind(arguments[1])
+        	}
+			return makeTransformedSeq(this, cb, makeNextFilter, "filterFn");
+        },
         map: function (cb) {
         	if (arguments.length == 2) {
         		cb = cb.bind(arguments[1])
         	}
 			return makeTransformedSeq(this, cb, makeNextMap, "mapFn");
         },
-        filter: function (cb) {
-        	if (arguments.length == 2) {
-        		cb = cb.bind(arguments[1])
-        	}
-			return makeTransformedSeq(this, cb, makeNextFilter, "filterFn");
+        mapMany: function (f) {
+        	const inner = this;
+			return Object.create(inner, {
+				inner:    { value: inner },
+				[Symbol.iterator]: {
+					value: function* () {
+						let it = inner[Symbol.iterator]();
+						let e = it.next();
+						while (!e.done) {
+							yield* f(e.value);
+							e = it.next();
+						};
+					}
+				}
+			});
         },
         cons: function (elem) {
         	const inner = this;
@@ -137,6 +153,7 @@ define(function() {
             }
         }
 	};
+
 	const emptyGeneratorResult = Object.defineProperties({}, {
 		value: { value: undefined,
 				 enumerable: true
@@ -160,7 +177,7 @@ define(function() {
 		value: emptySequence,
 		enumerable: true
 	});
-	
+
 	function makeNextMap(origNext, cb) {
 		let i = 0;
 		return () => {

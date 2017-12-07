@@ -359,4 +359,26 @@ require(["scripts/sequence"], function(Sequence) {
             "empty.filter(..) should return same thing");
     });
 
+
+    QUnit.module("sequence.mapMany()");
+
+    QUnit.test("from empty Array", function(assert) {
+        let s = new Sequence([]);
+        function* f(x) { 
+            for (let i = 0; i < x; i++) yield x;
+        }
+
+        basicTest(assert, s.mapMany(f), []);
+    });
+
+    QUnit.test("from non-empty Array", function(assert) {
+        let s = new Sequence([3,2,0,1]);
+        function* f(x) { 
+            for (let i = 0; i < x; i++) yield x;
+        }
+
+        basicTest(assert, s.mapMany(f), [3,3,3,2,2,1]);
+    });
+
+
 });
