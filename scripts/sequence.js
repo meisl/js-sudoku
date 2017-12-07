@@ -99,6 +99,8 @@ define(function() {
         take: function (n) {
         	if (!Number.isInteger(n) || n < 0) {
         		throw "invalid n = " + n + " - must be non-negative integer";
+        	} else if (n === 0) {
+        		return emptySequence;
         	}
         	const inner = this;
 			return Object.create(inner, {
@@ -114,10 +116,7 @@ define(function() {
 								index++;
 								return e;
 							}
-							return {
-								value: undefined,
-								done: true
-							};
+							return emptyGeneratorResult;
 						}
 						return it;
 					}
@@ -138,7 +137,30 @@ define(function() {
             }
         }
 	};
-
+	const emptyGeneratorResult = Object.defineProperties({}, {
+		value: { value: undefined,
+				 enumerable: true
+		},
+		done: { value: true,
+				enumerable: true
+		}
+	});
+	const emptyGenerator = Object.defineProperties({}, {
+		next: {
+			value: () => emptyGeneratorResult,
+			enumerable: true
+		}
+	});
+	const emptySequence = Object.create(Sequence.prototype, {
+		[Symbol.iterator]: {
+			value: () => emptyGenerator
+		}
+	});
+	Object.defineProperty(Sequence, "empty", {
+		value: emptySequence,
+		enumerable: true
+	});
+	
 	function makeNextMap(origNext, cb) {
 		let i = 0;
 		return () => {

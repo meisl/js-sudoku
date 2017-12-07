@@ -20,7 +20,8 @@ require(["scripts/sequence"], function(Sequence) {
         assert.equal(typeof it2.next, "function", 
             "typeof returned iterator's .next method' (2): " + it2.next);
 
-        assert.notStrictEqual(it1, it2, "should return new iterator on each call");
+        //Well, except for the (immutable) empty sequence...
+        //assert.notStrictEqual(it1, it2, "should return new iterator on each call");
 
         let expectedLength = expected.length;
         assert.equal(sq.length, expectedLength, "sequence.length should be " + expectedLength);
@@ -329,4 +330,33 @@ require(["scripts/sequence"], function(Sequence) {
         let s = new Sequence([42, 4711]);
         basicTest(assert, s.take(1 << 26), [42, 4711]);
     });
+
+
+    QUnit.module("sequence.empty");
+
+    QUnit.test("no elems, .first, .map, .filter", function(assert) {
+        let s = Sequence.empty;
+        
+        basicTest(assert, s, []);
+        
+        Sequence.empty = {};
+        assert.strictEqual(Sequence.empty, s, 
+            "sequence.empty should not be mutable");
+
+        assert.throws(() => s.first(), /empty/, "empty.first() should throw");
+
+        basicTest(assert, s.map(x => "" + x), []);
+        basicTest(assert, s.filter(x => x < 0), []);
+        
+    });
+
+    QUnit.todo(".map, .filter etc should return same thing", function(assert) {
+        let s = Sequence.empty;
+        
+        assert.strictEqual(s.map(x => "" + x), s, 
+            "empty.map(..) should return same thing");
+        assert.strictEqual(s.filter(x => x < 0), s, 
+            "empty.filter(..) should return same thing");
+    });
+
 });
