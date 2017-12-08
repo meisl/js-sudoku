@@ -252,6 +252,12 @@ require(["scripts/sequence"], function(Sequence) {
             assert.throws(() => s.skip(null), /invalid/, ".skip(null) should throw");
             assert.throws(() => s.skip(-1), /invalid/, ".skip(-1) should throw");
             assert.throws(() => s.skip(-42), /invalid/, ".skip(-42) should throw");
+            assert.throws(() => s.skip(Number.NaN),
+                /invalid/, ".skip(Number.NaN) should throw");
+            assert.throws(() => s.skip(Number.POSITIVE_INFINITY), 
+                /invalid/, ".skip(Number.POSITIVE_INFINITY) should throw");
+            assert.throws(() => s.skip(Number.NEGATIVE_INFINITY), 
+                /invalid/, ".skip(Number.NEGATIVE_INFINITY) should throw");
         });
     });
 
@@ -291,6 +297,12 @@ require(["scripts/sequence"], function(Sequence) {
             assert.throws(() => s.take(null), /invalid/, ".take(null) should throw");
             assert.throws(() => s.take(-1), /invalid/, ".take(-1) should throw");
             assert.throws(() => s.take(-42), /invalid/, ".take(-42) should throw");
+            assert.throws(() => s.take(Number.NaN),
+                /invalid/, ".take(Number.NaN) should throw");
+            assert.throws(() => s.take(Number.POSITIVE_INFINITY), 
+                /invalid/, ".take(Number.POSITIVE_INFINITY) should throw");
+            assert.throws(() => s.take(Number.NEGATIVE_INFINITY), 
+                /invalid/, ".take(Number.NEGATIVE_INFINITY) should throw");
         });
     });
 
