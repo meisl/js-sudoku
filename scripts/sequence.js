@@ -6,6 +6,8 @@ define(function() {
         this.inner = iterable;
 	}
 
+	const singletonSeq = elem => new Sequence([elem]);
+
 	function makeGetIterator(inner, cb, makeTransformedNext) {
 		return () => {
 			let it = inner[Symbol.iterator]();
@@ -217,12 +219,14 @@ define(function() {
 			value: () => emptyGenerator
 		},
 		length: { value: 0 },
-		cons:	{ value: x => new Sequence([x]) },
+		cons:	{ value: singletonSeq },
+		snoc:	{ value: singletonSeq },
 	});
 	Object.defineProperty(Sequence, "empty", {
 		value: emptySequence,
 		enumerable: true
 	});
+
 
 	function makeNextMap(origNext, cb) {
 		let i = 0;

@@ -368,6 +368,30 @@ require(["scripts/sequence"], function(Sequence) {
         basicTest(assert, s.cons(5).cons(6), [6,5]);
     });
 
+    QUnit.test(".snoc", function(assert) {
+        let s = Sequence.empty.snoc(5);
+        assert.equal(s.length, 1, "empty.snoc(..).length");
+        basicTest(assert, s, [5]);
+    });
+
+    QUnit.todo(".snoc.snoc", function(assert) {
+        let s = Sequence.empty.snoc(5).snoc(6);
+        assert.equal(s.length, 2, "empty.snoc(..).snoc(..).length");
+        basicTest(assert, s, [5,6]);
+    });
+
+    QUnit.test(".snoc.cons", function(assert) {
+        let s = Sequence.empty.snoc(5).cons(6);
+        assert.equal(s.length, 2, "empty.snoc(..).cons(..).length");
+        basicTest(assert, s, [6,5]);
+    });
+
+    QUnit.todo(".cons.snoc", function(assert) {
+        let s = Sequence.empty.cons(5).snoc(6);
+        assert.equal(s.length, 2, "empty.cons(..).snoc(..).length");
+        basicTest(assert, s, [5,6]);
+    });
+
 
     QUnit.module("sequence.mapMany()");
 
