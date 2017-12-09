@@ -234,19 +234,31 @@ define(["./cell", "./group"], function(cell, group) {
 					return out;
 				},
 				print: () => {
+					let done = 0;
+					let fixatable = 0;
+					let missing = 0;
 					console.log(out.stringify(c => {
 						if (c.isFixated) {
+							done++;
 							return String.fromCharCode(c.value + "a".charCodeAt(0));
 						} else if (c.canBeFixated) {
+							fixatable++;
 							return "/";
 						} else if (c.isLastCandidate) {
+							fixatable++;
 							return "\\";
 						} else {
 							//return " ";
 							//return "-";
+							missing++;
 							return c.choiceCount();
 						}
 					}));
+					console.log(""
+						+ "// fix: " + done + " + " + fixatable
+						+ ", missing: " + missing
+						+ " (ttl: " + out.cellCount() + ")"
+					);
 					return out;
 				},
 				toString: () => out.stringify(),
