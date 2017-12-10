@@ -1,25 +1,17 @@
 require(["scripts/sequence"], function(Sequence) {
 
-	QUnit.module("sequence");
+	QUnit.module("sequence"); // ------------------------------------------
 
     function basicTest(assert, sq, expected) {
         if (!Array.isArray(expected)) {
             throw "need expected values as an Array - got typeof " + expected;
         }
-        assert.equal(typeof sq[Symbol.iterator], "function", 
-            "typeof new Sequence([..])[Symbol.iterator]");
-        let it1 = sq[Symbol.iterator]();
-        assert.equal(typeof it1, "object", 
-            "typeof returned iterator (1): " + it1);
-        assert.equal(typeof it1.next, "function", 
-            "typeof returned iterator's .next method' (1): " + it1.next);
-        
-        let it2 = sq[Symbol.iterator]();
-        assert.equal(typeof it2, "object", 
-            "typeof returned iterator (2): " + it2);
-        assert.equal(typeof it2.next, "function", 
-            "typeof returned iterator's .next method' (2): " + it2.next);
 
+        assert.isIterable(sq, "sq");
+
+        let it1 = sq[Symbol.iterator]();
+        let it2 = sq[Symbol.iterator]();
+        
         //Well, except for the (immutable) empty sequence...
         //assert.notStrictEqual(it1, it2, "should return new iterator on each call");
 
@@ -104,7 +96,7 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.test("sequence of sequences", function (assert) {
         let s;
-        s = new Sequence([Sequence.empty, new Sequence([1,2,3])]);
+        s = new Sequence([new Sequence([]), new Sequence([1,2,3])]);
         assert.equal(s.toString(), "<<>,<1,2,3>>");
         s = new Sequence([new Sequence([new Sequence([1,2,3])]), new Sequence(["a", "b", "c"])]);
         assert.equal(s.toString(), "<<<1,2,3>>,<a,b,c>>");
@@ -192,7 +184,7 @@ require(["scripts/sequence"], function(Sequence) {
     });
 
 
-    QUnit.module("sequence.forEach()");
+    QUnit.module("sequence.forEach()"); // ------------------------------------
 
     function test_forEach(title, inner, thisValue) {
         QUnit.test(title + " args.length=" + arguments.length, function(assert) {
@@ -238,7 +230,7 @@ require(["scripts/sequence"], function(Sequence) {
     test_forEach("from Array, with thisValue = some object", ["2", { foo: 1}, 3], { i_am_this: {}});
 
 
-    QUnit.module("sequence.first()");
+    QUnit.module("sequence.first()"); // ------------------------------------
 
     QUnit.test("from singleton Array", function(assert){
         let s = new Sequence([42]);
@@ -291,7 +283,7 @@ require(["scripts/sequence"], function(Sequence) {
     });
 
 
-    QUnit.module("sequence.cons()");
+    QUnit.module("sequence.cons()"); // ------------------------------------
 
     QUnit.test("from empty Array", function(assert) {
         let s = new Sequence([]).cons(42);
@@ -304,7 +296,7 @@ require(["scripts/sequence"], function(Sequence) {
     });
     
 
-    QUnit.module("sequence.snoc()");
+    QUnit.module("sequence.snoc()"); // ------------------------------------
 
     QUnit.test("from empty Array", function(assert) {
         let s = new Sequence([]).snoc(42);
@@ -317,7 +309,7 @@ require(["scripts/sequence"], function(Sequence) {
     });
 
 
-    QUnit.module("sequence.skip()");
+    QUnit.module("sequence.skip()"); // -----------------------------------
 
     QUnit.test("with invalid n", function(assert) {
         [[], [4711]].forEach(a => {
@@ -362,7 +354,7 @@ require(["scripts/sequence"], function(Sequence) {
     });
 
 
-    QUnit.module("sequence.take()");
+    QUnit.module("sequence.take()"); // ----------------------------------
 
     QUnit.test("with invalid argument n", function(assert) {
         [[], [4711]].forEach(a => {
@@ -418,73 +410,7 @@ require(["scripts/sequence"], function(Sequence) {
     });
 
 
-    QUnit.module("sequence.empty");
-
-    QUnit.test(".toString", function(assert) {
-        let s = Sequence.empty;
-        assert.equal(s.toString(), "<>");
-    });
-
-    QUnit.test("no elems, .first, .map, .filter", function(assert) {
-        let s = Sequence.empty;
-        
-        basicTest(assert, s, []);
-        
-        Sequence.empty = {};
-        assert.strictEqual(Sequence.empty, s, 
-            "sequence.empty should not be mutable");
-
-        assert.throws(() => s.first(), /empty/, "empty.first() should throw");
-
-        basicTest(assert, s.map(x => "" + x), []);
-        basicTest(assert, s.filter(x => x < 0), []);
-        
-    });
-
-    QUnit.todo(".map, .filter etc should return same thing", function(assert) {
-        let s = Sequence.empty;
-        
-        assert.strictEqual(s.map(x => "" + x), s, 
-            "empty.map(..) should return same thing");
-        assert.strictEqual(s.filter(x => x < 0), s, 
-            "empty.filter(..) should return same thing");
-    });
-
-    QUnit.test(".cons", function(assert) {
-        let s = Sequence.empty;
-
-        assert.equal(s.cons(5).length, 1, "empty.cons(..).length");
-
-        basicTest(assert, s.cons(5),           [5]);
-        basicTest(assert, s.cons(5).cons(6), [6,5]);
-    });
-
-    QUnit.test(".snoc", function(assert) {
-        let s = Sequence.empty.snoc(5);
-        assert.equal(s.length, 1, "empty.snoc(..).length");
-        basicTest(assert, s, [5]);
-    });
-
-    QUnit.test(".snoc.snoc", function(assert) {
-        let s = Sequence.empty.snoc(5).snoc(6);
-        assert.equal(s.length, 2, "empty.snoc(..).snoc(..).length");
-        basicTest(assert, s, [5,6]);
-    });
-
-    QUnit.test(".snoc.cons", function(assert) {
-        let s = Sequence.empty.snoc(5).cons(6);
-        assert.equal(s.length, 2, "empty.snoc(..).cons(..).length");
-        basicTest(assert, s, [6,5]);
-    });
-
-    QUnit.test(".cons.snoc", function(assert) {
-        let s = Sequence.empty.cons(5).snoc(6);
-        assert.equal(s.length, 2, "empty.cons(..).snoc(..).length");
-        basicTest(assert, s, [5,6]);
-    });
-
-
-    QUnit.module("sequence.mapMany()");
+    QUnit.module("sequence.mapMany()"); // ---------------------------------
 
     QUnit.test("with invalid function argument", function(assert) {
         [[], [4711]].forEach(a => {
