@@ -100,9 +100,10 @@ define(function() {
 					value: function () {
 						const it = inner[Symbol.iterator]();
 						const origNext = it.next.bind(it);
-						let index = 0;
+						let first = true;
 						const newNext = () => {
-							if (index++ === 0) {
+							if (first) {
+								first = false;
 								return {
 									value: elem,
 									done:  false
