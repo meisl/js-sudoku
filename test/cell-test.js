@@ -1,13 +1,13 @@
 require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 
-	QUnit.module("cell");
 
+	QUnit.module("cell"); // ---------------------------------------------------------
 
 	QUnit.skip("create", function(assert) {
 		var s = {};
 	
 		var c = cell.create(s);
-		assert.equal(typeof c, "object", "returns an object");
+		assert.same(typeof c, "object", "returns an object");
 	});
 
 	QUnit.test(".field", function(assert) {
@@ -15,12 +15,12 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		var t = sudoku.create({box: [2, 3]});
 
 		s.forEachCell(c => {
-			assert.strictEqual(c.field, s, 
+			assert.same(c.field, s, 
 				c.id + ": .field returns the sudoku instance that created the cell");
 			assert.notStrictEqual(c.field, t, 
-				"(make sure strictEqual knows object identity)");
+				"(make sure 'same'' (fka 'strictEqual')' knows object identity)");
 			c.field = null;
-			assert.strictEqual(c.field, s, 
+			assert.same(c.field, s, 
 				"assigning " + c.id + ": .field does nothing");
 		});
 	});
@@ -31,9 +31,9 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		for (let y = 0; y < s.n(); y++) {
 			for (let x = 0; x < s.n(); x++) {
 				let c = s.cell(x, y);
-				assert.equal(c.x, x, c.id + ".x");
-				assert.equal(c.y, y, c.id + ".y");
-				assert.equal(c.id, s.toXcoord(x) + s.toYcoord(y), c.id + ".id");
+				assert.same(c.x, x, c.id + ".x");
+				assert.same(c.y, y, c.id + ".y");
+				assert.same(c.id, s.toXcoord(x) + s.toYcoord(y), c.id + ".id");
 			}
 		}
 	});
@@ -49,7 +49,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 				.sort()
 				.join(",")
 			;
-			assert.equal(c.toString(), 
+			assert.same(c.toString(), 
 				c.id + "{" + choicesStr + "}", c.id + "{" + choicesStr + "}");
 		});
 	});
@@ -59,27 +59,27 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		s.forEachCell(c => {
 			
 			let row = c.row;
-			assert.equal(typeof row, "object", "typeof " + c.id + ".row");
-			assert.strictEqual(row.field(), s, 
+			assert.same(typeof row, "object", "typeof " + c.id + ".row");
+			assert.same(row.field(), s, 
 				c.id + ".row=" + row.id + ": " + ".row.field() points to .field");
-			assert.strictEqual(row, s.rows[c.y],
+			assert.same(row, s.rows[c.y],
 				c.id + ".row=" + row.id + ": should be same as .field.rows[" + c.y + "]");
 			
 			let col = c.col;
-			assert.equal(typeof col, "object", "typeof " + c.id + ".col");
-			assert.strictEqual(col.field(), s,
+			assert.same(typeof col, "object", "typeof " + c.id + ".col");
+			assert.same(col.field(), s,
 				c.id + ".col=" + col.id + ": " + ".col.field() points to .field");
-			assert.strictEqual(col, s.columns[c.x],
+			assert.same(col, s.columns[c.x],
 				c.id + ".col=" + col.id + ": should be same as .field.columns[" + c.x + "]");
 			
 			let box = c.box;
-			assert.equal(typeof box, "object", "typeof " + c.id + ".box");
-			assert.strictEqual(box.field(), s,
+			assert.same(typeof box, "object", "typeof " + c.id + ".box");
+			assert.same(box.field(), s,
 				c.id + ".box=" + box.id + ": " + ".box.field() points to .field");
 			let boxX = Math.trunc(c.x / s.boxW());
 			let boxY = Math.trunc(c.y / s.boxH());
 			let boxIdx = boxX + boxY * s.boxH(); // there are boxH (!) boxes in a row
-			assert.strictEqual(box, s.boxes[boxIdx],
+			assert.same(box, s.boxes[boxIdx],
 				c.id + ".box=" + box.id + ": should be same as .field.boxes[" + boxIdx + "]");
 		});
 	});
@@ -88,7 +88,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		let s = sudoku.create({box: [3, 2]});
 		s.forEachCell(c => {
 			f = c.groups.some;
-			assert.equal(typeof f, "function",
+			assert.same(typeof f, "function",
 				"typeof " + c.id + ".groups.function");
 		});
 	});
@@ -97,7 +97,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		let s = sudoku.create({box: [3, 2]});
 		s.forEachCell(c => {
 			f = c.choices.some;
-			assert.equal(typeof f, "function",
+			assert.same(typeof f, "function",
 				"typeof " + c.id + ".choices.function");
 		});
 	});
@@ -109,16 +109,16 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			let groups = new Array(3);
 			c.groups.forEach(g => {
 				groups[i++] = g;
-				assert.equal(typeof g, "object", 
+				assert.same(typeof g, "object", 
 					c.id + ": " + i + ". group is an object");
-				assert.strictEqual(g.field(), c.field,
+				assert.same(g.field(), c.field,
 					c.id + ": " + i + ". group's .field() points to same as cell.field");
 				for (let k = 0; k < i-1; k++) {
 					assert.notStrictEqual(g, groups[k],
 						c.id + ": " + i + ". group !== " + (k+1) + ". group");
 				}
 			});
-			assert.equal(groups.length, 3, "cell belongs to 3 groups");
+			assert.same(groups.length, 3, "cell belongs to 3 groups");
 		});
 	});
 
@@ -130,7 +130,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		var m, k, choices;
 		s.forEachCell(c => {
 			m = c.choiceCount();
-			assert.equal(m, n,
+			assert.same(m, n,
 				c.id + ": .choiceCount() should be " + n);
 			k = 0;
 			choices = new Set();
@@ -141,13 +141,13 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 				choices.add(w);
 				k++;
 			});
-			assert.equal(k, m, "nr of values yielded by .forEachChoice(..) should be " + m);
+			assert.same(k, m, "nr of values yielded by .forEachChoice(..) should be " + m);
 			
 			// now remove a value from choices
 			c.removeChoice(v);
 			
 			m = c.choiceCount();
-			assert.equal(m, n - 1,
+			assert.same(m, n - 1,
 				c.id + ": .choiceCount() after .removeChoice(" + v + ") should be " + (n-1));
 			k = 0;
 			choices.clear();
@@ -158,7 +158,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 				choices.add(w);
 				k++;
 			});
-			assert.equal(k, m, "after removeChoice(" + v 
+			assert.same(k, m, "after removeChoice(" + v 
 				+ "): nr of values yielded by .forEachChoice(..) should be " + m);
 			assert.notOk(choices.has(v), 
 				"removed value " + v + " not anymore contained in " + choices);
@@ -212,9 +212,9 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 		s.forEachCell(c => {
 			assert.ok(c.choiceCount() >= 1, 
 				c.id + " needs at least 1 choices for this test: " + c.choiceCount());
-			assert.strictEqual(c.value, undefined, c.id + ".value should be undefined");
+			assert.same(c.value, undefined, c.id + ".value should be undefined");
 			assert.notOk(c.isFixated, c.id + ".isFixated should be false");
-			assert.equal(c.canBeFixated, c.choiceCount() == 1, 
+			assert.same(c.canBeFixated, c.choiceCount() == 1, 
 				c.id + ".canBeFixated should be " + (c.choiceCount() == 1) 
 				+ " (choiceCount == " + c.choiceCount() + ")");
 			assert.throws( () => { c.value = undefined; }, /not a value/,
@@ -232,9 +232,9 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			
 			c.value = v1;
 		
-			assert.equal(c.choiceCount(), 1, 
+			assert.same(c.choiceCount(), 1, 
 				c.id + " should have 1 choice after setting .value = " + v1);
-			assert.equal(c.value, v1, 
+			assert.same(c.value, v1, 
 				c.id + " should have .value = " + v1 + " after setting .value = " + v1);
 			assert.ok(c.isFixated, 
 				c.id + ".isFixated should be true after setting .value = " + v1);
@@ -245,7 +245,7 @@ require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
 			c.groups.forEach(g => {
 				assert.ok(g.hasCandidate(c, v1),
 					g.id + " still has " + c + " as candidate for " + v1);
-				assert.equal(g.candidates(v1).size, 1, 
+				assert.same(g.candidates(v1).size, 1, 
 					g.id + " has only " + c + " as candidate for " + v1);
 			});
 			
