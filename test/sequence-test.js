@@ -1,40 +1,7 @@
 require(["scripts/sequence"], function(Sequence) {
 
+
 	QUnit.module("sequence"); // ------------------------------------------
-
-    function basicTest(assert, sq, expected) {
-        if (!Array.isArray(expected)) {
-            throw "need expected values as an Array - got typeof " + expected;
-        }
-
-        assert.isIterable(sq, "sq");
-
-        let it1 = sq[Symbol.iterator]();
-        let it2 = sq[Symbol.iterator]();
-
-        //Well, except for the (immutable) empty sequence...
-        //assert.notStrictEqual(it1, it2, "should return new iterator on each call");
-
-        let expectedLength = expected.length;
-        assert.same(sq.length, expectedLength, "sequence.length should be " + expectedLength);
-        assert.same(sq.size,   expectedLength, "sequence.size should be " + expectedLength);
-
-        let expectedIterator = expected[Symbol.iterator]();
-        let expElem;
-        let index = 0;
-        do {
-            expElem = expectedIterator.next();
-            let e1 = it1.next();
-            let e2 = it2.next();
-            assert.same(e1.value, expElem.value, ".value @ index" + index + " (a)");
-            assert.same(e1.done,  expElem.done,  ".done @ index" + index + " (a)");
-            
-            assert.same(e2.value, expElem.value, ".value @ index" + index + " (b)");
-            assert.same(e2.done,  expElem.done,  ".done @ index" + index + " (b)");
-            index++;
-        } while (!expElem.done);
-
-    }
     
     QUnit.test("from empty Array", function(assert) {
         let inner = [];
@@ -44,38 +11,37 @@ require(["scripts/sequence"], function(Sequence) {
 
         inner.push(1984);
         assert.same(inner.length, 1, "underlying array was pushed");
-        assert.same(s.length, 1, "sequence.length after mutating underlying iterable");
         assert.all.same(s, inner, "sequence after mutating underlying iterable");
     });
 
     QUnit.test("from singleton Array", function(assert) {
         let inner = [42];
         let s = new Sequence(inner);
-        basicTest(assert, s, inner);
+        
+        assert.all.same(s, inner);
 
         inner.push(1984);
-        assert.equal(inner.length, 2, "underlying array was pushed");
-        assert.equal(s.length, 2, "sequence.length after mutating underlying iterable");
+        assert.same(inner.length, 2, "underlying array was pushed");
+        assert.all.same(s, inner, "sequence after mutating underlying iterable");
 
         inner.shift();
-        assert.equal(inner.length, 1, "underlying array was shifted");
-        assert.equal(s.length, 1, "sequence.length after mutating underlying iterable");
+        assert.same(inner.length, 1, "underlying array was shifted");
+        assert.all.same(s, inner, "sequence after mutating underlying iterable");
 
     });
 
     QUnit.test("from larger Array", function(assert) {
         let inner = [2,1,3];
         let s = new Sequence(inner);
-        basicTest(assert, s, inner);
+        assert.all.same(s, inner);
 
         inner.push(1984);
-        assert.equal(inner.length, 4, "underlying array was pushed");
-        assert.equal(s.length, 4, "sequence.length after mutating underlying iterable");
+        assert.same(inner.length, 4, "underlying array was pushed");
+        assert.all.same(s, inner, "sequence after mutating underlying iterable");
 
         inner.shift();
-        assert.equal(inner.length, 3, "underlying array was shifted");
-        assert.equal(s.length, 3, "sequence.length after mutating underlying iterable");
-
+        assert.same(inner.length, 3, "underlying array was shifted");
+        assert.all.same(s, inner, "sequence after mutating underlying iterable");
     });
 
 
@@ -83,54 +49,54 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.test("from empty Array", function (assert) {
         let s = new Sequence([]);
-        assert.equal(s.toString(), "<>");
+        assert.same(s.toString(), "<>");
     });
 
     QUnit.test("with simple values", function (assert) {
         let s;
         s = new Sequence([42]);
-        assert.equal(s.toString(), "<42>");
+        assert.same(s.toString(), "<42>");
         s = new Sequence(["abc"]);
-        assert.equal(s.toString(), "<abc>");
+        assert.same(s.toString(), "<abc>");
         s = new Sequence(["abc", 4711]);
-        assert.equal(s.toString(), "<abc,4711>");
+        assert.same(s.toString(), "<abc,4711>");
     });
 
     QUnit.test("sequence of sequences", function (assert) {
         let s;
         s = new Sequence([new Sequence([]), new Sequence([1,2,3])]);
-        assert.equal(s.toString(), "<<>,<1,2,3>>");
+        assert.same(s.toString(), "<<>,<1,2,3>>");
         s = new Sequence([new Sequence([new Sequence([1,2,3])]), new Sequence(["a", "b", "c"])]);
-        assert.equal(s.toString(), "<<<1,2,3>>,<a,b,c>>");
+        assert.same(s.toString(), "<<<1,2,3>>,<a,b,c>>");
     });
 
     QUnit.test("sequence of arrays", function (assert) {
         let s;
         s = new Sequence([[], [1,2,3]]);
-        assert.equal(s.toString(), "<[],[1,2,3]>");
+        assert.same(s.toString(), "<[],[1,2,3]>");
         s = new Sequence([[new Sequence([1,2,3])]]);
-        assert.equal(s.toString(), "<[<1,2,3>]>");
+        assert.same(s.toString(), "<[<1,2,3>]>");
     });
 
     QUnit.test("sequence of objects", function (assert) {
         let s;
         s = new Sequence([{ foo: "bar", x: 42 }]);
-        assert.equal(s.toString(), "<{foo: bar, x: 42}>");
+        assert.same(s.toString(), "<{foo: bar, x: 42}>");
         s = new Sequence([{ foo: "bar", x: { y: 42 } }]);
-        assert.equal(s.toString(), "<{foo: bar, x: {y: 42}}>",
+        assert.same(s.toString(), "<{foo: bar, x: {y: 42}}>",
             "should apply recursively");
         s = new Sequence([{ foo: "bar", x: { y: new Sequence([42]) }}]);
-        assert.equal(s.toString(), "<{foo: bar, x: {y: <42>}}>",
+        assert.same(s.toString(), "<{foo: bar, x: {y: <42>}}>",
             "should apply recursively");
         s = new Sequence([{ foo: "bar", x: { y: [42] }}]);
-        assert.equal(s.toString(), "<{foo: bar, x: {y: [42]}}>",
+        assert.same(s.toString(), "<{foo: bar, x: {y: [42]}}>",
             "should apply recursively");
     });
 
     QUnit.test("sequence of array of objects", function (assert) {
         let s;
         s = new Sequence([[{ foo: "bar", x: new Sequence([42]) }]]);
-        assert.equal(s.toString(), "<[{foo: bar, x: <42>}]>",
+        assert.same(s.toString(), "<[{foo: bar, x: <42>}]>",
             "should apply recursively");
     });
 
@@ -141,7 +107,7 @@ require(["scripts/sequence"], function(Sequence) {
             let s = new Sequence(inner).map(mapFn);
             let expected = [...inner].map(mapFn);
 
-            basicTest(assert, s, expected);
+            assert.all.same(s, expected);
         });
     }
 
@@ -155,7 +121,7 @@ require(["scripts/sequence"], function(Sequence) {
         let s = new Sequence(orig).map(f1).map(f2);
         let expected = orig.map(f1).map(f2);
 
-        basicTest(assert, s, expected);
+        assert.all.same(s, expected);
     });
 
 
@@ -166,7 +132,7 @@ require(["scripts/sequence"], function(Sequence) {
             let s = new Sequence(inner).filter(predicateFn);
             let expected = [...inner].filter(predicateFn);
 
-            basicTest(assert, s, expected);
+            assert.all.same(s, expected);
         });
     }
 
@@ -182,7 +148,7 @@ require(["scripts/sequence"], function(Sequence) {
         let s = new Sequence(orig).filter(f1).filter(f2);
         let expected = orig.filter(f1).filter(f2);
 
-        basicTest(assert, s, expected);
+        assert.all.same(s, expected);
     });
 
 
@@ -215,14 +181,14 @@ require(["scripts/sequence"], function(Sequence) {
             }
             
             // assert
-            assert.equal(actual.length, expected.length, 
+            assert.same(actual.length, expected.length, 
                 "callback should have been called " + expected.length + " times");
             
             expected.forEach( (exp, i) => {
                 let act = actual[i];
-                assert.strictEqual(act.this, exp.this, "call #" + i + ": thisValue");
-                assert.strictEqual(act.value, exp.value, "call #" + i + ": 1st arg (value)");
-                assert.strictEqual(act.index, exp.index, "call #" + i + ": 2nd arg (index)");
+                assert.same(act.this, exp.this, "call #" + i + ": thisValue");
+                assert.same(act.value, exp.value, "call #" + i + ": 1st arg (value)");
+                assert.same(act.index, exp.index, "call #" + i + ": 2nd arg (index)");
             });
         });
     }
@@ -236,12 +202,12 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.test("from singleton Array", function(assert){
         let s = new Sequence([42]);
-        assert.equal(s.first(), 42, "should return the (only) value");
+        assert.same(s.first(), 42, "should return the (only) value");
     });
 
     QUnit.test("from larger Array", function(assert){
         let s = new Sequence([42, 7, 5]);
-        assert.equal(s.first(), 42, "should return the first value");
+        assert.same(s.first(), 42, "should return the first value");
     });
 
     QUnit.test("from empty Array", function(assert){
@@ -261,7 +227,7 @@ require(["scripts/sequence"], function(Sequence) {
     
     QUnit.test("from filtered Array (then non-empty)", function(assert){
         let s = new Sequence([42, -6, -5, 72]).filter(x => x < 0);
-        assert.equal(s.first(), -6);
+        assert.same(s.first(), -6);
     });
 
     QUnit.test("from mapped (initially empty) Array", function(assert){
@@ -271,7 +237,7 @@ require(["scripts/sequence"], function(Sequence) {
     
     QUnit.test("from mapped Array", function(assert){
         let s = new Sequence([42, -6, -5, 72]).map(x => x + 1);
-        assert.equal(s.first(), 43);
+        assert.same(s.first(), 43);
     });
 
     QUnit.test("from mapped, then filtered Array (then empty)", function(assert){
@@ -281,7 +247,7 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.test("from mapped, then filtered Array (then non-empty)", function(assert){
         let s = new Sequence([42, -1, 0, -6, -5, 72]).map(x => x + 1).filter(x => x < 0);
-        assert.equal(s.first(), -5);
+        assert.same(s.first(), -5);
     });
 
 
@@ -289,12 +255,13 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.test("from empty Array", function(assert) {
         let s = new Sequence([]).cons(42);
-        basicTest(assert, s, [42]);
+        assert.all.same(s, [42], "new Sequence([]).cons(42)");
     });
 
     QUnit.test("from non-empty Array", function(assert) {
         let s = new Sequence([74, 4711]);
-        basicTest(assert, s.cons(42), [42, 74, 4711]);
+        assert.all.same(s.cons(42), [42, 74, 4711],
+            "new Sequence([74, 4711]).cons(42)");
     });
     
 
@@ -302,12 +269,13 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.test("from empty Array", function(assert) {
         let s = new Sequence([]).snoc(42);
-        basicTest(assert, s, [42]);
+        assert.all.same(s, [42], "new Sequence([]).snoc(42)");
     });
 
     QUnit.test("from non-empty Array", function(assert) {
         let s = new Sequence([74, 4711]);
-        basicTest(assert, s.snoc(42), [74, 4711, 42]);
+        assert.all.same(s.snoc(42), [74, 4711, 42],
+            "new Sequence([74, 4711]).snoc(42)");
     });
 
 
@@ -331,28 +299,28 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.test("from empty Array", function(assert) {
         let s = new Sequence([]);
-        basicTest(assert, s.skip(0), []);
-        basicTest(assert, s.skip(1), []);
-        basicTest(assert, s.skip(2), []);
-        basicTest(assert, s.skip(3), []);
+        assert.all.same(s.skip(0), []);
+        assert.all.same(s.skip(1), []);
+        assert.all.same(s.skip(2), []);
+        assert.all.same(s.skip(3), []);
     });
 
     QUnit.test("from non-empty Array", function(assert) {
         let s = new Sequence([42, 4711]);
-        basicTest(assert, s.skip(0), [42, 4711]);
-        basicTest(assert, s.skip(1), [4711]);
-        basicTest(assert, s.skip(2), []);
-        basicTest(assert, s.skip(3), []);
+        assert.all.same(s.skip(0), [42, 4711]);
+        assert.all.same(s.skip(1), [4711]);
+        assert.all.same(s.skip(2), []);
+        assert.all.same(s.skip(3), []);
     });
 
     QUnit.test("from empty Array, with ridiculously large n", function(assert) {
         let s = new Sequence([]);
-        basicTest(assert, s.skip(1 << 26), []);
+        assert.all.same(s.skip(1 << 26), []);
     });
 
     QUnit.test("from non-empty Array, with ridiculously large n", function(assert) {
         let s = new Sequence([42, 4711]);
-        basicTest(assert, s.skip(1 << 26), []);
+        assert.all.same(s.skip(1 << 26), []);
     });
 
 
@@ -376,39 +344,39 @@ require(["scripts/sequence"], function(Sequence) {
 
     QUnit.test("from empty Array", function(assert) {
         let s = new Sequence([]);
-        basicTest(assert, s.take(0), []);
-        basicTest(assert, s.take(1), []);
-        basicTest(assert, s.take(2), []);
-        basicTest(assert, s.take(3), []);
+        assert.all.same(s.take(0), []);
+        assert.all.same(s.take(1), []);
+        assert.all.same(s.take(2), []);
+        assert.all.same(s.take(3), []);
 
-        basicTest(assert, s.take(0).take(1), []);
-        basicTest(assert, s.take(2).take(1), []);
-        basicTest(assert, s.take(1).take(2), []);
+        assert.all.same(s.take(0).take(1), []);
+        assert.all.same(s.take(2).take(1), []);
+        assert.all.same(s.take(1).take(2), []);
     });
 
     QUnit.test("from non-empty Array", function(assert) {
         let s = new Sequence([42, 4711, 1974]);
-        basicTest(assert, s.take(0), []);
-        basicTest(assert, s.take(1), [42]);
-        basicTest(assert, s.take(2), [42, 4711]);
-        basicTest(assert, s.take(3), [42, 4711, 1974]);
-        basicTest(assert, s.take(4), [42, 4711, 1974]);
+        assert.all.same(s.take(0), []);
+        assert.all.same(s.take(1), [42]);
+        assert.all.same(s.take(2), [42, 4711]);
+        assert.all.same(s.take(3), [42, 4711, 1974]);
+        assert.all.same(s.take(4), [42, 4711, 1974]);
 
-        basicTest(assert, s.take(0).take(1), []);
-        basicTest(assert, s.take(2).take(0), []);
-        basicTest(assert, s.take(2).take(1), [42]);
-        basicTest(assert, s.take(1).take(2), [42]);
-        basicTest(assert, s.take(2).take(2), [42, 4711]);
+        assert.all.same(s.take(0).take(1), []);
+        assert.all.same(s.take(2).take(0), []);
+        assert.all.same(s.take(2).take(1), [42]);
+        assert.all.same(s.take(1).take(2), [42]);
+        assert.all.same(s.take(2).take(2), [42, 4711]);
     });
 
     QUnit.test("from empty Array, with ridiculously large n", function(assert) {
         let s = new Sequence([]);
-        basicTest(assert, s.take(1 << 26), []);
+        assert.all.same(s.take(1 << 26), []);
     });
 
     QUnit.test("from non-empty Array, with ridiculously large n", function(assert) {
         let s = new Sequence([42, 4711]);
-        basicTest(assert, s.take(1 << 26), [42, 4711]);
+        assert.all.same(s.take(1 << 26), [42, 4711]);
     });
 
 
@@ -430,7 +398,7 @@ require(["scripts/sequence"], function(Sequence) {
             for (let i = 0; i < x; i++) yield x;
         }
 
-        basicTest(assert, s.mapMany(f), []);
+        assert.all.same(s.mapMany(f), []);
     });
 
     QUnit.test("from non-empty Array with generator fn", function(assert) {
@@ -439,15 +407,15 @@ require(["scripts/sequence"], function(Sequence) {
             for (let i = 0; i < x; i++) yield x;
         }
 
-        basicTest(assert, s.mapMany(f), [3,3,3,2,2,1]);
+        assert.all.same(s.mapMany(f), [3,3,3,2,2,1]);
     });
 
     QUnit.test("from Array of Arrays", function(assert) {
         let parts = [[],[1,2],[],[3],[4,5]];
         let s = new Sequence(parts.map((_,i) => i));
-        assert.equal("" + [...s.values], "" + [0, 1, 2, 3, 4],
+        assert.same("" + [...s.values], "" + [0, 1, 2, 3, 4],
             "should be sequence of indices into parts");
-        basicTest(assert, s.mapMany(i => parts[i]), [1,2,3,4,5]);
+        assert.all.same(s.mapMany(i => parts[i]), [1,2,3,4,5]);
     });
 
 
