@@ -87,5 +87,42 @@ QUnit.test("assert.same is a synonym for assert.strictEqual", function(assert) {
 		"2nd .pushResult call: arguments[0].expected");
 	assert.strictEqual(c.arguments[0].message, message,
 		"2nd .pushResult call: arguments[0].message");
-	
+
 });
+
+QUnit.test("assert.typeof", function(assert) {
+	assert.same(typeof assert.typeof, "function", "typeof assert.typeof");
+});
+
+QUnit.test("assert.isFunction", function(assert) {
+	assert.typeof(assert.isFunction, "function", "assert.isFunction");
+});
+
+QUnit.test("assert.isObject", function(assert) {
+	assert.isFunction(assert.isObject, "assert.isObject");
+});
+
+QUnit.test("assert.isSymbol", function(assert) {
+	assert.isFunction(assert.isSymbol, "assert.isSymbol");
+});
+
+QUnit.test("assert.isBoolean", function(assert) {
+	assert.isFunction(assert.isBoolean, "assert.isBoolean");
+});
+
+QUnit.test("assert.isNumber", function(assert) {
+	assert.isFunction(assert.isNumber, "assert.isNumber");
+});
+
+QUnit.test("assert.isString", function(assert) {
+	assert.isFunction(assert.isString, "assert.isString");
+});
+
+
+QUnit.test("assert.all", function(assert) {
+	assert.isObject(assert.all, "assert.all");
+	["equal", "strictEqual", "same"].forEach(name => {
+		assert.isFunction(assert.all[name], "assert.all." + name);
+	});
+});
+
