@@ -211,7 +211,7 @@ define(function() {
         			if (out == "[object Object]") {
         				out = "{";
         				let first = true;
-						for (prop in x) {
+						for (let prop in x) {
 							if (first) {
 								first = false;
 							} else {
