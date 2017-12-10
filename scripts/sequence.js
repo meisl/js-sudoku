@@ -207,7 +207,21 @@ define(function() {
         		} else if (x instanceof Set) {
         			return "Set{" + new seq(x).toString() + "}"
         		} else {
-        			return x.toString();
+        			let out = x.toString();
+        			if (out == "[object Object]") {
+        				out = "{";
+        				let first = true;
+						for (prop in x) {
+							if (first) {
+								first = false;
+							} else {
+								out += ", ";
+							}
+							out += prop + ": " + f(x[prop]);
+						}
+						out += "}";
+        			}
+       				return out;
         		}
         	}
         	return "<" + [...this.map(f)].join(",") + ">";

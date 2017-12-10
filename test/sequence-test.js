@@ -84,6 +84,64 @@ require(["scripts/sequence"], function(Sequence) {
 
     });
 
+
+    QUnit.module("sequence.toString"); // ---------------------------------------------------
+
+    QUnit.test("from empty Array", function (assert) {
+        let s = new Sequence([]);
+        assert.equal(s.toString(), "<>");
+    });
+
+    QUnit.test("with simple values", function (assert) {
+        let s;
+        s = new Sequence([42]);
+        assert.equal(s.toString(), "<42>");
+        s = new Sequence(["abc"]);
+        assert.equal(s.toString(), "<abc>");
+        s = new Sequence(["abc", 4711]);
+        assert.equal(s.toString(), "<abc,4711>");
+    });
+
+    QUnit.test("sequence of sequences", function (assert) {
+        let s;
+        s = new Sequence([Sequence.empty, new Sequence([1,2,3])]);
+        assert.equal(s.toString(), "<<>,<1,2,3>>");
+        s = new Sequence([new Sequence([new Sequence([1,2,3])]), new Sequence(["a", "b", "c"])]);
+        assert.equal(s.toString(), "<<<1,2,3>>,<a,b,c>>");
+    });
+
+    QUnit.test("sequence of arrays", function (assert) {
+        let s;
+        s = new Sequence([[], [1,2,3]]);
+        assert.equal(s.toString(), "<[],[1,2,3]>");
+        s = new Sequence([[new Sequence([1,2,3])]]);
+        assert.equal(s.toString(), "<[<1,2,3>]>");
+    });
+
+    QUnit.test("sequence of objects", function (assert) {
+        let s;
+        s = new Sequence([{ foo: "bar", x: 42 }]);
+        assert.equal(s.toString(), "<{foo: bar, x: 42}>");
+        s = new Sequence([{ foo: "bar", x: { y: 42 } }]);
+        assert.equal(s.toString(), "<{foo: bar, x: {y: 42}}>",
+            "should apply recursively");
+        s = new Sequence([{ foo: "bar", x: { y: new Sequence([42]) }}]);
+        assert.equal(s.toString(), "<{foo: bar, x: {y: <42>}}>",
+            "should apply recursively");
+        s = new Sequence([{ foo: "bar", x: { y: [42] }}]);
+        assert.equal(s.toString(), "<{foo: bar, x: {y: [42]}}>",
+            "should apply recursively");
+    });
+
+    QUnit.test("sequence of array of objects", function (assert) {
+        let s;
+        s = new Sequence([[{ foo: "bar", x: new Sequence([42]) }]]);
+        assert.equal(s.toString(), "<[{foo: bar, x: <42>}]>",
+            "should apply recursively");
+    });
+
+    QUnit.module("sequence.map"); // ---------------------------------------------------
+
     function test_map(title, inner, mapFn) {
         QUnit.test(".map " + title, function(assert) {
             let s = new Sequence(inner).map(mapFn);
@@ -105,6 +163,9 @@ require(["scripts/sequence"], function(Sequence) {
 
         basicTest(assert, s, expected);
     });
+
+
+    QUnit.module("sequence.filter"); // ---------------------------------------------------
 
     function test_filter(title, inner, predicateFn) {
         QUnit.test(".filter " + title, function(assert) {
@@ -358,6 +419,11 @@ require(["scripts/sequence"], function(Sequence) {
 
 
     QUnit.module("sequence.empty");
+
+    QUnit.test(".toString", function(assert) {
+        let s = Sequence.empty;
+        assert.equal(s.toString(), "<>");
+    });
 
     QUnit.test("no elems, .first, .map, .filter", function(assert) {
         let s = Sequence.empty;
