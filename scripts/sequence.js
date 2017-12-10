@@ -8,6 +8,7 @@ define(function() {
 
 	const singletonSeq = elem => new Sequence([elem]);
 
+		             
 	function makeGetIterator(inner, cb, makeTransformedNext) {
 		return () => {
 			let it = inner[Symbol.iterator]();
@@ -118,7 +119,20 @@ define(function() {
 				},
 			});
         },
-        // function f(cb, n, s) { const k = s.size; s.filter( (e,i) => i < k-n).forEach( (e,i) => cb(e, s.skip(i+1))) }
+        snoc: function (elem) {
+        	const inner = this;
+			return Object.create(inner, {
+				inner:     { value: inner },
+				snocedVal: { value: elem },
+				[Symbol.iterator]: {
+					value: function* () {
+						yield* inner[Symbol.iterator]();
+						yield elem;
+					}
+				},
+			});
+        },
+        
         skip: function (n) {
         	if (!Number.isInteger(n) || n < 0) {
         		throw "invalid n = " + n + " - must be non-negative integer";
@@ -253,3 +267,4 @@ define(function() {
 
 	return Sequence;
 });
+

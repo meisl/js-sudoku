@@ -241,6 +241,19 @@ require(["scripts/sequence"], function(Sequence) {
         let s = new Sequence([74, 4711]);
         basicTest(assert, s.cons(42), [42, 74, 4711]);
     });
+    
+
+    QUnit.module("sequence.snoc()");
+
+    QUnit.test("from empty Array", function(assert) {
+        let s = new Sequence([]).snoc(42);
+        basicTest(assert, s, [42]);
+    });
+
+    QUnit.test("from non-empty Array", function(assert) {
+        let s = new Sequence([74, 4711]);
+        basicTest(assert, s.snoc(42), [74, 4711, 42]);
+    });
 
 
     QUnit.module("sequence.skip()");
@@ -386,7 +399,7 @@ require(["scripts/sequence"], function(Sequence) {
         basicTest(assert, s, [5]);
     });
 
-    QUnit.todo(".snoc.snoc", function(assert) {
+    QUnit.test(".snoc.snoc", function(assert) {
         let s = Sequence.empty.snoc(5).snoc(6);
         assert.equal(s.length, 2, "empty.snoc(..).snoc(..).length");
         basicTest(assert, s, [5,6]);
@@ -398,7 +411,7 @@ require(["scripts/sequence"], function(Sequence) {
         basicTest(assert, s, [6,5]);
     });
 
-    QUnit.todo(".cons.snoc", function(assert) {
+    QUnit.test(".cons.snoc", function(assert) {
         let s = Sequence.empty.cons(5).snoc(6);
         assert.equal(s.length, 2, "empty.cons(..).snoc(..).length");
         basicTest(assert, s, [5,6]);
