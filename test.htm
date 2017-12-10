@@ -11,15 +11,18 @@
   <div id="qunit-fixture"></div>
   <script src="https://code.jquery.com/qunit/qunit-2.4.1.js"></script>
   <script src="scripts/require.js"></script>
-  <script src="test/ext/QUnit-ext.js"></script>
-  <script>
-	require(["./scripts/sudoku", "./scripts/sequence"], (su, sq) => { sudoku = su; seq = sq; });
-  </script>
+  <script src="scripts/QUnit-ext.js"></script>
+  <script src="test/QUnit-ext-test.js"></script>
   <script src="test/sequence-test.js"></script>
   <script src="test/sequence.empty-test.js"></script>
   <script src="test/sudoku-test.js"></script>
   <script src="test/sudoku-coords-test.js"></script>
   <script src="test/cell-test.js"></script>
   <script src="test/group-test.js"></script>
+
+  <script>
+	require(["./scripts/sudoku", "./scripts/sequence"], (su, sq) => { sudoku = su; seq = sq; });
+  </script>
+
 </body>
 </html>
