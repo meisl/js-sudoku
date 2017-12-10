@@ -1,5 +1,5 @@
 
-define(["./cell"], function(cell) {
+define(["./cell", "./sequence"], function(cell, seq) {
 
 	function Group (field, cells, id) {
 		Object.defineProperty(this, "id", {
@@ -9,7 +9,7 @@ define(["./cell"], function(cell) {
 		})
 	}
 	Group.prototype = {
-
+		toString: function () { return this.id; },
 
 	};
 
@@ -25,6 +25,7 @@ define(["./cell"], function(cell) {
 		out.candidates = v => {
 			return candidates[v];
 		};
+		out.cells = new seq(cells);
 		Object.defineProperty(out, "cs", {
 			get: function () {
 				let x = {};
