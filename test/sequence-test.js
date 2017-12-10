@@ -11,13 +11,13 @@ require(["scripts/sequence"], function(Sequence) {
 
         let it1 = sq[Symbol.iterator]();
         let it2 = sq[Symbol.iterator]();
-        
+
         //Well, except for the (immutable) empty sequence...
         //assert.notStrictEqual(it1, it2, "should return new iterator on each call");
 
         let expectedLength = expected.length;
-        assert.equal(sq.length, expectedLength, "sequence.length should be " + expectedLength);
-        assert.equal(sq.size,   expectedLength, "sequence.size should be " + expectedLength);
+        assert.same(sq.length, expectedLength, "sequence.length should be " + expectedLength);
+        assert.same(sq.size,   expectedLength, "sequence.size should be " + expectedLength);
 
         let expectedIterator = expected[Symbol.iterator]();
         let expElem;
@@ -26,11 +26,11 @@ require(["scripts/sequence"], function(Sequence) {
             expElem = expectedIterator.next();
             let e1 = it1.next();
             let e2 = it2.next();
-            assert.strictEqual(e1.value, expElem.value, ".value @ index" + index + " (a)");
-            assert.strictEqual(e1.done,  expElem.done,  ".done @ index" + index + " (a)");
+            assert.same(e1.value, expElem.value, ".value @ index" + index + " (a)");
+            assert.same(e1.done,  expElem.done,  ".done @ index" + index + " (a)");
             
-            assert.strictEqual(e2.value, expElem.value, ".value @ index" + index + " (b)");
-            assert.strictEqual(e2.done,  expElem.done,  ".done @ index" + index + " (b)");
+            assert.same(e2.value, expElem.value, ".value @ index" + index + " (b)");
+            assert.same(e2.done,  expElem.done,  ".done @ index" + index + " (b)");
             index++;
         } while (!expElem.done);
 
@@ -39,11 +39,13 @@ require(["scripts/sequence"], function(Sequence) {
     QUnit.test("from empty Array", function(assert) {
         let inner = [];
         let s = new Sequence(inner);
-        basicTest(assert, s, inner);
+        
+        assert.all.same(s, inner);
 
         inner.push(1984);
-        assert.equal(inner.length, 1, "underlying array was pushed");
-        assert.equal(s.length, 1, "sequence.length after mutating underlying iterable");
+        assert.same(inner.length, 1, "underlying array was pushed");
+        assert.same(s.length, 1, "sequence.length after mutating underlying iterable");
+        assert.all.same(s, inner, "sequence after mutating underlying iterable");
     });
 
     QUnit.test("from singleton Array", function(assert) {

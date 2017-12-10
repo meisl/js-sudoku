@@ -1,5 +1,9 @@
 require([], function() {
 
+    QUnit.assert.same = function same(v, x, m) {
+        return this.strictEqual(v, x, m);
+    }
+
     QUnit.assert.typeof = function(value, expected, what, message) {
         let actual = typeof value;
 
@@ -138,13 +142,11 @@ require([], function() {
 
     QUnit.assert.all = {
         equal: assert_all2.bind(
-            QUnit.assert, 
-            (a,b) => a == b,
-            QUnit.assert.equal
+            QUnit.assert, (a,b) => a == b,  QUnit.assert.equal
         ), strictEqual: assert_all2.bind(
-            QUnit.assert, 
-            (a,b) => a === b,
-            QUnit.assert.strictEqual
+            QUnit.assert, (a,b) => a === b, QUnit.assert.strictEqual
+        ), same: assert_all2.bind(
+            QUnit.assert, (a,b) => a === b, QUnit.assert.same
         ),
     };
 
