@@ -5,12 +5,13 @@ require(["scripts/sequence"], function(Sequence) {
     QUnit.test("", function(assert) {
         let s = Sequence.empty;
         assert.isIterable(s, "empty");
-        assert.equal(s.length, 0, "empty.length");
+        assert.same(s.length, 0, "empty.length");
         assert.all.same(s, [], "empty");
     });
         
     QUnit.test("cannot overwrite .empty", function(assert) {
-        let s = Sequence.empty;        Sequence.empty = {};
+        let s = Sequence.empty;
+        Sequence.empty = {};
         assert.same(Sequence.empty, s, 
             "empty should not be mutable");
     });
@@ -20,24 +21,47 @@ require(["scripts/sequence"], function(Sequence) {
         assert.same(s.toString(), "<>");
     });
 
-    QUnit.test(".first, .map, .filter", function(assert) {
+    QUnit.todo(".nth", function(assert) {
         let s = Sequence.empty;
-
-        assert.throws(() => s.first(), /empty/, "empty.first() should throw");
-
-        assert.all.same(s.map(x => "" + x), [], 
-            "empty.map(x => \"\" + x)");
-        assert.all.same(s.filter(x => x < 0), [], 
-            "empty.filter(x => x < 0)");
+        assert.throws(() => s.nth(), /invalid/, "empty.nth() should throw");
+        assert.throws(() => s.nth("foo"), /invalid/, "empty.nth() should throw");
+        assert.throws(() => s.nth(-1), /invalid/, "empty.nth(-1) should throw");
+        assert.throws(() => s.nth(0), /empty/, "empty.nth(0) should throw");
+        assert.throws(() => s.nth(1), /empty/, "empty.nth(1) should throw");
     });
 
-    QUnit.todo(".map, .filter etc should return same thing", function(assert) {
+    QUnit.test(".first", function(assert) {
+        let s = Sequence.empty;
+        assert.throws(() => s.first(), /empty/, "empty.first() should throw");
+    });
+
+    QUnit.todo(".head", function(assert) {
+        let s = Sequence.empty;
+        assert.throws(() => s.head(), /empty/, "empty.head() should throw");
+    });
+
+    QUnit.todo(".tail", function(assert) {
+        let s = Sequence.empty;
+        assert.throws(() => s.tail(), /empty/, "empty.tail() should throw");
+    });
+
+    QUnit.test(".skip, .take, .filter, .map, .mapMany return same thing", function(assert) {
         let s = Sequence.empty;
         
-        assert.same(s.map(x => "" + x), s, 
-            "empty.map(..) should return same thing");
+        assert.same(s.skip(0), s, "empty.skip(0) should return same thing");
+        assert.same(s.skip(1), s, "empty.skip(1) should return same thing");
+        assert.same(s.skip(2), s, "empty.skip(2) should return same thing");
+
+        assert.same(s.take(0), s, "empty.take(0) should return same thing");
+        assert.same(s.take(1), s, "empty.take(1) should return same thing");
+        assert.same(s.take(2), s, "empty.take(2) should return same thing");
+
         assert.same(s.filter(x => x < 0), s, 
             "empty.filter(..) should return same thing");
+        assert.same(s.map(x => "" + x), s, 
+            "empty.map(..) should return same thing");
+        assert.same(s.mapMany(x => [x, x]), s, 
+            "empty.mapMany(..) should return same thing");
     });
 
     QUnit.test(".cons", function(assert) {

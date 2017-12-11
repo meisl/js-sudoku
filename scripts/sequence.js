@@ -243,11 +243,18 @@ define(function() {
 			enumerable: true
 		}
 	});
+	const returnThis = function returnThis() { return this };
+
 	const emptySequence = Object.create(Sequence.prototype, {
 		[Symbol.iterator]: {
 			value: () => emptyGenerator
 		},
 		length: { value: 0 },
+		skip:	{ value: returnThis },
+		take:	{ value: returnThis },
+		filter:	{ value: returnThis },
+		map:	{ value: returnThis },
+		mapMany:{ value: returnThis },
 		cons:	{ value: singletonSeq },
 		snoc:	{ value: singletonSeq },
 	});
