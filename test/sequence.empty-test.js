@@ -1,57 +1,61 @@
-require(["scripts/sequence"], (Sequence) => {
+require(["scripts/sequence"], (seq) => {
 	const { test, todo, skip, module } = QUnit;
 
-	module("sequence.empty", () => { // ----------------------------------------
+	module("seq.empty", () => { // ----------------------------------------
+		test("module object", function (assert) {
+			assert.isObject(seq.empty, "seq.empty");
+		});
+
 		test("", function(assert) {
-			let s = Sequence.empty;
+			let s = seq.empty;
 			assert.isIterable(s, "empty");
 			assert.same(s.length, 0, "empty.length");
 			assert.all.same(s, [], "empty");
 		});
 
 		test("cannot overwrite .empty", function(assert) {
-			let s = Sequence.empty;
-			Sequence.empty = {};
-			assert.same(Sequence.empty, s, 
+			let s = seq.empty;
+			seq.empty = {};
+			assert.same(seq.empty, s, 
 				"empty should not be mutable");
 		});
 
 		test(".toString", function(assert) {
-			let s = Sequence.empty;
+			let s = seq.empty;
 			assert.same(s.toString(), "<>");
 		});
 
 		module(".nth", () => {
 			todo("with valid arg", function(assert) {
-				let s = Sequence.empty;
+				let s = seq.empty;
 				assert.throws(() => s.nth(), /invalid/, "empty.nth() should throw");
 				assert.throws(() => s.nth("foo"), /invalid/, "empty.nth() should throw");
 				assert.throws(() => s.nth(-1), /invalid/, "empty.nth(-1) should throw");
 			});
 			todo("with invalid arg", function(assert) {
-				let s = Sequence.empty;
+				let s = seq.empty;
 				assert.throws(() => s.nth(0), /empty/, "empty.nth(0) should throw");
 				assert.throws(() => s.nth(1), /empty/, "empty.nth(1) should throw");
 			});
 		}); // end module ".nth"
 
 		test(".first", function(assert) {
-			let s = Sequence.empty;
+			let s = seq.empty;
 			assert.throws(() => s.first(), /empty/, "empty.first() should throw");
 		});
 
 		todo(".head", function(assert) {
-			let s = Sequence.empty;
+			let s = seq.empty;
 			assert.throws(() => s.head(), /empty/, "empty.head() should throw");
 		});
 
 		todo(".tail", function(assert) {
-			let s = Sequence.empty;
+			let s = seq.empty;
 			assert.throws(() => s.tail(), /empty/, "empty.tail() should throw");
 		});
 
 		test(".skip, .take, .filter, .map, .mapMany return same thing", function(assert) {
-			let s = Sequence.empty;
+			let s = seq.empty;
 
 			assert.same(s.skip(0), s, "empty.skip(0) should return same thing");
 			assert.same(s.skip(1), s, "empty.skip(1) should return same thing");
@@ -70,7 +74,7 @@ require(["scripts/sequence"], (Sequence) => {
 		});
 
 		test(".cons", function(assert) {
-			let s = Sequence.empty;
+			let s = seq.empty;
 
 			assert.same(s.cons(5).length, 1, "empty.cons(..).length");
 			assert.all.same(s.cons(5),           [5],
@@ -80,23 +84,23 @@ require(["scripts/sequence"], (Sequence) => {
 		});
 
 		test(".snoc", function(assert) {
-			let s = Sequence.empty.snoc(5);
+			let s = seq.empty.snoc(5);
 			assert.same(s.length, 1, "empty.snoc(..).length");
 			assert.all.same(s,         [5],   "empty.snoc(5)");
 			assert.all.same(s.snoc(6), [5,6], "empty.snoc(5).snoc(6)");
 		});
 
 		test(".snoc.cons", function(assert) {
-			let s = Sequence.empty.snoc(5).cons(6);
+			let s = seq.empty.snoc(5).cons(6);
 			assert.same(s.length, 2, "empty.snoc(5).cons(6).length");
 			assert.all.same(s, [6,5], "empty.snoc(5).cons(6)");
 		});
 
 		test(".cons.snoc", function(assert) {
-			let s = Sequence.empty.cons(5).snoc(6);
+			let s = seq.empty.cons(5).snoc(6);
 			assert.same(s.length, 2, "empty.cons(5).snoc(6).length");
 			assert.all.same(s, [5,6], "empty.cons(5).snoc(6)");
 		});
-	}); // end module "sequence.empty"
+	}); // end module "seq.empty"
 
 }); // end require

@@ -3,7 +3,7 @@ require(["scripts/sequence"], (seq) => {
 
 	module("seq", () => { // ------------------------------------------
 		test("module object", function (assert) {
-			//assert.same(Object.getPrototypeOf(seq), null, "has null __proto__");
+			assert.same(Object.getPrototypeOf(seq), null, "has null __proto__");
 			assert.isFunction(seq.create, "seq.create");
 		});
 

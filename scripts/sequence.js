@@ -260,10 +260,6 @@ define(["./fn"], (fn) => {
 		cons:	{ value: singletonSeq },
 		snoc:	{ value: singletonSeq },
 	});
-	Object.defineProperty(Sequence, "empty", {
-		value: emptySequence,
-		enumerable: true
-	});
 
 
 	function makeNextMap(origNext, cb) {
@@ -288,8 +284,9 @@ define(["./fn"], (fn) => {
 		};
 	}
 
-	Sequence.create = iterable => new Sequence(iterable);
-
-	return Sequence;
+	return Object.create(null, {
+		create: { value: iterable => new Sequence(iterable) },
+		empty:  { value: emptySequence },
+	});
 });
 

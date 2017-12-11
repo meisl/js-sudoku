@@ -24,7 +24,7 @@ define(["./cell", "./sequence"], (cell, seq) => {
 		out.candidates = v => {
 			return candidates[v];
 		};
-		out.cells = new seq(cells);
+		out.cells = seq.create(cells);
 		Object.defineProperty(out, "cs", {
 			get: function () {
 				let x = {};
