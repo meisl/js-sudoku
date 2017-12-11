@@ -1,5 +1,5 @@
 
-define(function() {
+define(["./fn"], function(fn) {
 
 	function Sequence(iterable) {
 	    this[Symbol.iterator] = () => iterable[Symbol.iterator]();
@@ -243,18 +243,16 @@ define(function() {
 			enumerable: true
 		}
 	});
-	const returnThis = function returnThis() { return this };
-
 	const emptySequence = Object.create(Sequence.prototype, {
 		[Symbol.iterator]: {
 			value: () => emptyGenerator
 		},
 		length: { value: 0 },
-		skip:	{ value: returnThis },
-		take:	{ value: returnThis },
-		filter:	{ value: returnThis },
-		map:	{ value: returnThis },
-		mapMany:{ value: returnThis },
+		skip:	{ value: fn.returnThis },
+		take:	{ value: fn.returnThis },
+		filter:	{ value: fn.returnThis },
+		map:	{ value: fn.returnThis },
+		mapMany:{ value: fn.returnThis },
 		cons:	{ value: singletonSeq },
 		snoc:	{ value: singletonSeq },
 	});
