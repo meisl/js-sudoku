@@ -14,14 +14,14 @@
   <script src="scripts/QUnit-ext.js"></script>
   <script>
   	require([
-		"./test/QUnit-ext-test",
-		"./test/fn-test",
-		"./test/sequence-test",
-		"./test/sequence.empty-test",
-		"./test/sudoku-test",
-		"./test/sudoku-coords-test",
-		"./test/cell-test",
-		"./test/group-test",
+		"./test/01_QUnit-ext-test",
+		"./test/02_fn-test",
+		"./test/03_sequence-test",
+		"./test/03a_sequence.empty-test",
+		"./test/04_sudoku-test",
+		"./test/04a_sudoku-coords-test",
+		"./test/05_cell-test",
+		"./test/06_group-test",
 	], () => {});
 
 	require(["./scripts/sudoku", "./scripts/sequence"], (su, sq) => { sdk = su; seq = sq; });
