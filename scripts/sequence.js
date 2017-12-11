@@ -288,6 +288,7 @@ define(["./fn"], (fn) => {
 		};
 	}
 
+	Sequence.create = iterable => new Sequence(iterable);
 
 	return Sequence;
 });
