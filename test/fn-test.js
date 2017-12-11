@@ -1,14 +1,31 @@
 require(["scripts/fn"], function(fn) {
+    const { test, todo, skip, module } = QUnit;
 
-    QUnit.module("fn"); // ----------------------------------------
+    module("fn", () => { // ----------------------------------------
 
-    QUnit.test("returnThis", function (assert) {
-        assert.isFunction(fn.returnThis, "fn.returnThis");
-        assert.same(fn.returnThis("foo"), fn, "fn.thisValue('foo') === fn");
-        const thisValue = {};
-        assert.same(fn.returnThis.call(thisValue), thisValue, "thisValue.call(x) === x");
-        const f = fn.returnThis;
-        assert.same(f(), this, "thisValue() === this");
-        assert.same(f("bar"), this, "thisValue('bar') === this");
-    });
-});
+        test("returnThis called via .call", function (assert) {
+            const thisValue = {};
+            assert.same(fn.returnThis.call(thisValue), thisValue, 
+                "thisValue.call(x) === x");
+            assert.same(fn.returnThis.call(thisValue, "foo"), thisValue, 
+                "thisValue.call(x, 'foo') === x");
+        });
+
+        test("returnThis called as method", function (assert) {
+            assert.same(fn.returnThis(), fn, "fn.thisValue() === fn");
+            assert.same(fn.returnThis("foo"), fn, "fn.thisValue('foo') === fn");
+
+            const o = { f: fn.returnThis };
+            assert.same(o.f(), o, "o.thisValue() === o");
+            assert.same(o.f("foo"), o, "o.thisValue('foo') === o");
+        });
+
+        skip("returnThis called \"freely\"", function (assert) {
+            const f = fn.returnThis;
+            assert.same(f(), this, "thisValue() === this");
+            assert.same(f("bar"), this, "thisValue('bar') === this");
+        });
+
+    }); // end module "fn"
+
+}); // end require

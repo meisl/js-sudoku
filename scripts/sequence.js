@@ -1,4 +1,3 @@
-
 define(["./fn"], function(fn) {
 
 	function Sequence(iterable) {
@@ -57,12 +56,17 @@ define(["./fn"], function(fn) {
 				inner:    { value: inner },
 				[Symbol.iterator]: {
 					value: function* () {
-						let it = inner[Symbol.iterator]();
-						let e = it.next();
+						let innerIt = inner[Symbol.iterator]();
+						let e = innerIt.next();
 						while (!e.done) {
 							yield* f(e.value);
-							e = it.next();
+							e = innerIt.next();
 						};
+						/*
+						for (let x of inner) {
+							yield* f(x);
+						}
+						*/
 					}
 				}
 			});
