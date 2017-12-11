@@ -3,7 +3,7 @@ require([], function () {
 
 	module("QUnit-ext", () => { // -------------------------------------------------
 		module(".assert", () => { // -------------------------------------------------
-			test(".same is a synonym for .strictEqual", function(assert) {
+			test(".same is a synonym for .strictEqual", function (assert) {
 				const orig = assert.strictEqual;
 				const strictEqual_calls = [];
 				const pushResult_calls = [];
@@ -33,7 +33,7 @@ require([], function () {
 
 				const o = {};
 				const message = "foobar";
-				let c0;
+				let c;
 
 				// act (passing)
 				interceptIt();
