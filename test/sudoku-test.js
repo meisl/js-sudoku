@@ -2,8 +2,11 @@ require(["scripts/sudoku"], function(sudoku) {
 	const { test, todo, skip, module } = QUnit;
 
 	module("sudoku", () => { // ---------------------------------------------------------------------
-		todo("module object", function (assert) {
+		test("module object", function (assert) {
 			assert.same(Object.getPrototypeOf(sudoku), null, "has null prototype");
+		});
+
+		todo("module object (static methods)", function (assert) {
 			assert.same(sudoku.toXcoord, undefined, "has no .toXcoord");
 			assert.same(sudoku.toYcoord, undefined, "has no .toYcoord");
 		});

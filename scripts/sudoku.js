@@ -362,76 +362,77 @@ define(["./cell", "./group"], function(cell, group) {
 		return params;
 	}
 
-	return {
-		fromXcoord: fromXcoord,
-		fromYcoord: fromYcoord,
-		toXcoord:   toXcoord,
-		toYcoord:   toYcoord,
-		create: create,
-		parse: s => {
-			let lines = s.split("\n");
-			let lineIdx = 0;
-			let match;
-			while (!match) {
-				if (lineIdx >= lines.length) {
-					throw "expected horizontal separator \"+---..\"";
-				} else {
-					match = lines[lineIdx++].match(
-						/^( *)((\+((?:--)+)-)\3+\+) *$/);
-					if (match) {
-						break;
-					}
+	const parse = s => {
+		let lines = s.split("\n");
+		let lineIdx = 0;
+		let match;
+		while (!match) {
+			if (lineIdx >= lines.length) {
+				throw "expected horizontal separator \"+---..\"";
+			} else {
+				match = lines[lineIdx++].match(
+					/^( *)((\+((?:--)+)-)\3+\+) *$/);
+				if (match) {
+					break;
 				}
 			}
-
-			let p = {
-				start: match[1].length,
-				hSep: match[2],
-				boxW: match[4].length / 2,
-				boxH: (match[2].length - 1) / match[3].length,
-				symbols: new Set(),
-				todos: [],
-				todosStr: []
-			}
-			p.n = p.boxW * p.boxH;
-			p.end = p.start + p.n*2 + p.boxH*2;
-			
-			let y = 0;
-			for (let by = 0; by < p.boxW; by++) {
-				for (let k = 0; k < p.boxH; k++) {
-					parseRow(p, y, lines[lineIdx]);
-					y++;
-					lineIdx++;
-				}
-				// consume an hSep
-				lineIdx++;
-			}
-			
-			let ch = 1;
-			while (p.symbols.size < p.n) {
-				while (p.symbols.has(ch + "")) {
-					if (ch < 9) {
-						ch++;
-					} else if (ch == 9) {
-						ch = "A"
-					} else {
-						ch = String.fromCharCode(ch.charCodeAt(0) + 1);
-					}
-				}
-				p.symbols.add(ch + "");
-			}
-
-			let options = { box: [p.boxW, p.boxH], symbols: [...p.symbols].sort() };
-			let result = create(options);
-			
-			p.todos.forEach(t => t(result));
-			console.log(options);
-			console.log(result.stringify());
-			
-			return result;
 		}
 
-	};
+		let p = {
+			start: match[1].length,
+			hSep: match[2],
+			boxW: match[4].length / 2,
+			boxH: (match[2].length - 1) / match[3].length,
+			symbols: new Set(),
+			todos: [],
+			todosStr: []
+		}
+		p.n = p.boxW * p.boxH;
+		p.end = p.start + p.n*2 + p.boxH*2;
+
+		let y = 0;
+		for (let by = 0; by < p.boxW; by++) {
+			for (let k = 0; k < p.boxH; k++) {
+				parseRow(p, y, lines[lineIdx]);
+				y++;
+				lineIdx++;
+			}
+			// consume an hSep
+			lineIdx++;
+		}
+
+		let ch = 1;
+		while (p.symbols.size < p.n) {
+			while (p.symbols.has(ch + "")) {
+				if (ch < 9) {
+					ch++;
+				} else if (ch == 9) {
+					ch = "A"
+				} else {
+					ch = String.fromCharCode(ch.charCodeAt(0) + 1);
+				}
+			}
+			p.symbols.add(ch + "");
+		}
+
+		let options = { box: [p.boxW, p.boxH], symbols: [...p.symbols].sort() };
+		let result = create(options);
+
+		p.todos.forEach(t => t(result));
+		console.log(options);
+		console.log(result.stringify());
+
+		return result;
+	}
+
+	return Object.create(null, {
+		create:     { value:create },
+		parse:      { value:parse },
+		fromXcoord: { value: fromXcoord },
+		fromYcoord: { value: fromYcoord },
+		toXcoord:   { value: toXcoord },
+		toYcoord:   { value: toYcoord },
+	});
 });
 
 
