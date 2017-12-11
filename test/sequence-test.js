@@ -1,7 +1,11 @@
-require(["scripts/sequence"], function (Sequence) {
+require(["scripts/sequence"], (Sequence) => {
 	const { test, todo, skip, module } = QUnit;
 
 	module("sequence", () => { // ------------------------------------------
+		todo("module object", function (assert) {
+			assert.same(Object.getPrototypeOf(Sequence), null, "has null __proto__");
+		});
+
 		test("from empty Array", function(assert) {
 			let foo = {
 				"bar": () => {}

@@ -1,7 +1,10 @@
-require(["scripts/cell", "scripts/sudoku"], function(cell, sudoku) {
+require(["scripts/cell", "scripts/sudoku"], (cell, sudoku) => {
 	const { test, todo, skip, module } = QUnit;
 
 	module("cell", () => { // -------------------------------------------------
+		test("module object", function (assert) {
+			assert.same(Object.getPrototypeOf(cell), null, "has null __proto__");
+		});
 
 		skip("create", function(assert) {
 			var s = {};

@@ -1,7 +1,10 @@
-require(["scripts/fn"], function(fn) {
+require(["scripts/fn"], (fn) => {
     const { test, todo, skip, module } = QUnit;
 
     module("fn", () => { // ----------------------------------------
+		test("module object", function (assert) {
+			assert.same(Object.getPrototypeOf(fn), null, "has null __proto__");
+		});
 
         test("returnThis called via .call", function (assert) {
             const thisValue = {};

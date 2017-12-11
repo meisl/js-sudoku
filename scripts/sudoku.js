@@ -1,7 +1,4 @@
-
-define(["./cell", "./group"], function(cell, group) {
-
-	
+define(["./cell", "./group"], (cell, group) => {
 	function fromXcoord(xc) {
 		return xc.charCodeAt(0) - "A".charCodeAt(0);
 	}

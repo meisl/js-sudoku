@@ -1,5 +1,4 @@
-
-define(["./cell", "./sequence"], function(cell, seq) {
+define(["./cell", "./sequence"], (cell, seq) => {
 
 	function Group (field, cells, id) {
 		Object.defineProperty(this, "id", {
@@ -67,7 +66,7 @@ define(["./cell", "./sequence"], function(cell, seq) {
 		return out;
 	}
 	
-	return {
-		create:  createGroup,
-	};
+	return Object.create(null, {
+		create:  { value: createGroup },
+	});
 });

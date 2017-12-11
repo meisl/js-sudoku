@@ -1,4 +1,4 @@
-require(["scripts/sequence"], function (Sequence) {
+require(["scripts/sequence"], (Sequence) => {
 	const { test, todo, skip, module } = QUnit;
 
 	module("sequence.empty", () => { // ----------------------------------------
@@ -21,14 +21,19 @@ require(["scripts/sequence"], function (Sequence) {
 			assert.same(s.toString(), "<>");
 		});
 
-		todo(".nth", function(assert) {
-			let s = Sequence.empty;
-			assert.throws(() => s.nth(), /invalid/, "empty.nth() should throw");
-			assert.throws(() => s.nth("foo"), /invalid/, "empty.nth() should throw");
-			assert.throws(() => s.nth(-1), /invalid/, "empty.nth(-1) should throw");
-			assert.throws(() => s.nth(0), /empty/, "empty.nth(0) should throw");
-			assert.throws(() => s.nth(1), /empty/, "empty.nth(1) should throw");
-		});
+		module(".nth", () => {
+			todo("with valid arg", function(assert) {
+				let s = Sequence.empty;
+				assert.throws(() => s.nth(), /invalid/, "empty.nth() should throw");
+				assert.throws(() => s.nth("foo"), /invalid/, "empty.nth() should throw");
+				assert.throws(() => s.nth(-1), /invalid/, "empty.nth(-1) should throw");
+			});
+			todo("with invalid arg", function(assert) {
+				let s = Sequence.empty;
+				assert.throws(() => s.nth(0), /empty/, "empty.nth(0) should throw");
+				assert.throws(() => s.nth(1), /empty/, "empty.nth(1) should throw");
+			});
+		}); // end module ".nth"
 
 		test(".first", function(assert) {
 			let s = Sequence.empty;

@@ -1,4 +1,4 @@
-require([], function () {
+require([], () => {
 	const { test, todo, skip, module } = QUnit;
 
 	module("QUnit-ext", () => { // -------------------------------------------------

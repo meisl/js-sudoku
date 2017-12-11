@@ -1,4 +1,4 @@
-define(["./fn"], function(fn) {
+define(["./fn"], (fn) => {
 
 	function Sequence(iterable) {
 	    this[Symbol.iterator] = () => iterable[Symbol.iterator]();

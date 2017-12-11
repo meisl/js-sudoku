@@ -1,5 +1,5 @@
 
-define(function() {
+define([], () => {
 
 	function Cell(field, x, y) {
 		let value;
@@ -166,7 +166,7 @@ define(function() {
 		},
 	};
 
-	return {
-		create: (field, x, y) => new Cell(field, x, y),
-	};
+	return Object.create(null, {
+		create: { value: (field, x, y) => new Cell(field, x, y) },
+	});
 });

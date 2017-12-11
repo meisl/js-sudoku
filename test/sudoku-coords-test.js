@@ -1,4 +1,4 @@
-require(["scripts/sudoku"], function (sudoku) {
+require(["scripts/sudoku"], (sudoku) => {
 	const { test, todo, skip, module } = QUnit;
 
 	function* range(lo, hi) {
@@ -28,7 +28,7 @@ require(["scripts/sudoku"], function (sudoku) {
 
 		module(".fromXcoord", () => { // -------------------------------------------------------------
 			test("with valid arg", function (assert) {
-				function test(boxW, boxH, xs) {
+				function doTest(boxW, boxH, xs) {
 					let s = sudoku.create({ box: [boxW, boxH] });
 					let n = boxW * boxH;
 					let prefix = boxW + "x" + boxH + ": ";
@@ -40,13 +40,13 @@ require(["scripts/sudoku"], function (sudoku) {
 							prefix + "should map x-coord \"" + cx + "\" to x-index " + x);
 					}
 				}
-				test(2, 4, [...range("A", "H")]);
-				test(6, 6, [...range("A", "Z"), ...range("a", "j")]);
+				doTest(2, 4, [...range("A", "H")]);
+				doTest(6, 6, [...range("A", "Z"), ...range("a", "j")]);
 			});
 
 			test("with invalid arg", function (assert) {
 				let s, xs;
-				function test(boxW, boxH, xs) {
+				function doTest(boxW, boxH, xs) {
 					let s = sudoku.create({ box: [boxW, boxH] });
 					let n = boxW * boxH;
 					let prefix = boxW + "x" + boxH + ": ";
@@ -64,11 +64,11 @@ require(["scripts/sudoku"], function (sudoku) {
 							prefix + "with x-coord out of range: " + cx);
 					}
 				}
-				test(2, 4, [
+				doTest(2, 4, [
 					...range("I", "Z"), ...range("a", "z"), ..."[\\]^_`",
 					...range("0", "9"), ...range(0, 9)
 				]);
-				test(6, 6, [
+				doTest(6, 6, [
 										...range("k", "z"), ..."[\\]^_`",
 					...range("0", "9"), ...range(0, 9)
 				]);
@@ -77,7 +77,7 @@ require(["scripts/sudoku"], function (sudoku) {
 
 		module(".fromYcoord", () => { // -------------------------------------------------------------
 			test("with invalid arg", function (assert) {
-				function test(boxW, boxH, ys) {
+				function doTest(boxW, boxH, ys) {
 					let s = sudoku.create({ box: [boxW, boxH] });
 					let n = boxW * boxH;
 					let prefix = boxW + "x" + boxH + ": ";
@@ -89,11 +89,11 @@ require(["scripts/sudoku"], function (sudoku) {
 							prefix + "should map y-coord \"" + cy + "\" to y-index " + y);
 					}
 				}
-				test(2, 4, [...range(1, 8)]);
-				test(6, 6, [...range(1, 36)]);
+				doTest(2, 4, [...range(1, 8)]);
+				doTest(6, 6, [...range(1, 36)]);
 			});
 			test("with invalid arg", function (assert) {
-				function test(boxW, boxH, ys) {
+				function doTest(boxW, boxH, ys) {
 					let s = sudoku.create({ box: [boxW, boxH] });
 					let n = boxW * boxH;
 					let prefix = boxW + "x" + boxH + ": ";
@@ -111,11 +111,11 @@ require(["scripts/sudoku"], function (sudoku) {
 							prefix + "with y-coord out of range: " + cy);
 					}
 				}
-				test(2, 4, [
+				doTest(2, 4, [
 					...range("A", "Z"), ...range("a", "z"), ..."[\\]^_`",
 					"0", "9", 0, ...range(9, 49)
 				]);
-				test(6, 6, [
+				doTest(6, 6, [
 					...range("A", "Z"), ...range("a", "z"), ..."[\\]^_`",
 					"0", "9", 0, ...range(37, 49)
 				]);

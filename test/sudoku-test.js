@@ -1,9 +1,9 @@
-require(["scripts/sudoku"], function(sudoku) {
+require(["scripts/sudoku"], (sudoku) => {
 	const { test, todo, skip, module } = QUnit;
 
 	module("sudoku", () => { // ---------------------------------------------------------------------
 		test("module object", function (assert) {
-			assert.same(Object.getPrototypeOf(sudoku), null, "has null prototype");
+			assert.same(Object.getPrototypeOf(sudoku), null, "has null __proto__");
 		});
 
 		todo("module object (static methods)", function (assert) {

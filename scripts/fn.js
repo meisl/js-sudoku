@@ -1,10 +1,9 @@
-
-define([], function() {
+define([], () => {
 
 	const returnThis = function returnThis() { return this };
 
-	return {
-		returnThis: returnThis,
-	};
+	return Object.create(null, {
+		returnThis: { value: returnThis },
+	});
 });
 

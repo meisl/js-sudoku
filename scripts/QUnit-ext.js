@@ -1,4 +1,4 @@
-require([], function() {
+require([], () => {
 
 	QUnit.assert.same = function same(v, x, m) {
 		return this.strictEqual(v, x, m);

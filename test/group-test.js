@@ -1,7 +1,11 @@
-require(["scripts/group", "scripts/sudoku"], function(group, sudoku) {
+require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 	const { test, todo, skip, module } = QUnit;
 
 	module("group", () => { // -------------------------------------------------
+		test("module object", function (assert) {
+			assert.same(Object.getPrototypeOf(group), null, "has null __proto__");
+		});
+
 		module(".id", () => { // -------------------------------------------------
 			test("row", function (assert) {
 				let boxW = 3;
