@@ -191,7 +191,7 @@ define(["./fn"], (fn) => {
 				},
 			});
         },
-        first: function () {
+        get head() {
         	let e = this[Symbol.iterator]().next();
         	if (e.done)
         		throw "no first element in empty sequence";

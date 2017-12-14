@@ -39,14 +39,9 @@ require(["scripts/sequence"], (seq) => {
 			});
 		}); // end module ".nth"
 
-		test(".first", function(assert) {
+		test(".head", function(assert) {
 			let s = seq.empty;
-			assert.throws(() => s.first(), /empty/, "empty.first() should throw");
-		});
-
-		todo(".head", function(assert) {
-			let s = seq.empty;
-			assert.throws(() => s.head(), /empty/, "empty.head() should throw");
+			assert.throws(() => s.head, /empty/, "empty.head should throw");
 		});
 
 		todo(".tail", function(assert) {

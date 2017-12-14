@@ -203,57 +203,57 @@ require(["scripts/sequence"], (seq) => {
 			test_forEach("from Array, with thisValue = some object", ["2", { foo: 1}, 3], { i_am_this: {}});
 		}); // end module ".forEach"
 
-		module(".first()", () => { // ------------------------------------
+		module(".head", () => { // ------------------------------------
 			test("from singleton Array", function(assert){
 				let s = seq.create([42]);
-				assert.same(s.first(), 42, "should return the (only) value");
+				assert.same(s.head, 42, "should return the (only) value");
 			});
 
 			test("from larger Array", function(assert){
 				let s = seq.create([42, 7, 5]);
-				assert.same(s.first(), 42, "should return the first value");
+				assert.same(s.head, 42, "should return the first value");
 			});
 
 			test("from empty Array", function(assert){
 				let s = seq.create([]);
-				assert.throws( () => s.first(), /empty/, "should throw");
+				assert.throws( () => s.head, /empty/, "should throw");
 			});
 
 			test("from filtered Array (then empty)", function(assert){
 				let s = seq.create([42, 6]).filter(x => x < 0);
-				assert.throws( () => s.first(), /empty/, "should throw");
+				assert.throws( () => s.head, /empty/, "should throw");
 			});
 
 			test("from filtered (initially empty) Array", function(assert){
 				let s = seq.create([]).filter(x => x < 0);
-				assert.throws( () => s.first(), /empty/, "should throw");
+				assert.throws( () => s.head, /empty/, "should throw");
 			});
 
 			test("from filtered Array (then non-empty)", function(assert){
 				let s = seq.create([42, -6, -5, 72]).filter(x => x < 0);
-				assert.same(s.first(), -6);
+				assert.same(s.head, -6);
 			});
 
 			test("from mapped (initially empty) Array", function(assert){
 				let s = seq.create([]).map(x => x + 1);
-				assert.throws( () => s.first(), /empty/, "should throw");
+				assert.throws( () => s.head, /empty/, "should throw");
 			});
 
 			test("from mapped Array", function(assert){
 				let s = seq.create([42, -6, -5, 72]).map(x => x + 1);
-				assert.same(s.first(), 43);
+				assert.same(s.head, 43);
 			});
 
 			test("from mapped, then filtered Array (then empty)", function(assert){
 				let s = seq.create([42, -1, 0, 6]).map(x => x + 1).filter(x => x < 0);
-				assert.throws( () => s.first(), /empty/, "should throw");
+				assert.throws( () => s.head, /empty/, "should throw");
 			});
 
 			test("from mapped, then filtered Array (then non-empty)", function(assert){
 				let s = seq.create([42, -1, 0, -6, -5, 72]).map(x => x + 1).filter(x => x < 0);
-				assert.same(s.first(), -5);
+				assert.same(s.head, -5);
 			});
-		}); // end module ".first"
+		}); // end module ".head"
 
 		module(".cons", () => { // ------------------------------------
 			test("from empty Array", function(assert) {
