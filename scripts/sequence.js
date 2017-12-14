@@ -230,7 +230,8 @@ define(["./fn"], (fn) => {
         	}
         	return "<" + [...this.map(f)].join(",") + ">";
         },
-        get str() { return this.toString(); }
+        get str() { return this.toString(); },
+        [Symbol.toStringTag]: "Sequence",
 	};
 
 	const emptyGeneratorResult = Object.defineProperties({}, {
@@ -250,6 +251,10 @@ define(["./fn"], (fn) => {
 	const emptySequence = Object.create(Sequence.prototype, {
 		[Symbol.iterator]: {
 			value: () => emptyGenerator
+		},
+		[Symbol.toStringTag]: {
+			//get: function () { return "EmptySequence"; }
+			value: "EmptySequence"
 		},
 		length: { value: 0 },
 		skip:	{ value: fn.returnThis },
@@ -285,6 +290,7 @@ define(["./fn"], (fn) => {
 	}
 
 	return Object.create(null, {
+		ctor: { value: Sequence },
 		create: { value: iterable => new Sequence(iterable) },
 		empty:  { value: emptySequence },
 	});

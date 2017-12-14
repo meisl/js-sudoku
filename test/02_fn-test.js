@@ -25,7 +25,7 @@ require(["scripts/fn"], (fn) => {
 
         skip("returnThis called \"freely\"", function (assert) {
             const f = fn.returnThis;
-            const thisValue = this;
+            const thisValue = this; // test function are called bound to the test context
             assert.same(f(), thisValue, "returnThis() === this");
             assert.same(f("bar"), thisValue, "returnThis('bar') === this");
         });
