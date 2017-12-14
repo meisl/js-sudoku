@@ -35,6 +35,19 @@ define(["./fn"], (fn) => {
         get size() {
             return this.length;
         },
+        get head() {
+        	let e = this[Symbol.iterator]().next();
+        	if (e.done)
+        		throw "no first element in empty sequence";
+        	return e.value;
+        },
+		/*
+        get tail() { // cannot implement this in a consistent way
+        	// for sequences that are views of mutable things like array, set
+        	// Reason: .tail should fail early on an empty sequence, but
+        	// the underlying mutable thing might *become* empty only later
+        },
+        */
         filter: function (cb) {
         	if (arguments.length == 2) {
         		cb = cb.bind(arguments[1])
@@ -190,12 +203,6 @@ define(["./fn"], (fn) => {
 					}
 				},
 			});
-        },
-        get head() {
-        	let e = this[Symbol.iterator]().next();
-        	if (e.done)
-        		throw "no first element in empty sequence";
-        	return e.value;
         },
         forEach: function (cb, thisValue) {
             let it = this[Symbol.iterator]();

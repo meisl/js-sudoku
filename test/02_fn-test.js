@@ -30,6 +30,15 @@ require(["scripts/fn"], (fn) => {
             assert.same(f("bar"), thisValue, "returnThis('bar') === this");
         });
 
+        test("arrow function .bind", function (assert) {
+        	let actualThis;
+        	const lexicalThis = this;
+        	const otherThis = {};
+        	const f = (() => { actual = this }).bind(otherThis);
+        	f();
+        	assert.same(actual, lexicalThis);
+        });
+
     }); // end module "fn"
 
 }); // end require

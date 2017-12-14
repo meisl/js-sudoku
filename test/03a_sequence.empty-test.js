@@ -44,11 +44,6 @@ require(["scripts/sequence"], (seq) => {
 			assert.throws(() => s.head, /empty/, "empty.head should throw");
 		});
 
-		todo(".tail", function(assert) {
-			let s = seq.empty;
-			assert.throws(() => s.tail(), /empty/, "empty.tail() should throw");
-		});
-
 		test(".skip, .take, .filter, .map, .mapMany return same thing", function(assert) {
 			let s = seq.empty;
 
