@@ -30,7 +30,7 @@ require(["scripts/sequence"], (seq) => {
 			assert.same(s.length, 0, "empty.length");
 		});
 
-		module(".nth", () => {
+		module(".nth", () => { // ------------------------------------------
 			todo("with invalid arg", function(assert) {
 				let s = seq.empty;
 				assert.throws(() => s.nth(), /invalid/, "empty.nth() should throw");
@@ -44,22 +44,72 @@ require(["scripts/sequence"], (seq) => {
 			});
 		}); // end module ".nth"
 
-		test(".head()", function(assert) {
+		module(".head()", () => { // ------------------------------------------
+			test("", function(assert) {
+				let s = seq.empty;
+				assert.throws(() => s.head(), /empty/, "empty.head() should throw");
+			});
+		}); // end module ".head"
+
+		module(".skip", () => { // ------------------------------------------
+			test("with valid arg", function(assert) {
+				let s = seq.empty;
+				assert.same(s.skip(0), s, "empty.skip(0) should return same thing");
+				assert.same(s.skip(1), s, "empty.skip(1) should return same thing");
+				assert.same(s.skip(2), s, "empty.skip(2) should return same thing");
+			});
+			test("with invalid arg", function(assert) {
+				let s = seq.empty;
+				assert.throws(() => s.skip(-1), /non-negative/, 
+					"-1: should throw");
+				assert.throws(() => s.skip("1"), /non-negative/, 
+					"'1': should throw");
+				assert.throws(() => s.skip(), /non-negative/,
+					"no arg: should throw");
+				assert.throws(() => s.skip(undefined), /non-negative/,
+					"no arg: should throw");
+				assert.throws(() => s.skip(null), /non-negative/,
+					"null: should throw");
+				assert.throws(() => s.skip(NaN), /non-negative/,
+					"NaN: should throw");
+				assert.throws(() => s.skip({}), /non-negative/,
+					"an object: should throw");
+				assert.throws(() => s.skip(_ => 0), /non-negative/,
+					"a function: should throw");
+			});
+		}); // end module ".skip"
+		
+		module(".take", () => { // ------------------------------------------
+			test("with valid arg", function(assert) {
+				let s = seq.empty;
+				assert.same(s.take(0), s, "empty.take(0) should return same thing");
+				assert.same(s.take(1), s, "empty.take(1) should return same thing");
+				assert.same(s.take(2), s, "empty.take(2) should return same thing");
+			});
+			test("with invalid arg", function(assert) {
+				let s = seq.empty;
+				assert.throws(() => s.take(-1), /non-negative/, 
+					"-1: should throw");
+				assert.throws(() => s.take("1"), /non-negative/, 
+					"'1': should throw");
+				assert.throws(() => s.take(), /non-negative/,
+					"no arg: should throw");
+				assert.throws(() => s.take(undefined), /non-negative/,
+					"undefined: should throw");
+				assert.throws(() => s.take(null), /non-negative/,
+					"null: should throw");
+				assert.throws(() => s.take(NaN), /non-negative/,
+					"NaN: should throw");
+				assert.throws(() => s.take({}), /non-negative/,
+					"an object: should throw");
+				assert.throws(() => s.take(_ => 0), /non-negative/,
+					"a function: should throw");
+			});
+		}); // end module ".take"
+
+
+		test(".filter, .map, .mapMany return same thing", function(assert) {
 			let s = seq.empty;
-			assert.throws(() => s.head(), /empty/, "empty.head() should throw");
-		});
-
-		test(".skip, .take, .filter, .map, .mapMany return same thing", function(assert) {
-			let s = seq.empty;
-
-			assert.same(s.skip(0), s, "empty.skip(0) should return same thing");
-			assert.same(s.skip(1), s, "empty.skip(1) should return same thing");
-			assert.same(s.skip(2), s, "empty.skip(2) should return same thing");
-
-			assert.same(s.take(0), s, "empty.take(0) should return same thing");
-			assert.same(s.take(1), s, "empty.take(1) should return same thing");
-			assert.same(s.take(2), s, "empty.take(2) should return same thing");
-
 			assert.same(s.filter(x => x < 0), s, 
 				"empty.filter(..) should return same thing");
 			assert.same(s.map(x => "" + x), s, 

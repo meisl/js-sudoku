@@ -158,9 +158,7 @@ define(["./fn"], (fn) => {
         },
         
         skip: function (n) {
-        	if (!Number.isInteger(n) || n < 0) {
-        		throw "invalid n = " + n + " - must be non-negative integer";
-        	} else if (n === 0) {
+        	if (fn.insist_nonNegativeInt(n) === 0) {
         		return this;
         	}
         	const inner = this;
@@ -184,9 +182,7 @@ define(["./fn"], (fn) => {
 			});
         },
         take: function (n) {
-        	if (!Number.isInteger(n) || n < 0) {
-        		throw "invalid n = " + n + " - must be non-negative integer";
-        	} else if (n === 0) {
+        	if (fn.insist_nonNegativeInt(n) === 0) {
         		return emptySequence;
         	}
         	const inner = this;
@@ -257,19 +253,15 @@ define(["./fn"], (fn) => {
 		length: { value: 1 },
 		head:   { value: () => elem },
 		skip:	{ value: function (n) {
-			if (n === 0) {
-				return this;
-			} else {
-				return emptySequence;
-			}
+			return (fn.insist_nonNegativeInt(n) === 0)
+				? this
+				: emptySequence;
 		} },
 		take:	{ value: function (n) {
-			if (n === 0) {
-				return emptySequence;
-			} else {
-				return this;
-			}
-		}},
+			return (fn.insist_nonNegativeInt(n) === 0)
+				? emptySequence
+				: this;
+		} },
 	});
 
 	const emptyGeneratorResult = Object.defineProperties({}, {
@@ -295,8 +287,8 @@ define(["./fn"], (fn) => {
 			value: "EmptySequence"
 		},
 		length: { value: 0 },
-		skip:	{ value: fn.returnThis },
-		take:	{ value: fn.returnThis },
+		skip:	{ value: function (n) { fn.insist_nonNegativeInt(n); return this } },
+		take:	{ value: function (n) { fn.insist_nonNegativeInt(n); return this } },
 		filter:	{ value: fn.returnThis },
 		map:	{ value: fn.returnThis },
 		mapMany:{ value: fn.returnThis },
