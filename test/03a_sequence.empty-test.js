@@ -25,23 +25,28 @@ require(["scripts/sequence"], (seq) => {
 			assert.same(s.toString(), "<>");
 		});
 
+		test(".length", function(assert) {
+			let s = seq.empty;
+			assert.same(s.length, 0, "empty.length");
+		});
+
 		module(".nth", () => {
-			todo("with valid arg", function(assert) {
+			todo("with invalid arg", function(assert) {
 				let s = seq.empty;
 				assert.throws(() => s.nth(), /invalid/, "empty.nth() should throw");
-				assert.throws(() => s.nth("foo"), /invalid/, "empty.nth() should throw");
+				assert.throws(() => s.nth("foo"), /invalid/, "empty.nth('foo') should throw");
 				assert.throws(() => s.nth(-1), /invalid/, "empty.nth(-1) should throw");
 			});
-			todo("with invalid arg", function(assert) {
+			todo("with valid arg", function(assert) {
 				let s = seq.empty;
 				assert.throws(() => s.nth(0), /empty/, "empty.nth(0) should throw");
 				assert.throws(() => s.nth(1), /empty/, "empty.nth(1) should throw");
 			});
 		}); // end module ".nth"
 
-		test(".head", function(assert) {
+		test(".head()", function(assert) {
 			let s = seq.empty;
-			assert.throws(() => s.head, /empty/, "empty.head should throw");
+			assert.throws(() => s.head(), /empty/, "empty.head() should throw");
 		});
 
 		test(".skip, .take, .filter, .map, .mapMany return same thing", function(assert) {

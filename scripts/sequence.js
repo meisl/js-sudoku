@@ -5,9 +5,7 @@ define(["./fn"], (fn) => {
         this.inner = iterable;
 	}
 
-	const singletonSeq = elem => new Sequence([elem]);
 
-		             
 	function makeGetIterator(inner, cb, makeTransformedNext) {
 		return () => {
 			let it = inner[Symbol.iterator]();
@@ -18,7 +16,7 @@ define(["./fn"], (fn) => {
 	}
 
 	function makeTransformedSeq(inner, cb, makeTransformedNext, cbName) {
-		return Object.create(inner, {
+		return Object.create(Sequence.prototype, {
 			inner:    { value: inner },
 			[cbName]: { value: cb },
 			[Symbol.iterator]: {
@@ -35,10 +33,10 @@ define(["./fn"], (fn) => {
         get size() {
             return this.length;
         },
-        get head() {
+        head: function () {
         	let e = this[Symbol.iterator]().next();
         	if (e.done)
-        		throw "no first element in empty sequence";
+        		throw ".head(): no first element in empty sequence";
         	return e.value;
         },
 		/*
@@ -65,7 +63,7 @@ define(["./fn"], (fn) => {
         		throw "invalid mapping function: " + f;
         	}
         	const inner = this;
-			let a = Object.create(inner, {
+			let a = Object.create(Sequence.prototype, {
 				inner:    { value: inner },
 				[Symbol.iterator]: {
 					value: function* () {
@@ -110,7 +108,7 @@ define(["./fn"], (fn) => {
         },
         cons: function (elem) {
         	const inner = this;
-			return Object.create(inner, {
+			return Object.create(Sequence.prototype, {
 				inner:     { value: inner },
 				consedVal: { value: elem },
 				[Symbol.iterator]: {
@@ -135,11 +133,19 @@ define(["./fn"], (fn) => {
 						return it;
 					}
 				},
+				head: { value: () => elem },
+				skip: { value: function (n) {
+					if (n === 0) {
+						return this;
+					} else {
+						return inner.skip(n - 1);
+					}
+				} },
 			});
         },
         snoc: function (elem) {
         	const inner = this;
-			return Object.create(inner, {
+			return Object.create(Sequence.prototype, {
 				inner:     { value: inner },
 				snocedVal: { value: elem },
 				[Symbol.iterator]: {
@@ -158,7 +164,7 @@ define(["./fn"], (fn) => {
         		return this;
         	}
         	const inner = this;
-			return Object.create(inner, {
+			return Object.create(Sequence.prototype, {
 				inner:    { value: inner },
 				[Symbol.iterator]: {
 					value: function () {
@@ -184,7 +190,7 @@ define(["./fn"], (fn) => {
         		return emptySequence;
         	}
         	const inner = this;
-			return Object.create(inner, {
+			return Object.create(Sequence.prototype, {
 				inner:    { value: inner },
 				[Symbol.iterator]: {
 					value: function () {
@@ -240,6 +246,31 @@ define(["./fn"], (fn) => {
         get str() { return this.toString(); },
         [Symbol.toStringTag]: "Sequence",
 	};
+
+	const singletonSeq = elem => Object.create(Sequence.prototype, {
+		[Symbol.iterator]: {
+			value: function* () { yield elem }
+		},
+		[Symbol.toStringTag]: {
+			value: "SingletonSequence"
+		},
+		length: { value: 1 },
+		head:   { value: () => elem },
+		skip:	{ value: function (n) {
+			if (n === 0) {
+				return this;
+			} else {
+				return emptySequence;
+			}
+		} },
+		take:	{ value: function (n) {
+			if (n === 0) {
+				return emptySequence;
+			} else {
+				return this;
+			}
+		}},
+	});
 
 	const emptyGeneratorResult = Object.defineProperties({}, {
 		value: { value: undefined,
@@ -297,9 +328,10 @@ define(["./fn"], (fn) => {
 	}
 
 	return Object.create(null, {
-		ctor: { value: Sequence },
-		create: { value: iterable => new Sequence(iterable) },
-		empty:  { value: emptySequence },
+		create:    { value: iterable => new Sequence(iterable) },
+		empty:     { value: emptySequence },
+		singleton: { value: singletonSeq },
+		ctor: { value: Sequence }
 	});
 });
 
