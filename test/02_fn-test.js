@@ -81,7 +81,7 @@ require(["scripts/fn"], (fn) => {
 
 
         test("arrow function .bind", function (assert) {
-        	let actualThis;
+        	let actualThis, actual;
         	const lexicalThis = this;
         	const otherThis = {};
         	const f = (() => { actual = this }).bind(otherThis);
