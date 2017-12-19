@@ -1,5 +1,7 @@
 define([], () => {
 
+	const id = function id(x) { return x };
+	
 	const returnThis = function returnThis() { return this };
 
 	const insist_nonNegativeInt = n => {
@@ -10,6 +12,7 @@ define([], () => {
 	};
 
 	return Object.create(null, {
+		id: { value: id },
 		returnThis: { value: returnThis },
 		insist_nonNegativeInt: { value: insist_nonNegativeInt },
 	});

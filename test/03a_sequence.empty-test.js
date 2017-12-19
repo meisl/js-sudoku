@@ -146,6 +146,58 @@ require(["scripts/sequence"], (seq) => {
 			assert.same(s.length, 2, "empty.cons(5).snoc(6).length");
 			assert.all.same(s, [5,6], "empty.cons(5).snoc(6)");
 		});
+
+		module(".append", () => { // ---------------------------------
+			test("elem traversal", function (assert) {
+				let t;
+				const s = seq.empty;
+				
+				t = seq.create([4,5]);
+				assert.all.same(s.append(t), [4,5]);
+				assert.all.same(t.append(s), [4,5]);
+
+				t = seq.create([]);
+				assert.all.same(s.append(t), []);
+				assert.all.same(t.append(s), []);
+
+				t = seq.empty;
+				assert.all.same(s.append(t), []);
+				assert.all.same(t.append(s), []);
+
+				t = seq.create([4]);
+				assert.all.same(s.append(t), [4]);
+				assert.all.same(t.append(s), [4]);
+			});
+			test("empty.append(other) should return other", function (assert) {
+				let t;
+				const s = seq.empty;
+				t = seq.empty;
+				assert.same(s.append(t), t, "empty.append(empty)");
+				t = seq.create([]);
+				assert.same(s.append(t), t, "empty.append(create([]))");
+				t = seq.create([42]);
+				assert.same(s.append(t), t, "empty.append(create([42]))");
+				t = seq.singleton(42);
+				assert.same(s.append(t), t, "empty.append(singleton(42))");
+				t = seq.create([1,2,3]);
+				assert.same(s.append(t), t, "empty.append(create([1,2,3]))");
+			});
+			test("other.append(empty) should return other", function (assert) {
+				let t;
+				const s = seq.empty;
+				t = seq.empty;
+				assert.same(t.append(s), t, "empty.append(empty)");
+				t = seq.create([]);
+				assert.same(t.append(s), t, "create([]).append(empty)");
+				t = seq.create([42]);
+				assert.same(t.append(s), t, "create([42]).append(empty)");
+				t = seq.singleton(42);
+				assert.same(t.append(s), t, "singleton(42).append(empty)");
+				t = seq.create([1,2,3]);
+				assert.same(t.append(s), t, "create([1,2,3]).append(empty)");
+			});
+		}); // end module ".append"
+
 	}); // end module "seq.empty"
 
 }); // end require

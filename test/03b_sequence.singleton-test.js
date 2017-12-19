@@ -88,6 +88,34 @@ require(["scripts/sequence"], (seq) => {
 			});
 		}); // end module ".take"
 
+		module(".append", () => { // ---------------------------------
+			test("elem traversal", function (assert) {
+				let t;
+				const s = seq.singleton(4711);
+				
+				t = seq.create([4,5]);
+				assert.all.same(s.append(t), [4711,4,5]);
+				assert.all.same(t.append(s), [4,5,4711]);
+
+				t = seq.create([]);
+				assert.all.same(s.append(t), [4711]);
+				assert.all.same(t.append(s), [4711]);
+
+				t = seq.empty;
+				assert.all.same(s.append(t), [4711]);
+				assert.all.same(t.append(s), [4711]);
+
+				t = seq.create([4]);
+				assert.all.same(s.append(t), [4711,4]);
+				assert.all.same(t.append(s), [4,4711]);
+			});
+			test("with empty seq", function (assert) {
+				let s = seq.singleton(42);
+				assert.same(s.append(seq.empty), s, "singleton.append(empty)");
+				assert.same(seq.empty.append(s), s, "empty.append(singleton)");
+			});
+		}); // end module ".append"
+				
 		skip(".filter, .map, .mapMany", function(assert) {
 			let s = seq.singleton(42);
 

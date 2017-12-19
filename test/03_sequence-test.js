@@ -7,7 +7,7 @@ require(["scripts/sequence"], (seq) => {
 			assert.isFunction(seq.create, "seq.create");
 		});
 
-		test("from empty Array", function(assert) {
+		test("from empty Array", function (assert) {
 			let foo = {
 				"bar": () => {}
 			};
@@ -23,7 +23,7 @@ require(["scripts/sequence"], (seq) => {
 			assert.all.same(s, inner, "seq after mutating underlying iterable");
 		});
 
-		test("from singleton Array", function(assert) {
+		test("from singleton Array", function (assert) {
 			let inner = [42];
 			let s = seq.create(inner);
 
@@ -39,7 +39,7 @@ require(["scripts/sequence"], (seq) => {
 
 		});
 
-		test("from larger Array", function(assert) {
+		test("from larger Array", function (assert) {
 			let inner = [2,1,3];
 			let s = seq.create(inner);
 			assert.all.same(s, inner);
@@ -110,7 +110,7 @@ require(["scripts/sequence"], (seq) => {
 		
 		module(".map", () => { // ---------------------------------------------------
 			function test_map(title, inner, mapFn) {
-				test(".map " + title, function(assert) {
+				test(".map " + title, function (assert) {
 					let s = seq.create(inner).map(mapFn);
 					let expected = [...inner].map(mapFn);
 
@@ -121,7 +121,7 @@ require(["scripts/sequence"], (seq) => {
 			test_map("from Array", [2, 1, 3], x => x + 1);
 			test_map("from Array, using index arg in callback", [2, 1, 3], (x,i) => i + ": " + x);
 
-			test(".map.map from Array", function(assert) {
+			test(".map.map from Array", function (assert) {
 				let orig = [2, 1, 3];
 				let f1 = x => x + 1;
 				let f2 = x => x + "|" + x;
@@ -134,7 +134,7 @@ require(["scripts/sequence"], (seq) => {
 
 		module(".filter", () => { // ---------------------------------------------------
 			function test_filter(title, inner, predicateFn) {
-				test(".filter " + title, function(assert) {
+				test(".filter " + title, function (assert) {
 					let s = seq.create(inner).filter(predicateFn);
 					let expected = [...inner].filter(predicateFn);
 
@@ -147,7 +147,7 @@ require(["scripts/sequence"], (seq) => {
 			test_filter("from Array, consecutive elems filtered out", [2, 1, 3, 4], x => (x % 2) === 0);
 			test_filter("from Array, using index arg in callback", [2, 1, 3], (x,i) => (i % 2) === 0);
 
-			test(".filter.filter from Array", function(assert) {
+			test(".filter.filter from Array", function (assert) {
 				let orig = [2, 1, 3, 4, 6, 8];
 				let f1 = x => (x % 2) === 0;
 				let f2 = (x, i) => (i % 2) === 0;
@@ -160,7 +160,7 @@ require(["scripts/sequence"], (seq) => {
 
 		module(".forEach()", () => { // ------------------------------------
 			function test_forEach(title, inner, thisValue) {
-				test(title + "; " + arguments.length + " args", function(assert) {
+				test(title + "; " + arguments.length + " args", function (assert) {
 					let s = seq.create(inner);
 					function makeRecordingFn(targetArray) {
 						return function (v, i) {
@@ -256,12 +256,12 @@ require(["scripts/sequence"], (seq) => {
 		}); // end module ".head"
 
 		module(".cons", () => { // ------------------------------------
-			test("from empty Array", function(assert) {
+			test("from empty Array", function (assert) {
 				let s = seq.create([]).cons(42);
 				assert.all.same(s, [42], "seq.create([]).cons(42)");
 			});
 
-			test("from non-empty Array", function(assert) {
+			test("from non-empty Array", function (assert) {
 				let s = seq.create([74, 4711]);
 				assert.all.same(s.cons(42), [42, 74, 4711],
 					"seq.create([74, 4711]).cons(42)");
@@ -269,12 +269,12 @@ require(["scripts/sequence"], (seq) => {
 		}); // end module ".cons"
 
 		module(".snoc", () => { // ------------------------------------
-			test("from empty Array", function(assert) {
+			test("from empty Array", function (assert) {
 				let s = seq.create([]).snoc(42);
 				assert.all.same(s, [42], "seq.create([]).snoc(42)");
 			});
 
-			test("from non-empty Array", function(assert) {
+			test("from non-empty Array", function (assert) {
 				let s = seq.create([74, 4711]);
 				assert.all.same(s.snoc(42), [74, 4711, 42],
 					"seq.create([74, 4711]).snoc(42)");
@@ -282,7 +282,7 @@ require(["scripts/sequence"], (seq) => {
 		}); // end module ".snoc"
 
 		module(".skip", () => { // -----------------------------------
-			test("with invalid n", function(assert) {
+			test("with invalid n", function (assert) {
 				[[], [4711]].forEach(a => {
 					let s = seq.create([]);
 					assert.throws(() => s.skip(), /invalid/, ".skip() should throw");
@@ -298,7 +298,7 @@ require(["scripts/sequence"], (seq) => {
 				});
 			});
 
-			test("from empty Array", function(assert) {
+			test("from empty Array", function (assert) {
 				let s = seq.create([]);
 				assert.all.same(s.skip(0), []);
 				assert.all.same(s.skip(1), []);
@@ -306,7 +306,7 @@ require(["scripts/sequence"], (seq) => {
 				assert.all.same(s.skip(3), []);
 			});
 
-			test("from non-empty Array", function(assert) {
+			test("from non-empty Array", function (assert) {
 				let s = seq.create([42, 4711]);
 				assert.all.same(s.skip(0), [42, 4711]);
 				assert.all.same(s.skip(1), [4711]);
@@ -314,12 +314,12 @@ require(["scripts/sequence"], (seq) => {
 				assert.all.same(s.skip(3), []);
 			});
 
-			test("from empty Array, with ridiculously large n", function(assert) {
+			test("from empty Array, with ridiculously large n", function (assert) {
 				let s = seq.create([]);
 				assert.all.same(s.skip(1 << 26), []);
 			});
 
-			test("from non-empty Array, with ridiculously large n", function(assert) {
+			test("from non-empty Array, with ridiculously large n", function (assert) {
 				let s = seq.create([42, 4711]);
 				assert.all.same(s.skip(1 << 26), []);
 			});
@@ -342,7 +342,7 @@ require(["scripts/sequence"], (seq) => {
 				});
 			});
 
-			test("from empty Array", function(assert) {
+			test("from empty Array", function (assert) {
 				let s = seq.create([]);
 				assert.all.same(s.take(0), []);
 				assert.all.same(s.take(1), []);
@@ -354,7 +354,7 @@ require(["scripts/sequence"], (seq) => {
 				assert.all.same(s.take(1).take(2), []);
 			});
 
-			test("from non-empty Array", function(assert) {
+			test("from non-empty Array", function (assert) {
 				let s = seq.create([42, 4711, 1974]);
 				assert.all.same(s.take(0), []);
 				assert.all.same(s.take(1), [42]);
@@ -369,19 +369,19 @@ require(["scripts/sequence"], (seq) => {
 				assert.all.same(s.take(2).take(2), [42, 4711]);
 			});
 
-			test("from empty Array, with ridiculously large n", function(assert) {
+			test("from empty Array, with ridiculously large n", function (assert) {
 				let s = seq.create([]);
 				assert.all.same(s.take(1 << 26), []);
 			});
 
-			test("from non-empty Array, with ridiculously large n", function(assert) {
+			test("from non-empty Array, with ridiculously large n", function (assert) {
 				let s = seq.create([42, 4711]);
 				assert.all.same(s.take(1 << 26), [42, 4711]);
 			});
 		}); // end module ".take"
 
 		module(".mapMany", () => { // ---------------------------------
-			test("with invalid function argument", function(assert) {
+			test("with invalid function argument", function (assert) {
 				[[], [4711]].forEach(a => {
 					let s = seq.create([]);
 					assert.throws(() => s.mapMany(), /invalid/, ".mapMany() should throw");
@@ -391,7 +391,7 @@ require(["scripts/sequence"], (seq) => {
 				});
 			});
 
-			test("from empty Array", function(assert) {
+			test("from empty Array", function (assert) {
 				let s = seq.create([]);
 				function* f(x) { 
 					for (let i = 0; i < x; i++) yield x;
@@ -400,7 +400,7 @@ require(["scripts/sequence"], (seq) => {
 				assert.all.same(s.mapMany(f), []);
 			});
 
-			test("from non-empty Array with generator fn", function(assert) {
+			test("from non-empty Array with generator fn", function (assert) {
 				let s = seq.create([3,2,0,1]);
 				function* f(x) { 
 					for (let i = 0; i < x; i++) yield x;
@@ -409,7 +409,7 @@ require(["scripts/sequence"], (seq) => {
 				assert.all.same(s.mapMany(f), [3,3,3,2,2,1]);
 			});
 
-			test("from Array of Arrays", function(assert) {
+			test("from Array of Arrays", function (assert) {
 				let parts = [[],[1,2],[],[3],[4,5]];
 				let s = seq.create(parts.map((_,i) => i));
 				assert.same("" + [...s.values], "" + [0, 1, 2, 3, 4],
@@ -417,6 +417,34 @@ require(["scripts/sequence"], (seq) => {
 				assert.all.same(s.mapMany(i => parts[i]), [1,2,3,4,5]);
 			});
 		}); // end module ".mapMany"
+
+		module(".append", () => { // ---------------------------------
+			test("elem traversal", function (assert) {
+				let s,t;
+				
+				s = seq.create([1,2,3]);
+				t = seq.create([4,5]);
+				assert.all.same(s.append(t), [1,2,3,4,5]);
+				assert.all.same(t.append(s), [4,5,1,2,3]);
+
+				t = seq.create([]);
+				assert.all.same(s.append(t), [1,2,3]);
+				assert.all.same(t.append(s), [1,2,3]);
+
+				t = seq.create([4]);
+				assert.all.same(s.append(t), [1,2,3,4]);
+				assert.all.same(t.append(s), [4,1,2,3]);
+
+				s = seq.create([]);
+				t = seq.create([]);
+				assert.all.same(s.append(t), []);
+				assert.all.same(t.append(s), []);
+
+				t = seq.create([4]);
+				assert.all.same(s.append(t), [4]);
+				assert.all.same(t.append(s), [4]);
+			});
+		}); // end module ".append"
 
 	}); // end module "seq"
 }); // end require

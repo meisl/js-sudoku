@@ -206,6 +206,21 @@ define(["./fn"], (fn) => {
 				},
 			});
         },
+        append: function (suffix) {
+        	if (suffix === emptySequence) {
+        		return this;
+        	}
+			const prefix = this;
+			console.log(this + ".append(..)")
+			return Object.create(Sequence.prototype, {
+				[Symbol.iterator]: {
+					value: function* () {
+						yield* prefix;
+						yield* suffix;
+					}
+				},
+			});
+		},
         forEach: function (cb, thisValue) {
             let it = this[Symbol.iterator]();
             let e = it.next();
@@ -262,6 +277,11 @@ define(["./fn"], (fn) => {
 				? emptySequence
 				: this;
 		} },
+		append:	{ value: function (s) {
+			return (s === emptySequence)
+				? this
+				: s.cons(elem);
+		} },
 	});
 
 	const emptyGeneratorResult = Object.defineProperties({}, {
@@ -292,9 +312,12 @@ define(["./fn"], (fn) => {
 		filter:	{ value: fn.returnThis },
 		map:	{ value: fn.returnThis },
 		mapMany:{ value: fn.returnThis },
+		append: { value: fn.id },
 		cons:	{ value: singletonSeq },
 		snoc:	{ value: singletonSeq },
 	});
+
+	const single_emptySeq = singletonSeq(emptySequence);
 
 
 	function makeNextMap(origNext, cb) {

@@ -6,6 +6,14 @@ require(["scripts/fn"], (fn) => {
 			assert.same(Object.getPrototypeOf(fn), null, "has null __proto__");
 		});
 
+		module("id", () => { // ----------------------------------------
+			test("std call", function (assert) {
+				assert.same(fn.id(), undefined, "id()");
+				let o = {};
+				assert.same(fn.id(o), o, "id(o)");
+			});
+		});  // end module "id"
+
 		module("returnThis", () => { // ----------------------------------------
 			test("called via .call", function (assert) {
 				const thisValue = {};
