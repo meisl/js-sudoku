@@ -258,15 +258,16 @@ define(["./fn"], (fn) => {
         [Symbol.toStringTag]: "Sequence",
 	};
 
-	const singletonSeq = elem => Object.create(Sequence.prototype, {
+	function SingletonSequence() {
+	}
+	SingletonSequence.prototype = Object.create(Sequence.prototype, {
 		[Symbol.iterator]: {
-			value: function* () { yield elem }
+			value: function* () { yield this.head() }
 		},
 		[Symbol.toStringTag]: {
 			value: "SingletonSequence"
 		},
 		length: { value: 1 },
-		head:   { value: () => elem },
 		skip:	{ value: function (n) {
 			return (fn.insist_nonNegativeInt(n) === 0)
 				? this
@@ -280,8 +281,12 @@ define(["./fn"], (fn) => {
 		append:	{ value: function (s) {
 			return (s === emptySequence)
 				? this
-				: s.cons(elem);
+				: s.cons(this.head());
 		} },
+	});
+
+	const singletonSeq = elem => Object.create(SingletonSequence.prototype, {
+		head:   { value: () => elem }
 	});
 
 	const emptyGeneratorResult = Object.defineProperties({}, {
