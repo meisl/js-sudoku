@@ -121,6 +121,10 @@ require([], () => {
 				assert.isFunction(assert.isString, "assert.isString");
 			});
 
+			test(".isIterable", function(assert) {
+				assert.isFunction(assert.isIterable, "assert.isIterable");
+			});
+
 			test(".all", function(assert) {
 				assert.isObject(assert.all, "assert.all");
 				["equal", "strictEqual", "same"].forEach(name => {
