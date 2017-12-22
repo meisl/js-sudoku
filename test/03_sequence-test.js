@@ -446,5 +446,20 @@ require(["scripts/sequence"], (seq) => {
 			});
 		}); // end module ".append"
 
+		module(".fromGeneratorFn", () => { // ---------------------------------
+			test("elem traversal", function (assert) {
+				function* f() {
+					yield 1;
+					yield 2;
+					yield 3;
+				}
+				let s = seq.fromGeneratorFn(f);
+
+				assert.all.same(s, [1,2,3], "1st traversal");
+				assert.all.same(s, [1,2,3], "2nd traversal");
+
+			});
+		}); // end module "fromGeneratorFn"
+
 	}); // end module "seq"
 }); // end require

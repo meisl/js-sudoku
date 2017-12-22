@@ -136,7 +136,7 @@ require([], () => {
 			expected: expected,
 			message: "all " + (i-1) + " elems "
 				+ " of " + what + message
-				+ elemAssertion.name + " as expected"
+				+ " " + elemAssertion.name + " as expected"
 		});
 	};
 
