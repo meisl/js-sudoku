@@ -204,6 +204,127 @@ require(["scripts/fn"], (fn) => {
 			});
 		});  // end module "fn.getDescriptors"
 
+		module("memoize", () => { // ----------------------------------------
+			test("with non-function arg", function (assert) {
+				assert.throws(fn.memoize, /invalid/, "with no arg");
+				assert.throws(() => fn.memoize(null), /invalid/, "with null");
+				assert.throws(() => fn.memoize({}), /invalid/, "with object");
+			});
+			test("with non-nullary function", function (assert) {
+				assert.throws(() => fn.memoize(x => x), /invalid/, "with unary fn");
+			});
+			test("own getter", function (assert) {
+				let f_callCount = 0;
+				let this_in_f;
+				const f = function () { this_in_f = this; return f_callCount++; };
+				const o = Object.create(null, {
+					foo: { get: fn.memoize(f), configurable: true }
+				});
+
+				assert.same(f_callCount, 0, "call count before 1st access");
+
+				let act = o.foo;
+				assert.same(act, 0, "return value from 1st access");
+				assert.same(f_callCount, 1, "call count after 1st access");
+				assert.same(this_in_f, o, "thisValue in implementing fn");
+				
+				act = o.foo;
+				assert.same(act, 0, "return value from 2nd access");
+				assert.same(f_callCount, 1, "call count after 2nd access");
+			});
+			test("inherited getter", function (assert) {
+				let f_callCount = 0;
+				let this_in_f;
+				const f = function () { this_in_f = this; return f_callCount++; };
+				const p = Object.create(null, {
+					foo: { get: fn.memoize(f) },
+					who: { value: "parent", enumerable: true }
+				});
+				const o = Object.create(p, {
+					who: { value: "first child", enumerable: true }
+				});
+
+				assert.same(f_callCount, 0, "call count before 1st access");
+				
+				let act = o.foo;
+				assert.same(act, 0, "return value from 1st access");
+				assert.same(f_callCount, 1, "call count after 1st access");
+				assert.same(this_in_f, o, "thisValue in implementing fn");
+				
+				act = o.foo;
+				assert.same(act, 0, "return value from 2nd access");
+				assert.same(f_callCount, 1, "call count after 2nd access");
+				
+				// another object inherits it:
+				const o2 = Object.create(p, {
+					who: { value: "second child", enumerable: true }
+				});
+				act = o2.foo;
+				assert.same(act, 1, "return value from 1st access");
+				assert.same(f_callCount, 2, "call count after 1st access");
+				assert.same(this_in_f, o2, "thisValue in implementing fn");
+				
+				act = o2.foo;
+				assert.same(act, 1, "return value from 2nd access");
+				assert.same(f_callCount, 2, "call count after 2nd access");
+			});
+			test("own method", function (assert) {
+				let f_callCount = 0;
+				let this_in_f;
+				const f = function () { this_in_f = this; return f_callCount++; };
+				const o = Object.create(null, {
+					foo: { value: fn.memoize(f), configurable: true }
+				});
+
+				assert.same(f_callCount, 0, "call count before 1st access");
+
+				let act = o.foo();
+				assert.same(act, 0, "return value from 1st access");
+				assert.same(f_callCount, 1, "call count after 1st access");
+				assert.same(this_in_f, o, "thisValue in implementing fn");
+				
+				act = o.foo();
+				assert.same(act, 0, "return value from 2nd access");
+				assert.same(f_callCount, 1, "call count after 2nd access");
+			});
+			test("inherited method", function (assert) {
+				let f_callCount = 0;
+				let this_in_f;
+				const f = function () { this_in_f = this; return f_callCount++; };
+				const p = Object.create(null, {
+					foo: { value: fn.memoize(f) },
+					who: { value: "parent", enumerable: true }
+				});
+				const o = Object.create(p, {
+					who: { value: "first child", enumerable: true }
+				});
+
+				assert.same(f_callCount, 0, "call count before 1st access");
+				
+				let act = o.foo();
+				assert.same(act, 0, "return value from 1st access");
+				assert.same(f_callCount, 1, "call count after 1st access");
+				assert.same(this_in_f, o, "thisValue in implementing fn");
+				
+				act = o.foo();
+				assert.same(act, 0, "return value from 2nd access");
+				assert.same(f_callCount, 1, "call count after 2nd access");
+				
+				// another object inherits it:
+				const o2 = Object.create(p, {
+					who: { value: "second child", enumerable: true }
+				});
+				act = o2.foo();
+				assert.same(act, 1, "return value from 1st access");
+				assert.same(f_callCount, 2, "call count after 1st access");
+				assert.same(this_in_f, o2, "thisValue in implementing fn");
+				
+				act = o2.foo();
+				assert.same(act, 1, "return value from 2nd access");
+				assert.same(f_callCount, 2, "call count after 2nd access");
+			});
+		});  // end module "fn.memoize"
+
     }); // end module "fn"
 
 }); // end require
