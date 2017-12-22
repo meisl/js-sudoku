@@ -1,4 +1,4 @@
-define(["./cell", "./group"], (cell, group) => {
+define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 	function fromXcoord(xc) {
 		return xc.charCodeAt(0) - "A".charCodeAt(0);
 	}
@@ -18,24 +18,12 @@ define(["./cell", "./group"], (cell, group) => {
 	}
 
 	function Field(boxW, boxH) {
-		let n = boxW * boxH;
-		Object.defineProperty(this, "boxW", {
-			value: boxW,
-			enumerable: true,
-			writable: false,
-			configurable: false
-		});
-		Object.defineProperty(this, "boxH", {
-			value: boxH,
-			enumerable: true,
-			writable: false,
-			configurable: false
-		});
-		Object.defineProperty(this, "n", {
-			value: n,
-			enumerable: true,
-			writable: false,
-			configurable: false
+		const n = boxW * boxH;
+		Object.defineProperties(this, {
+			boxW: { value: boxW },
+			boxH: { value: boxH },
+			n:    { value: n },
+			nsq:  { value: n*n },
 		});
 	}
 	
@@ -105,212 +93,211 @@ define(["./cell", "./group"], (cell, group) => {
 	}
 	
 	function create(options) {
-		if (options && options.box) {
-			
-			var boxW = options.box[0];
-			var boxH = options.box[1];
-			var n = boxW * boxH; // cells per group = nr of rows = nr of cols = nr of boxes
-			var rows = new Array(n);
-			var columns = new Array(n);
-			var boxes = new Array(n);
-			var todos = [];
-			
-			let values2symbols = new Array(n);
-			let symbols2values = {};
-			if (options.symbols) {
-				for (let val = 0; val < n; val++) {
-					let sym = options.symbols[val];
-					values2symbols[val] = sym;
-					symbols2values[sym] = val;
-				}
-			} else {
-				for (var i = 0; i < n; i++) {
-					values2symbols[i] = i;
-					symbols2values[i] = i;
-				}
-			}
+		if (!(options && options.box))
+			throw "sudoku.create: missing/bad options";
 
-			var out = {
-				n:         () => n,
-				boxW:      () => boxW,
-				boxH:      () => boxH,
-				cellCount: () => n*n,
-				cell:      (x,y) => rows[y].cell(x),
-				forEachCell: cb => {
-					for (var y = 0; y < n; y++) {
-						for (var x = 0; x < n; x++) {
-							cb(out.cell(x, y), x, y);
-						}
-					}
-				},
-				symbol:    v => values2symbols[v],
-				value:     s => symbols2values[s],
-				newSetOfValues: () => new Set(values2symbols.keys()),
-				stringify: cellCb => {
-					if (cellCb === undefined) {
-						cellCb = c => {
-							let v = c.value;
-							return (v === undefined)
-								? "-"
-								: out.symbol(v);
-						};
-					}
-					function yStr(y) {
-						//return ((y + 1) + "").padStart((n+"").length, " ");
-						let result = (y + 1) + "";
-						return " ".repeat((n+"").length - result.length)
-							+ result;
-					}
-					let yPad = " ".repeat(yStr(0).length + 1);
-					let xCoords = yPad;
-					let x = 0;
-					for (let bx = 0; bx < boxH; bx++) {
-						xCoords += "  ";
-						for (let x0 = 0; x0 < boxW; x0++) {
-							xCoords += String.fromCharCode(65 + x) + " ";
-							x++;
-						}
-					}
-					xCoords = xCoords.substring(0, xCoords.length - 1) + "\n";
-					let hSep = yPad
-						+ ("+" + "-".repeat(boxW * 2 + 1)).repeat(boxH)
-						+ "+"
-						//+ " " + yPad
-						+ "\n"
-					;
-					let result = xCoords + hSep;
-					let y = 0;
-					for (let by = 0; by < boxW; by++) {
-						for (let y0 = 0; y0 < boxH; y0++) {
-							x = 0;
-							result += yStr(y) + " ";
-							for (let bx = 0; bx < boxH; bx++) {
-								result += "| ";
-								for (let x0 = 0; x0 < boxW; x0++) {
-									result += cellCb(out.cell(x, y)) + " ";
-									x++;
-								}
-							}
-							result += "| " + yStr(y) + "\n";
-							y++;
-						}
-						result += hSep;
-					}
-					result += xCoords;
-					return result;
-				},
-				addTodo: todo => todos.push(todo),
-				do: (...is) => {
-					let ts;
-					if (is.length == 0) {
-						ts = todos;
-					} else {
-						ts = is.map(i => todos[i]);
-					}
-					ts.forEach((t, i) => {
-						if (typeof t == "function") {
-							t();
-							todos[i] = "* " + t.toString();
-						}
-					});
-					return out.print().printTodos();
-				},
-				do_fp: function () {
-					let n;
-					do {
-						n = todos.length;
-						this.do();
-					} while (n < todos.length);
-				},
-				printTodos: showDone => {
-					todos.forEach((td, i) => {
-						if (showDone || (typeof td == "function")) {
-							console.log(i + ": " + td);
-						}
-					});
-					return out;
-				},
-				print: () => {
-					let done = 0;
-					let fixatable = 0;
-					let missing = 0;
-					console.log(out.stringify(c => {
-						if (c.isFixated) {
-							done++;
-							return String.fromCharCode(c.value + "a".charCodeAt(0));
-						} else if (c.canBeFixated) {
-							fixatable++;
-							return "/";
-						} else if (c.isLastCandidate) {
-							fixatable++;
-							return "\\";
-						} else {
-							//return " ";
-							//return "-";
-							missing++;
-							return c.choiceCount();
-						}
-					}));
-					console.log(""
-						+ "// fix: " + done + " + " + fixatable
-						+ ", missing: " + missing
-						+ " (ttl: " + out.cellCount() + ")"
-					);
-					return out;
-				},
-				toString: () => out.stringify(),
-				set: (x, y, v) => {
-					out.cell(x, y).value = v;
-					return out.print().printTodos();
-				}
-			};
-			Object.setPrototypeOf(out, Field.prototype);
+		const boxW = options.box[0];
+		const boxH = options.box[1];
+		const n = boxW * boxH; // cells per group = nr of rows = nr of cols = nr of boxes
+		const rows = new Array(n);
+		const columns = new Array(n);
+		const boxes = new Array(n);
+		const todos = [];
+		//const cells = new Array(n*n);
 
-			var cells;
-			var x, y;
-			var row, column, box;
-			
-			for (y = 0; y < n; y++) {
-				cells = new Array(n);
-				for (x = 0; x < n; x++) {
-					cells[x] = cell.create(out, x, y);
-				}
-				row = group.create(out, cells, "Row_" + out.toYcoord(y));
-				rows[y] = row;
+		let values2symbols = new Array(n);
+		let symbols2values = {};
+		if (options.symbols) {
+			for (let val = 0; val < n; val++) {
+				let sym = options.symbols[val];
+				values2symbols[val] = sym;
+				symbols2values[sym] = val;
 			}
-			out.rows = rows;
-			
-			for (x = 0; x < n; x++) {
-				cells = new Array(n);
-				for (y = 0; y < n; y++) {
-					cells[y] = out.cell(x, y);
-				}
-				column = group.create(out, cells, "Col_" + out.toXcoord(x));
-				columns[x] = column;
-			}
-			out.columns = columns;
-			
-			i = 0;
-			for (var by = 0; by < boxW; by++) { // boxW = n/boxH
-				for (var bx = 0; bx < boxH; bx++) { // boxH = n/boxW
-					cells = new Array(n);
-					var k = 0;
-					for (y = by*boxH; y < (by+1)*boxH; y++) {
-						for (x = bx*boxW; x < (bx+1)*boxW; x++) {
-							cells[k++] = out.cell(x, y);
-						}
-					}
-					box = group.create(out, cells, "Box_" + toXcoord(bx) + toYcoord(by));
-					boxes[i++] = box;
-				}
-			}
-			out.boxes = boxes;
-			
-			
-			return out;
 		} else {
-			throw "sudoku.create: missing/bad options"
+			for (var i = 0; i < n; i++) {
+				values2symbols[i] = i;
+				symbols2values[i] = i;
+			}
 		}
+
+		var out = {
+			n:         () => n,
+			boxW:      () => boxW,
+			boxH:      () => boxH,
+			cellCount: () => n*n,
+			cell:      (x,y) => rows[y].cell(x),
+			forEachCell: cb => {
+				for (var y = 0; y < n; y++) {
+					for (var x = 0; x < n; x++) {
+						cb(out.cell(x, y), x, y);
+					}
+				}
+			},
+			symbol:    v => values2symbols[v],
+			value:     s => symbols2values[s],
+			newSetOfValues: () => new Set(values2symbols.keys()),
+			stringify: cellCb => {
+				if (cellCb === undefined) {
+					cellCb = c => {
+						let v = c.value;
+						return (v === undefined)
+							? "-"
+							: out.symbol(v);
+					};
+				}
+				function yStr(y) {
+					//return ((y + 1) + "").padStart((n+"").length, " ");
+					let result = (y + 1) + "";
+					return " ".repeat((n+"").length - result.length)
+						+ result;
+				}
+				let yPad = " ".repeat(yStr(0).length + 1);
+				let xCoords = yPad;
+				let x = 0;
+				for (let bx = 0; bx < boxH; bx++) {
+					xCoords += "  ";
+					for (let x0 = 0; x0 < boxW; x0++) {
+						xCoords += String.fromCharCode(65 + x) + " ";
+						x++;
+					}
+				}
+				xCoords = xCoords.substring(0, xCoords.length - 1) + "\n";
+				let hSep = yPad
+					+ ("+" + "-".repeat(boxW * 2 + 1)).repeat(boxH)
+					+ "+"
+					//+ " " + yPad
+					+ "\n"
+				;
+				let result = xCoords + hSep;
+				let y = 0;
+				for (let by = 0; by < boxW; by++) {
+					for (let y0 = 0; y0 < boxH; y0++) {
+						x = 0;
+						result += yStr(y) + " ";
+						for (let bx = 0; bx < boxH; bx++) {
+							result += "| ";
+							for (let x0 = 0; x0 < boxW; x0++) {
+								result += cellCb(out.cell(x, y)) + " ";
+								x++;
+							}
+						}
+						result += "| " + yStr(y) + "\n";
+						y++;
+					}
+					result += hSep;
+				}
+				result += xCoords;
+				return result;
+			},
+			addTodo: todo => todos.push(todo),
+			do: (...is) => {
+				let ts;
+				if (is.length == 0) {
+					ts = todos;
+				} else {
+					ts = is.map(i => todos[i]);
+				}
+				ts.forEach((t, i) => {
+					if (typeof t == "function") {
+						t();
+						todos[i] = "* " + t.toString();
+					}
+				});
+				return out.print().printTodos();
+			},
+			do_fp: function () {
+				let n;
+				do {
+					n = todos.length;
+					this.do();
+				} while (n < todos.length);
+			},
+			printTodos: showDone => {
+				todos.forEach((td, i) => {
+					if (showDone || (typeof td == "function")) {
+						console.log(i + ": " + td);
+					}
+				});
+				return out;
+			},
+			print: () => {
+				let done = 0;
+				let fixatable = 0;
+				let missing = 0;
+				console.log(out.stringify(c => {
+					if (c.isFixated) {
+						done++;
+						return String.fromCharCode(c.value + "a".charCodeAt(0));
+					} else if (c.canBeFixated) {
+						fixatable++;
+						return "/";
+					} else if (c.isLastCandidate) {
+						fixatable++;
+						return "\\";
+					} else {
+						//return " ";
+						//return "-";
+						missing++;
+						return c.choiceCount();
+					}
+				}));
+				console.log(""
+					+ "// fix: " + done + " + " + fixatable
+					+ ", missing: " + missing
+					+ " (ttl: " + out.cellCount() + ")"
+				);
+				return out;
+			},
+			toString: () => out.stringify(),
+			set: (x, y, v) => {
+				out.cell(x, y).value = v;
+				return out.print().printTodos();
+			}
+		};
+		Object.setPrototypeOf(out, Field.prototype);
+
+		var cells;
+		var x, y;
+		var row, column, box;
+
+		for (y = 0; y < n; y++) {
+			cells = new Array(n);
+			for (x = 0; x < n; x++) {
+				cells[x] = cell.create(out, x, y);
+			}
+			row = group.create(out, cells, "Row_" + out.toYcoord(y));
+			rows[y] = row;
+		}
+		out.rows = rows;
+
+		for (x = 0; x < n; x++) {
+			cells = new Array(n);
+			for (y = 0; y < n; y++) {
+				cells[y] = out.cell(x, y);
+			}
+			column = group.create(out, cells, "Col_" + out.toXcoord(x));
+			columns[x] = column;
+		}
+		out.columns = columns;
+
+		i = 0;
+		for (var by = 0; by < boxW; by++) { // boxW = n/boxH
+			for (var bx = 0; bx < boxH; bx++) { // boxH = n/boxW
+				cells = new Array(n);
+				var k = 0;
+				for (y = by*boxH; y < (by+1)*boxH; y++) {
+					for (x = bx*boxW; x < (bx+1)*boxW; x++) {
+						cells[k++] = out.cell(x, y);
+					}
+				}
+				box = group.create(out, cells, "Box_" + toXcoord(bx) + toYcoord(by));
+				boxes[i++] = box;
+			}
+		}
+		out.boxes = boxes;
+
+
+		return out;
 	}
 	
 	function parseRow(params, y, line) {
