@@ -195,7 +195,6 @@ require(["scripts/cell", "scripts/sudoku"], (cell, sudoku) => {
 			});
 		});
 
-
 		test(".value (set/get) / .isFixated", function(assert) {
 			var s = sudoku.create({box: [2, 3]});
 			var n = s.n();
@@ -254,12 +253,36 @@ require(["scripts/cell", "scripts/sudoku"], (cell, sudoku) => {
 				c.value = v1; // setting it again to the same value is ok
 				assert.throws( () => { c.value = (v1 + 1) % n; },
 					"trying to re-set a cell's .value throws");
-
 			});
 
-			//console.log(s.stringify(d => {
-			//	return (d.choiceCount() == 1 ? d.value + "/" : "?/") + d.choiceCount();
-			//}));
+			test(".siblings", function (assert) {
+				const bW = 3, bH = 3, n = bW * bH;
+				const s = sudoku.create({ box: [bW, bH]});
+				s.forEachCell(c => {
+					assert.isIterable(c.siblings, c.id + ".siblings");
+					const expSibs = new Set([
+						...c.row.cells,
+						...c.col.cells,
+						...c.box.cells
+					].filter(d => d !== c));
+					const expectedLength = 3 * n // nr of cells in all groups
+							- bW // minus cells counted twice in box/row
+							- bH // minus cells counted twice in box/col
+							- 1 // minus the cell itself
+					;
+					assert.same(expectedLength, expSibs.size,
+						"(make sure expectedLength === size of epx. siblings)");
+
+					assert.same(c.siblings.length, expectedLength, 
+						c.id + ".siblings.length");
+					assert.same((new Set(c.siblings)).size, expectedLength,
+						"no duplicates in " + c.id + ".siblings");
+					for (const sib of c.siblings) {
+						assert.ok(expSibs.has(sib),
+							sib.id + " should be sibling of " + c.id);
+					}
+				});
+			});
 
 		});
 	}); // end module "cell"

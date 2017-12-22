@@ -34,12 +34,7 @@ define(["./sequence", "./fn"], (seq, fn) => {
 										this.removeChoice(u);
 									}
 								});
-								this.groups.forEach(g => {
-									g.candidates(v).forEach(c => {
-										if (c !== this)
-											c.removeChoice(v);
-									})
-								});
+								this.siblings.forEach(sib => sib.removeChoice(v));
 							} else {
 								throw this + ": " + v 
 									+ " (\"" + this.field.symbol(v) + "\")"
@@ -138,6 +133,11 @@ define(["./sequence", "./fn"], (seq, fn) => {
 		}) },
 		groups: { get: memoize(function () {
 			return seq.create([this.row, this.col, this.box]);
+		}) },
+		siblings: { get: memoize(function () {
+			return seq.create(new Set(
+				this.groups.mapMany(g => g.cells.filter(c => c !== this))
+			));
 		}) },
 	});
 
