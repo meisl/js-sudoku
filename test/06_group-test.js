@@ -8,9 +8,8 @@ require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 
 		module(".id", () => { // -------------------------------------------------
 			test("row", function (assert) {
-				let boxW = 3;
-				let boxH = 2;
-				let s = sudoku.create({box: [boxW, boxH]});
+				const boxW = 3, boxH = 2;
+				const s = sudoku.create({box: [boxW, boxH]});
 				for (let y = 0; y < boxW * boxH; y++) {
 					assert.equal(s.rows[y].id, "Row_" + s.toYcoord(y),
 						"rows[" + y + "].id");
@@ -18,9 +17,8 @@ require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 			});
 
 			test("column", function (assert) {
-				let boxW = 3;
-				let boxH = 2;
-				let s = sudoku.create({box: [boxW, boxH]});
+				const boxW = 3, boxH = 2;
+				const s = sudoku.create({box: [boxW, boxH]});
 				for (let x = 0; x < boxW * boxH; x++) {
 					assert.equal(s.columns[x].id, "Col_" + s.toXcoord(x),
 						"columns[" + x + "].id");
@@ -28,9 +26,8 @@ require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 			});
 
 			test("box", function (assert) {
-				let boxW = 3;
-				let boxH = 2;
-				let s = sudoku.create({box: [boxW, boxH]});
+				const boxW = 3, boxH = 2;
+				const s = sudoku.create({box: [boxW, boxH]});
 				for (let i = 0; i < s.n(); i++) {
 					let bx = i % boxH;
 					let by = Math.trunc(i / boxH);
@@ -39,6 +36,36 @@ require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 				}
 			});
 		}); // end module ".id"
+
+		module(".cells", () => { // -------------------------------------------------
+			test("row", function (assert) {
+				const boxW = 3, boxH = 2, n = boxW*boxH;
+				const s = sudoku.create({box: [boxW, boxH]});
+				for (let i = 0; i < n; i++) {
+					const cells = s.rows[i].cells;
+					assert.isIterable(cells, ".rows[" + i + "].cells");
+					assert.same(cells.length, n, ".rows[" + i + "].cells.length");
+				}
+			});
+			test("column", function (assert) {
+				const boxW = 3, boxH = 2, n = boxW*boxH;
+				const s = sudoku.create({box: [boxW, boxH]});
+				for (let i = 0; i < n; i++) {
+					const cells = s.columns[i].cells;
+					assert.isIterable(cells, ".columns[" + i + "].cells");
+					assert.same(cells.length, n, ".columns[" + i + "].cells.length");
+				}
+			});
+			test("boxes", function (assert) {
+				const boxW = 3, boxH = 2, n = boxW*boxH;
+				const s = sudoku.create({box: [boxW, boxH]});
+				for (let i = 0; i < n; i++) {
+					const cells = s.boxes[i].cells;
+					assert.isIterable(cells, ".boxes[" + i + "].cells");
+					assert.same(cells.length, n, ".boxes[" + i + "].cells.length");
+				}
+			});
+		}); // end module ".cells"
 
 		module("assignment of cells", () => {
 			test("to rows", function(assert) {
@@ -51,7 +78,7 @@ require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 					let y = i;
 					for (let x = 0; x < s.n(); x++) {
 						let c = s.cell(x, y);
-						assert.strictEqual(c.row, row, "row " + i
+						assert.same(c.row, row, "row " + i
 							+ " contains cell(" + x + ", " + y + ")");
 					}
 				}
@@ -67,7 +94,7 @@ require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 					let x = i;
 					for (let y = 0; y < s.n(); y++) {
 						let c = s.cell(x, y);
-						assert.strictEqual(c.col, col, "col " + i
+						assert.same(c.col, col, "col " + i
 							+ " contains cell(" + x + ", " + y + ")");
 					}
 				}
@@ -85,7 +112,7 @@ require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 					for (let y = cellYoffset; y < cellYoffset + boxH; y++) {
 						for (let x = cellXoffset; x < cellXoffset + boxW; x++) {
 							let c = s.cell(x, y);
-							assert.strictEqual(c.box, box, "box " + i 
+							assert.same(c.box, box, "box " + i 
 								+ " contains cell(" + x + ", " + y + ")");
 						}
 					}
