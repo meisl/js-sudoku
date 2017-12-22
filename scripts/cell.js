@@ -1,5 +1,6 @@
 
-define([], () => {
+define(["./sequence", "./fn"], (seq, fn) => {
+	const memoize = fn.memoize;
 
 	function Cell(field, x, y) {
 		let value;
@@ -17,13 +18,9 @@ define([], () => {
 		});
 
 		Object.defineProperties(this, {
-			id: { value: field.toCoord(x, y),	enumerable: true },
 			x:  { value: x },
 			y:  { value: y },
-			field: {
-				//get () { return field; },
-				value: field, 	writable: false,
-			},
+			field: { value: field },
 
 			value: {
 				get () { return value; },
@@ -95,51 +92,6 @@ define([], () => {
 	}
 
 	Cell.prototype = {
-		get row() {
-			let g = this.field.rows[this.y];
-			Object.defineProperty(this, "row", {
-				value: g,	writable: false,
-							enumerable: false,
-							configurable: false
-			});
-			return g;
-		},
-		get col() {
-			let g = this.field.columns[this.x];
-			Object.defineProperty(this, "col", {
-				value: g,	writable: false,
-							enumerable: false,
-							configurable: false
-			});
-			return g;
-		},
-		get box() {
-			let i = Math.trunc(this.x / this.field.boxW()) 
-				+ Math.trunc(this.y / this.field.boxH()) * this.field.boxH();
-			let g = this.field.boxes[i];
-			Object.defineProperty(this, "box", {
-				value: g,	writable: false,
-							enumerable: false,
-							configurable: false
-			});
-			return g;
-		},
-		get groups() {
-			let gsAr = [this.row, this.col, this.box];
-			let gsIt = gsAr[Symbol.iterator]();
-			let gs = {
-				[Symbol.iterator]: () => gsIt,
-				size:    gsAr.length,
-				length:  gsAr.length,
-				forEach: cb => gsAr.forEach(cb),
-				filter:  cb => gsAr.filter(cb),
-				map:     cb => gsAr.map(cb),
-			};
-			Object.defineProperty(this, "groups", {
-				value: gs
-			});
-			return gs;
-		},
 		toString: function () {
 			return this.id + "{" 
 				+ [...this.choices]
@@ -165,6 +117,29 @@ define([], () => {
 			);
 		},
 	};
+
+	Object.defineProperties(Cell.prototype, {
+		id: { get: memoize(function () {
+			return this.field.toCoord(this.x, this.y) 
+		}) },
+		row: { get: memoize(function () {
+			return this.field.rows[this.y];
+		}) },
+		col: { get: memoize(function () {
+			return this.field.columns[this.x];
+		}) },
+		box: { get: memoize(function () {
+			const x = this.x;
+			const y = this.y;
+			const bW = this.field.boxW();
+			const bH = this.field.boxH();
+			const i = Math.trunc(x / bW) + Math.trunc(y / bH) * bH;
+			return this.field.boxes[i];
+		}) },
+		groups: { get: memoize(function () {
+			return seq.create([this.row, this.col, this.box]);
+		}) },
+	});
 
 	return Object.create(null, {
 		create: { value: (field, x, y) => new Cell(field, x, y) },
