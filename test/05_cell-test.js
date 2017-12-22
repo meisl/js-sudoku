@@ -10,7 +10,7 @@ require(["scripts/cell", "scripts/sudoku"], (cell, sudoku) => {
 			var s = {};
 
 			var c = cell.create(s);
-			assert.same(typeof c, "object", "returns an object");
+			assert.isObject(c, "returns an object");
 		});
 
 		test(".field", function(assert) {
@@ -62,21 +62,21 @@ require(["scripts/cell", "scripts/sudoku"], (cell, sudoku) => {
 			s.forEachCell(c => {
 
 				let row = c.row;
-				assert.same(typeof row, "object", "typeof " + c.id + ".row");
+				assert.isObject(row, c.id + ".row");
 				assert.same(row.field(), s, 
 					c.id + ".row=" + row.id + ": " + ".row.field() points to .field");
 				assert.same(row, s.rows[c.y],
 					c.id + ".row=" + row.id + ": should be same as .field.rows[" + c.y + "]");
 
 				let col = c.col;
-				assert.same(typeof col, "object", "typeof " + c.id + ".col");
+				assert.isObject(col, c.id + ".col");
 				assert.same(col.field(), s,
 					c.id + ".col=" + col.id + ": " + ".col.field() points to .field");
 				assert.same(col, s.columns[c.x],
 					c.id + ".col=" + col.id + ": should be same as .field.columns[" + c.x + "]");
 
 				let box = c.box;
-				assert.same(typeof box, "object", "typeof " + c.id + ".box");
+				assert.isObject(box, c.id + ".box");
 				assert.same(box.field(), s,
 					c.id + ".box=" + box.id + ": " + ".box.field() points to .field");
 				let boxX = Math.trunc(c.x / s.boxW());
@@ -91,8 +91,7 @@ require(["scripts/cell", "scripts/sudoku"], (cell, sudoku) => {
 			let s = sudoku.create({box: [3, 2]});
 			s.forEachCell(c => {
 				f = c.groups.some;
-				assert.same(typeof f, "function",
-					"typeof " + c.id + ".groups.function");
+				assert.isFunction(f, c.id + ".groups.function");
 			});
 		});
 
@@ -100,20 +99,19 @@ require(["scripts/cell", "scripts/sudoku"], (cell, sudoku) => {
 			let s = sudoku.create({box: [3, 2]});
 			s.forEachCell(c => {
 				f = c.choices.some;
-				assert.same(typeof f, "function",
-					"typeof " + c.id + ".choices.function");
+				assert.isFunction(f, c.id + ".choices.function");
 			});
 		});
 
 		test("enumerate groups", function(assert) {
 			let s = sudoku.create({box: [3, 2]});
 			s.forEachCell(c => {
-				let i = 0;
+				assert.isIterable(c.groups, c.id + ".groups");
 				let groups = new Array(3);
+				let i = 0;
 				c.groups.forEach(g => {
 					groups[i++] = g;
-					assert.same(typeof g, "object", 
-						c.id + ": " + i + ". group is an object");
+					assert.isObject(g, c.id + ": " + i + ". group is an object");
 					assert.same(g.field(), c.field,
 						c.id + ": " + i + ". group's .field() points to same as cell.field");
 					for (let k = 0; k < i-1; k++) {
