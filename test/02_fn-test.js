@@ -89,6 +89,121 @@ require(["scripts/fn"], (fn) => {
         	assert.same(actual, lexicalThis);
         });
 
+		module("getDescriptors", () => { // ----------------------------------------
+			test("non-existent property", function (assert) {
+				const foo = () => "bar";
+				const o = { };
+				let act = fn.getDescriptors(foo, o);
+				assert.same(act.length, 0, 
+					"nr of descriptors: " + QUnit.dump.parse(act));
+			});
+			test("inherited from Object.prototype", function (assert) {
+				const f = Object.prototype.toString;
+				const o = { };
+				let act = fn.getDescriptors(f, o);
+				assert.same(act.length, 1, 
+					"nr of descriptors: " + QUnit.dump.parse(act));
+				assert.same(act[0].name, "toString", "descriptor .name");
+				assert.same(act[0].value, f, "descriptor .value");
+				assert.same(act[0].get, undefined, "descriptor .get")
+				assert.same(act[0].set, undefined, "descriptor .set")
+				assert.same(act[0].depth, 1, "descriptor .depth");
+			});
+			test("enumerable function on object itself", function (assert) {
+				const foo = () => "bar";
+				const o = { qmbl: foo };
+				let act = fn.getDescriptors(foo, o);
+				assert.same(act.length, 1, 
+					"nr of descriptors: " + QUnit.dump.parse(act));
+				assert.same(act[0].name, "qmbl", "descriptor .name");
+				assert.same(act[0].value, foo, "descriptor .value");
+				assert.same(act[0].get, undefined, "descriptor .get")
+				assert.same(act[0].set, undefined, "descriptor .set")
+				assert.same(act[0].depth, 0, "descriptor .depth");
+			});
+			test("enumerable function on proto of object", function (assert) {
+				const foo = () => "bar";
+				const p = { qmbl: foo };
+				const o = Object.create(p);
+				let act = fn.getDescriptors(foo, o);
+				assert.same(act.length, 1,
+					"nr of descriptors: " + QUnit.dump.parse(act));
+				assert.same(act[0].name, "qmbl", "descriptor .name");
+				assert.same(act[0].value, foo, "descriptor .value");
+				assert.same(act[0].get, undefined, "descriptor .get")
+				assert.same(act[0].set, undefined, "descriptor .set")
+				assert.same(act[0].depth, 1, "descriptor .depth");
+			});
+			test("(non-enumerable) getter on object itself", function (assert) {
+				const foo = () => "bar";
+				const o = Object.defineProperty({}, "qmbl", { get: foo } );
+				let act = fn.getDescriptors(foo, o);
+				assert.same(act.length, 1, 
+					"nr of descriptors: " + QUnit.dump.parse(act));
+				assert.same(act[0].name, "qmbl", "descriptor .name");
+				assert.same(act[0].value, undefined, "descriptor .value");
+				assert.same(act[0].get, foo, "descriptor .get")
+				assert.same(act[0].set, undefined, "descriptor .set")
+				assert.same(act[0].depth, 0, "descriptor .depth");
+			});
+			test("(non-enumerable) getter on proto of proto of object", function (assert) {
+				const foo = () => "bar";
+				const q = Object.defineProperty({}, "qmbl", { get: foo } );
+				const p = Object.create(q);
+				const o = Object.create(p);
+				let act = fn.getDescriptors(foo, o);
+				assert.same(act.length, 1, 
+					"nr of descriptors: " + QUnit.dump.parse(act));
+				assert.same(act[0].name, "qmbl", "descriptor .name");
+				assert.same(act[0].value, undefined, "descriptor .value");
+				assert.same(act[0].get, foo, "descriptor .get")
+				assert.same(act[0].set, undefined, "descriptor .set")
+				assert.same(act[0].depth, 2, "descriptor .depth");
+			});
+			test("(non-enumerable) getter with Symbol name on proto of object", function (assert) {
+				const foo = () => "bar";
+				const sym = Symbol("blaha");
+				const p = Object.defineProperty({}, sym, { get: foo } );
+				const o = Object.create(p);
+				let act = fn.getDescriptors(foo, o);
+				assert.same(act.length, 1, 
+					"nr of descriptors: " + QUnit.dump.parse(act));
+				assert.same(act[0].name, sym, "descriptor .name");
+				assert.same(act[0].value, undefined, "descriptor .value");
+				assert.same(act[0].get, foo, "descriptor .get")
+				assert.same(act[0].set, undefined, "descriptor .set")
+				assert.same(act[0].depth, 1, "descriptor .depth");
+			});
+			test("same function appearing more than once, in both, object and __proto__", function (assert) {
+				const f = () => "bar";
+				const p = Object.create(Object.prototype, { 
+					qmbl: { get: f }
+				});
+				const o = Object.create(p, {
+					qmbl: { value: f },
+					xxxx: { get: f }
+				});
+				let act = fn.getDescriptors(f, o);
+				assert.same(act.length, 3, 
+					"nr of descriptors: " + QUnit.dump.parse(act));
+				assert.same(act[0].name, "qmbl", "descriptor 0 .name");
+				assert.same(act[0].value, f, "descriptor 0 .value");
+				assert.same(act[0].get, undefined, "descriptor 0 .get")
+				assert.same(act[0].set, undefined, "descriptor 0 .set")
+				assert.same(act[0].depth, 0, "descriptor 0 .depth");
+				assert.same(act[1].name, "xxxx", "descriptor 1 .name");
+				assert.same(act[1].value, undefined, "descriptor 1 .value");
+				assert.same(act[1].get, f, "descriptor 1 .get")
+				assert.same(act[1].set, undefined, "descriptor 1 .set")
+				assert.same(act[1].depth, 0, "descriptor 1 .depth");
+				assert.same(act[2].name, "qmbl", "descriptor 2 .name");
+				assert.same(act[2].value, undefined, "descriptor 2 .value");
+				assert.same(act[2].get, f, "descriptor 2 .get")
+				assert.same(act[2].set, undefined, "descriptor 2 .set")
+				assert.same(act[2].depth, 1, "descriptor 2 .depth");
+			});
+		});  // end module "fn.getDescriptors"
+
     }); // end module "fn"
 
 }); // end require

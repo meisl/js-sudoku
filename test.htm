@@ -25,7 +25,8 @@
 		"./test/06_group-test",
 	], () => {});
 
-	require(["./scripts/sudoku", "./scripts/sequence"], (su, sq) => { sdk = su; seq = sq; });
+	require(["./scripts/sudoku", "./scripts/sequence", "./scripts/fn"], 
+		(su, sq, fn) => { sdk = su; seq = sq; this.fn = fn; });
   </script>
 
 </body>
