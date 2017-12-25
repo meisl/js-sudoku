@@ -475,6 +475,12 @@ require(["scripts/sequence"], (seq) => {
 				assert.same(s.length, 10, 
 					"range(0, 9).length, again (2nd traversal!)");
 				assert.all.same(s, [0, 1, 2, 3, 4, 5, 6,7, 8, 9]);
+				
+				s = seq.range(0, -1);
+				assert.same(s.length, 0, "range(0, -1).length");
+				assert.same(s.length, 0, 
+					"range(0, -1).length, again (2nd traversal!)");
+				assert.all.same(s, []);
 			});
 		}); // end module "range"
 
