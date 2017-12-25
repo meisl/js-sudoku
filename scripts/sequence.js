@@ -200,7 +200,10 @@ define(["./fn"], (fn) => {
 		singleton: { value: singletonSeq },
 		create:    { value: iterable => new Sequence(iterable) },
 		fromGeneratorFn: { value: fromGeneratorFn },
-		ctor: { value: Sequence }
+		ctor: { value: Sequence },
+		range: { value: (lo, hi) => fromGeneratorFn(function* () {
+			for (let i = lo; i <= hi; i++) yield i;
+		}) },
 	});
 });
 

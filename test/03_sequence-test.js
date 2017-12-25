@@ -461,5 +461,22 @@ require(["scripts/sequence"], (seq) => {
 			});
 		}); // end module "fromGeneratorFn"
 
+		module(".range", () => { // ---------------------------------
+			test("elem traversal", function (assert) {
+				let s;
+				s = seq.range(0, 0);
+				assert.same(s.length, 1, "range(0, 0).length");
+				assert.same(s.length, 1, 
+					"range(0, 0).length, again (2nd traversal!)");
+				assert.all.same(s, [0]);
+
+				s = seq.range(0, 9);
+				assert.same(s.length, 10, "range(0, 9).length");
+				assert.same(s.length, 10, 
+					"range(0, 9).length, again (2nd traversal!)");
+				assert.all.same(s, [0, 1, 2, 3, 4, 5, 6,7, 8, 9]);
+			});
+		}); // end module "range"
+
 	}); // end module "seq"
 }); // end require
