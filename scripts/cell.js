@@ -3,7 +3,6 @@ define(["./sequence", "./fn"], (seq, fn) => {
 	const memoize = fn.memoize;
 
 	function Cell(field, x, y) {
-		let value;
 		let choices = field.newSetOfValues();
 		let choicesRO = Object.create(null, {
 			size: {
@@ -21,44 +20,6 @@ define(["./sequence", "./fn"], (seq, fn) => {
 			x:  { value: x },
 			y:  { value: y },
 			field: { value: field },
-
-			value: {
-				get () { return value; },
-				set (v) {
-					if (value === undefined) {
-						if ((v >= 0) && (v < this.field.n())) {
-							if (this.hasChoice(v)) {
-								value = v;
-								this.forEachChoice(u => { 
-									if (u != v) {
-										this.removeChoice(u);
-									}
-								});
-								this.siblings.forEach(sib => sib.removeChoice(v));
-							} else {
-								throw this + ": " + v 
-									+ " (\"" + this.field.symbol(v) + "\")"
-									+ " not in choices {"
-									+ [...this.choices]+ "}"
-									+ " ({"
-									+ [...this.choices].map(u => "\"" + this.field.symbol(u) + "\"")
-									+ "})"
-								;
-							}
-						} else {
-							throw "not a value: " + v;
-						}
-					} else if (value != v) {
-						throw this.id + ": cannot set to " + v 
-							+ " - already set to " + value;
-					}
-				},
-				enumerable: true,
-				configurable: false
-			},
-		});
-		Object.defineProperties(this, {
-
 			choices: {
 				get () { 
 					return choicesRO;
@@ -139,6 +100,44 @@ define(["./sequence", "./fn"], (seq, fn) => {
 				this.groups.mapMany(g => g.cells.filter(c => c !== this))
 			));
 		}) },
+		throwTwiceSet: {
+			value: function (newValue) {
+				if (newValue !== this.value)
+					throw this.id + ": cannot set to " + newValue 
+						+ " - already set to " + this.value;
+			}
+		},
+		value: {
+			set (v) {
+				if ((v >= 0) && (v < this.field.n())) {
+					if (this.hasChoice(v)) {
+						Object.defineProperty(this, "value", {
+							get: () => v,
+							set: this.throwTwiceSet
+						});
+						this.forEachChoice(u => { 
+							if (u != v) {
+								this.removeChoice(u);
+							}
+						});
+						this.siblings.forEach(sib => sib.removeChoice(v));
+					} else {
+						throw this + ": " + v 
+							+ " (\"" + this.field.symbol(v) + "\")"
+							+ " not in choices {"
+							+ [...this.choices]+ "}"
+							+ " ({"
+							+ [...this.choices].map(u => "\"" + this.field.symbol(u) + "\"")
+							+ "})"
+						;
+					}
+				} else {
+					throw "not a value: " + v;
+				}
+			},
+			enumerable: true,
+			configurable: false
+		},
 	});
 
 	return Object.create(null, {
