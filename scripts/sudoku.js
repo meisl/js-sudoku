@@ -301,7 +301,6 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 	}
 	
 	function parseRow(params, y, line) {
-		console.log('"' + line + '"');
 		let c = params.start;
 		function fail(err) {
 			let myErr = err + "\n\"" + line + "\"\n" 
@@ -403,7 +402,6 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 		let result = create(options);
 
 		p.todos.forEach(t => t(result));
-		console.log(options);
 		console.log(result.stringify());
 
 		return result;

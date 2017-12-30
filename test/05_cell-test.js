@@ -63,22 +63,22 @@ require(["scripts/cell", "scripts/sudoku"], (cell, sudoku) => {
 
 				let row = c.row;
 				assert.isObject(row, c.id + ".row");
-				assert.same(row.field(), s, 
-					c.id + ".row=" + row.id + ": " + ".row.field() points to .field");
+				assert.same(row.field, s, 
+					c.id + ".row=" + row.id + ": " + ".row.field points to .field");
 				assert.same(row, s.rows[c.y],
 					c.id + ".row=" + row.id + ": should be same as .field.rows[" + c.y + "]");
 
 				let col = c.col;
 				assert.isObject(col, c.id + ".col");
-				assert.same(col.field(), s,
-					c.id + ".col=" + col.id + ": " + ".col.field() points to .field");
+				assert.same(col.field, s,
+					c.id + ".col=" + col.id + ": " + ".col.field points to .field");
 				assert.same(col, s.columns[c.x],
 					c.id + ".col=" + col.id + ": should be same as .field.columns[" + c.x + "]");
 
 				let box = c.box;
 				assert.isObject(box, c.id + ".box");
-				assert.same(box.field(), s,
-					c.id + ".box=" + box.id + ": " + ".box.field() points to .field");
+				assert.same(box.field, s,
+					c.id + ".box=" + box.id + ": " + ".box.field points to .field");
 				let boxX = Math.trunc(c.x / s.boxW());
 				let boxY = Math.trunc(c.y / s.boxH());
 				let boxIdx = boxX + boxY * s.boxH(); // there are boxH (!) boxes in a row
@@ -112,8 +112,8 @@ require(["scripts/cell", "scripts/sudoku"], (cell, sudoku) => {
 				c.groups.forEach(g => {
 					groups[i++] = g;
 					assert.isObject(g, c.id + ": " + i + ". group is an object");
-					assert.same(g.field(), c.field,
-						c.id + ": " + i + ". group's .field() points to same as cell.field");
+					assert.same(g.field, c.field,
+						c.id + ": " + i + ". group's .field points to same as cell.field");
 					for (let k = 0; k < i-1; k++) {
 						assert.notStrictEqual(g, groups[k],
 							c.id + ": " + i + ". group !== " + (k+1) + ". group");

@@ -6,6 +6,35 @@ require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 			assert.same(Object.getPrototypeOf(group), null, "has null __proto__");
 		});
 
+		module(".field", () => { // -------------------------------------------------
+			test("row", function (assert) {
+				const boxW = 3, boxH = 2;
+				const s = sudoku.create({box: [boxW, boxH]});
+				for (let y = 0; y < boxW * boxH; y++) {
+					assert.same(s.rows[y].field, s,
+						"rows[" + y + "].field");
+				}
+			});
+
+			test("column", function (assert) {
+				const boxW = 3, boxH = 2;
+				const s = sudoku.create({box: [boxW, boxH]});
+				for (let x = 0; x < boxW * boxH; x++) {
+					assert.same(s.columns[x].field, s,
+						"columns[" + x + "].field");
+				}
+			});
+
+			test("box", function (assert) {
+				const boxW = 3, boxH = 2;
+				const s = sudoku.create({box: [boxW, boxH]});
+				for (let i = 0; i < s.n(); i++) {
+					assert.equal(s.boxes[i].field, s,
+						"boxes[" + i + "].field");
+				}
+			});
+		}); // end module ".field"
+
 		module(".id", () => { // -------------------------------------------------
 			test("row", function (assert) {
 				const boxW = 3, boxH = 2;

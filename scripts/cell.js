@@ -28,14 +28,19 @@ define(["./sequence", "./fn"], (seq, fn) => {
 				configurable: false
 			},
 			removeChoice: {
-				value: function (v) {
+				value: function (v, outerAct) {
 					if (choices.delete(v)) {
-						this.groups.forEach(g => g.removeCandidate(this, v));
+						let act = this.id + "!=" + this.field.symbol(v);
+						if (outerAct !== undefined) {
+							act += " <- " + outerAct;
+						}
+						this.groups.forEach(g => g.checkLastCandidate(v, act));
 						if (this.canBeFixated) {
 							let u = [...this.choices].pop();
 							let todo = () => this.value = u;
-							todo.toString = () => this.id + " := " + this.field.symbol(v)
-								+ " (last choice)";
+							todo.toString = () => this.id
+								+ ":=" + this.field.symbol(u)
+								+ " (last choice <- " + act + ")";
 							this.field.addTodo(todo);
 						}
 					}
@@ -115,12 +120,13 @@ define(["./sequence", "./fn"], (seq, fn) => {
 							get: () => v,
 							set: this.throwTwiceSet
 						});
+						const act = this.id + ":=" + this.field.symbol(v);
 						this.forEachChoice(u => { 
 							if (u != v) {
-								this.removeChoice(u);
+								this.removeChoice(u, act);
 							}
 						});
-						this.siblings.forEach(sib => sib.removeChoice(v));
+						this.siblings.forEach(sib => sib.removeChoice(v, act));
 					} else {
 						throw this + ": " + v 
 							+ " (\"" + this.field.symbol(v) + "\")"
