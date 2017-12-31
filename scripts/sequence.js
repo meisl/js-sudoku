@@ -83,7 +83,18 @@ define(["./fn"], (fn) => {
 			if (fn.insist_nonNegativeInt(n) === 0) {
 				return emptySequence;
 			}
-			return this.filter((_, i) => i < n);
+			
+			// NOT working with infinity sequences:
+			//return this.filter((_, i) => i < n);
+
+			const inner = this;
+			return fromGeneratorFn(function* () {
+				let i = 0;
+				for (const next of inner) {
+					yield next;
+					if (++i === n) return;
+				}
+			})
 		},
 		append: function (suffix) {
 			const prefix = this;
@@ -206,6 +217,24 @@ define(["./fn"], (fn) => {
 			if (lo === hi) return singletonSeq(lo);
 			return fromGeneratorFn(function* () {
 				for (let i = lo; i <= hi; i++) yield i;
+			});
+		} },
+		iterate: { value: function (...args) { 
+			const n = args.length - 1
+			      f = args[n],
+			      fArgs = args.slice(0, n);
+			return fromGeneratorFn(function* () {
+				yield* fArgs;
+				let next;
+				while (true) {
+					next = f.apply(null, fArgs);
+					yield next;
+					if (n > 0) {
+						fArgs.copyWithin(0, 1);
+						fArgs[n - 1] = next;
+					}
+				}
+
 			});
 		} },
 	});

@@ -378,6 +378,16 @@ require(["scripts/sequence"], (seq) => {
 				let s = seq.create([42, 4711]);
 				assert.all.same(s.take(1 << 26), [42, 4711]);
 			});
+
+			test("on infinite sequence", function (assert) {
+				const inner = { [Symbol.iterator]: function* () {
+					while (true)
+						yield 42;
+				} };
+				const s = seq.create(inner);
+				assert.same(s.take(0), seq.empty, ".take(0)");
+				assert.all.same(s.take(5), [42,42,42,42,42], "take(5)");
+			});
 		}); // end module ".take"
 
 		module(".mapMany", () => { // ---------------------------------
@@ -461,6 +471,50 @@ require(["scripts/sequence"], (seq) => {
 			});
 		}); // end module "fromGeneratorFn"
 
+		module(".iterate", () => { // -------------------------------
+			test("with 1 arg", function (assert) {
+				let calls = [];
+				const f = function (...args) {
+					calls.push({args: [...args], this: this});
+					return calls.length;
+				};
+				let s = seq.iterate(f);
+				let act = [...s.take(3)];
+				assert.same(calls.length, 3, "call count");
+				assert.all.same(act, [1,2,3], "values returned from fn");
+				assert.all.same(calls[0].args, [], "args @ 1st call");
+				assert.all.same(calls[1].args, [], "args @ 2nd call");
+				assert.all.same(calls[2].args, [], "args @ 3rd call");
+			});
+			test("with 2 args", function (assert) {
+				const calls = [],
+				      f = function (...args) {
+				          calls.push({args: [...args], this: this});
+				          return args[0] + 1;
+				      };
+				let s = seq.iterate(0, f);
+				let act = [...s.take(3)];
+				assert.same(calls.length, 2, "call count");
+				assert.all.same(calls[0].args, [0], "args @ 1st call");
+				assert.all.same(calls[1].args, [1], "args @ 2nd call");
+				assert.all.same(act, [0,1,2], "values in result sequence");
+			});
+			test("with 3 args", function (assert) {
+				const calls = [],
+				      f = function (...args) {
+				          calls.push({args: [...args], this: this});
+				          return args[0] + args[1];
+				      };
+				let s = seq.iterate(1, 1, f);
+				let act = [...s.take(5)];
+				assert.same(calls.length, 3, "call count");
+				assert.all.same(calls[0].args, [1,1], "args @ 1st call");
+				assert.all.same(calls[1].args, [1,2], "args @ 2nd call");
+				assert.all.same(calls[2].args, [2,3], "args @ 3rd call");
+				assert.all.same(act, [1,1,2,3,5], "values in result sequence");
+			});
+		});	// end module "iterate"
+
 		module(".range", () => { // ---------------------------------
 			test("elem traversal", function (assert) {
 				let s;
@@ -481,6 +535,11 @@ require(["scripts/sequence"], (seq) => {
 				assert.same(s.length, 0, 
 					"range(0, -1).length, again (2nd traversal!)");
 				assert.all.same(s, []);
+			});
+			skip("with infinite upper bound", function (assert) {
+				let s;
+				s = seq.range(42, Infinity);
+				assert.same(s.length, Infinity, "range(42, Infinity).length");
 			});
 		}); // end module "range"
 
