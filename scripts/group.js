@@ -9,13 +9,22 @@ define(["./fn", "./sequence"], (fn, seq) => {
 		});
 	}
 	Group.prototype = Object.create(Object.prototype, {
-		n: { get: function () { return this.field.n() } },
+		[Symbol.toStringTag]: { value: "Group" },
+		n: { get: function () {
+			return this.field.n();
+		} },
+		symbol: { value: function (val) {
+			return this.field.symbol(val);
+		} },
+		value: { value: function (sym) {
+			return this.field.value(sym);
+		} },
 		toString: { value: function () {
-			return this.id; }
-		},
+			return this.id;
+		} },
 		cell: { value: function (i) {
-			return this.cells.skip(i).head() }
-		},
+			return this.cells.skip(i).head();
+		} },
 		candidates: { value: function (v) {
 			return this.cells.filter(c => c.hasChoice(v));
 		} },
@@ -60,8 +69,44 @@ define(["./fn", "./sequence"], (fn, seq) => {
 		var out = new Group(field, cells, id);
 		return out;
 	}
+
+	function createFactory(field, proto) {
+		const customCtor = (proto.constructor)
+			? proto.constructor
+			: fn.returnThis
+		;
+		function ctor(cells, ...args) {
+			const g = Object.create(ctor.prototype);
+			Object.defineProperties(g, {
+				cells: {
+					get: function () {
+						const cellsArray = [...cells];
+						const cellsSeq   = seq.create(cellsArray);
+						Object.defineProperties(this, {
+							cell:  { value: i => cellsArray[i] },
+							cells: { value: cellsSeq },
+						});
+						return cellsSeq;
+					}, 
+					configurable: true 
+				}
+			});
+			customCtor.apply(g, args);
+			return g;
+		}
+		ctor.prototype = Object.create(Group.prototype, {
+			field: { value: field },
+		});
+		Reflect.ownKeys(proto).filter(key => key !== "constructor")
+			.forEach(key => {
+				const desc = Reflect.getOwnPropertyDescriptor(proto, key);
+				Reflect.defineProperty(ctor.prototype, key, desc);
+			});
+		return ctor;
+	};
 	
 	return Object.create(null, {
 		create:  { value: createGroup },
+		createFactory: { value: createFactory },
 	});
 });

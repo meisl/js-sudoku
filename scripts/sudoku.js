@@ -259,24 +259,80 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 		var cells;
 		var x, y;
 		var row, column, box;
+		const values = seq.range(0, n - 1);
 
-		for (y = 0; y < n; y++) {
-			cells = new Array(n);
-			for (x = 0; x < n; x++) {
-				cells[x] = cell.create(out, x, y);
-			}
-			row = group.create(out, cells, "Row_" + out.toYcoord(y));
-			rows[y] = row;
+
+		const createRow = group.createFactory(out, {
+			constructor (y) {
+				return Object.defineProperties(this, {
+					id: { value: "Row_" + out.toYcoord(y) },
+					y:  { value: y },
+				});
+			},
+			[Symbol.toStringTag]: "Row"
+		});
+		const createCol = group.createFactory(out, {
+			constructor (x) {
+				return Object.defineProperties(this, {
+					id: { value: "Col_" + out.toXcoord(x) },
+					x:  { value: x },
+				});
+			},
+			[Symbol.toStringTag]: "Col"
+		});
+		const createBox = group.createFactory(out, {
+			[Symbol.toStringTag]: "Box",
+			get w() { return boxW },
+			get h() { return boxH },
+			cell (i) {
+				const {x, y, w, h, n} = this,
+				      topLeftX = x * w,
+				      topLeftY = y * h,
+				      cxBox = i % w,
+					  cyBox = Math.trunc(i / w),
+					  cxField = topLeftX + cxBox,
+					  cyField = topLeftY + cyBox,
+					  ciField = cxField + cyField * n
+				;
+				return out.cell(cxField, cyField);
+			},
+			get _cells() {
+				const {x, y, w, h, n} = this;
+				return seq.iterate(y * h * n + x * w, y => y + n).take(h)
+					.mapMany(y => seq.iterate(y, i => i + 1).take(w))
+				/*
+				return seq.iterate(y * h, add(1)).take(h)
+					.mapMany(y => 
+						seq.iterate(x * w, add(1)).take(w)
+							.map(x => out.toCoord(x, y))
+				);
+				return seq.range(y*h, y*h + h - 1)
+					.mapMany(y => 
+						seq.range(x*w, x*w + w - 1)
+							.map(x => out.toCoord(x, y))
+				)
+				*/
+			},
+			constructor (idx) {
+				const x = idx % this.h, // boxH boxes per rows
+					  y = Math.trunc(idx / this.h);
+				return Object.defineProperties(this, {
+					id:  { value: "Box_" + out.toCoord(x, y) },
+					idx: { value: idx },
+					x:   { value: x },
+					y:   { value: y },
+				});
+			},
+		});
+
+		for (const y of values) {
+			const cells = [...values.map(x => cell.create(out, x, y))];
+			rows[y] = createRow(cells, y);
 		}
 		out.rows = rows;
 
-		for (x = 0; x < n; x++) {
-			cells = new Array(n);
-			for (y = 0; y < n; y++) {
-				cells[y] = out.cell(x, y);
-			}
-			column = group.create(out, cells, "Col_" + out.toXcoord(x));
-			columns[x] = column;
+		for (const x of values) {
+			columns[x] = createCol(values.map(y => rows[y].cell(x)), x);
 		}
 		out.columns = columns;
 
@@ -290,7 +346,8 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 						cells[k++] = out.cell(x, y);
 					}
 				}
-				box = group.create(out, cells, "Box_" + toXcoord(bx) + toYcoord(by));
+				//box = group.create(out, cells, "Box_" + toXcoord(bx) + toYcoord(by));
+				box = createBox(cells, i);
 				boxes[i++] = box;
 			}
 		}
