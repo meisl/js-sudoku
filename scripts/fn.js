@@ -54,12 +54,62 @@ define([], () => {
 		return out;
 	};
 
+	function extend(...args) {
+		const tpThis = (this === null) ? "null" : typeof this;
+		if (tpThis !== "function")
+			throw new TypeError(
+				"function extend called on incompatible receiver: "
+				+ tpThis);
+		const thisProto = this.prototype;
+		const tpThisProto = typeof thisProto;
+		if (tpThisProto !== "object")
+			throw new TypeError(
+				"function extend called on incompatible receiver: "
+				+ "has invalid .prototype " + tpThisProto);
+		if (args.length === 0)
+			throw "missing ctor arg (expected a function)";
+		const [ctor, proto] = args;
+		const tpCtor = (ctor === null) ? "null" : typeof ctor;
+		if (tpCtor !== "function")
+			throw "invalid ctor arg; expected a function but got " + tpCtor;
+		let result = ctor;
+		result.prototype = Object.create(thisProto, {
+			constructor: { value: result }
+		});
+		let tag;
+		if (ctor.name) {
+			tag = ctor.name;
+		} else if (thisProto !== null) {
+			tag = thisProto[Symbol.toStringTag];
+			if (tag)
+				tag = "Sub-" + tag;
+		} else if (this.name) {
+			tag = "Sub-" + this.name;
+		}
+		if (tag) {
+			Reflect.defineProperty(result.prototype, Symbol.toStringTag, {
+				value: tag
+			});
+		}
+		if (proto !== undefined) {
+			for (let key of Reflect.ownKeys(proto)) {
+				if (key === "constructor")
+					throw "invalid prop 'constructor' on proto template";
+				const desc = Reflect.getOwnPropertyDescriptor(proto, key);
+				Reflect.defineProperty(ctor.prototype, key, desc);
+			}
+		}
+		result.extend = this.extend;
+		return result;
+	}
+
 	return Object.create(null, {
 		id: { value: id },
 		returnThis: { value: returnThis },
 		insist_nonNegativeInt: { value: insist_nonNegativeInt },
 		getDescriptors: { value: getDescriptors },
-		memoize: { value: memoize }
+		memoize: { value: memoize },
+		extend: { value: extend }
 	});
 });
 
