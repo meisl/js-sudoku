@@ -492,19 +492,59 @@ require(["scripts/fn"], (fn) => {
 
 						});
 						test("with proto template", function (assert) {
-							const F = this.F,
-							      G = function G () {},
+							let G_calls = [],
+								F_calls = [];
+							const F = function F (...args) {
+							      	F_calls.push({
+							      		args: args.slice(0),
+							      		this: this
+							      	});
+							      },
+							      G = function G (...args) {
+							      	G_calls.push({
+							      		args: args.slice(0),
+							      		this: this
+							      	});
+							      	this.super(...args);
+							      },
 							      p = {
+							      	get super() {
+							      		return Object.getPrototypeOf(
+							      			Object.getPrototypeOf(this)
+							      		).constructor;
+							      	},
 							      	bar: 4711,
 							      	m: function aMethod() {}
 							      };
+							F.extend = fn.extend;
+
 							let act = test_extend(assert, F, G, p),
 								G_proto = act.prototype[Symbol.toStringTag];
+							
 							assert.same(act.prototype.bar, 4711,
 								"props from act.prototype should be there");
 							assert.same(act.prototype.m, p.m,
 								"props from act.prototype should be there");
+							
+							let o1 = new act();
+							assert.ok(o1 instanceof act, "(new C) instanceof C");
+							assert.ok(o1 instanceof F, "(new C) instanceof F");
+							assert.same(G_calls.length, 1, "G call count");
+							assert.same(G_calls[0].this, o1,
+								"thisValue in G was the new instance");
+							assert.all.same(G_calls[0].args, [],
+								"args for G as provided from outside");
 
+							let o2 = new act("foo", "bar");
+							assert.notStrictEqual(o2, o1, 
+								"new C again yields new instance");
+							assert.ok(o2 instanceof act, "(new C) instanceof C");
+							assert.ok(o2 instanceof F, "(new C) instanceof F");
+							assert.same(G_calls.length, 2, "G call count");
+							assert.same(G_calls[1].this, o2,
+								"thisValue in G was the new instance");
+							assert.all.same(G_calls[1].args, ["foo", "bar"],
+								"args for G as provided from outside");
 						});				
 					}); // end module "F.prototype non-null"
 

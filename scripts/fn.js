@@ -72,6 +72,42 @@ define([], () => {
 		const tpCtor = (ctor === null) ? "null" : typeof ctor;
 		if (tpCtor !== "function")
 			throw "invalid ctor arg; expected a function but got " + tpCtor;
+		if (thisProto === null) {
+			if (this.super !== undefined)
+				throw new TypeError(
+					"function extend called on incompatible receiver: "
+					+ ".super should be undefined but is " + this.super);
+		} else {
+			if (!thisProto.hasOwnProperty("constructor")) {
+				thisProto.constructor = this;
+			}
+			if (thisProto.constructor !== this) {
+				throw new TypeError(
+					"function extend called on incompatible receiver: "
+					+ ".prototype.constructor should be this "
+					+ "but is " + thisProto.constructor);
+			}
+			const thisSuper = Object.getPrototypeOf(thisProto).constructor;
+			if (!this.hasOwnProperty("super")) {
+				this.super = thisSuper;
+			}
+			if (this.super !== thisSuper) {
+				throw new TypeError(
+					"function extend called on incompatible receiver"
+					+ ": .super should be .prototype.__proto__.constructor"
+					+ " but is " + thisSuper);
+			}
+			if (thisProto.super === undefined) {
+				Reflect.defineProperty(thisProto, "super", {
+					get: function () {
+						const proto = Object.getPrototypeOf(this.constructor.prototype);
+						return (proto === null)
+							? undefined
+							: proto.constructor;
+					}
+				});
+			}
+		}
 		let result = ctor;
 		result.prototype = Object.create(thisProto, {
 			constructor: { value: result }
@@ -100,6 +136,7 @@ define([], () => {
 			}
 		}
 		result.extend = this.extend;
+		result.super = this;
 		return result;
 	}
 
