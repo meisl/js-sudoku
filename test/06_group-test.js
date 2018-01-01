@@ -2,7 +2,7 @@ require(["scripts/group", "scripts/sudoku"], (group, sudoku) => {
 	const { test, todo, skip, module } = QUnit;
 
 	module("group", () => { // -------------------------------------------------
-		test("module object", function (assert) {
+		skip("module object", function (assert) {
 			assert.same(Object.getPrototypeOf(group), null, "has null __proto__");
 		});
 
