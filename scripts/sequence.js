@@ -224,18 +224,18 @@ define(["./fn"], (fn) => {
 			});
 		} },
 		iterate: { value: function (...args) { 
-			const n = args.length - 1
-			      f = args[n],
-			      fArgs = args.slice(0, n);
+			const n = args.length - 1,
+			      f = args[n];
 			return fromGeneratorFn(function* () {
-				yield* fArgs;
+				const xs = args.slice(0, n);
+				yield* xs;
 				let next;
 				while (true) {
-					next = f.apply(null, fArgs);
+					next = f.apply(null, xs);
 					yield next;
 					if (n > 0) {
-						fArgs.copyWithin(0, 1);
-						fArgs[n - 1] = next;
+						xs.copyWithin(0, 1);
+						xs[n - 1] = next;
 					}
 				}
 

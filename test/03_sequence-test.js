@@ -476,15 +476,25 @@ require(["scripts/sequence"], (seq) => {
 				let calls = [];
 				const f = function (...args) {
 					calls.push({args: [...args], this: this});
-					return calls.length;
+					return 42;
 				};
-				let s = seq.iterate(f);
-				let act = [...s.take(3)];
+				let s = seq.iterate(f).take(3),
+					act;
+				
+				act = [...s];
 				assert.same(calls.length, 3, "call count");
-				assert.all.same(act, [1,2,3], "values returned from fn");
+				assert.all.same(act, [42,42,42], "values returned from fn");
 				assert.all.same(calls[0].args, [], "args @ 1st call");
 				assert.all.same(calls[1].args, [], "args @ 2nd call");
 				assert.all.same(calls[2].args, [], "args @ 3rd call");
+				
+				// 2nd traversal should give same results (!)
+				act = [...s];
+				assert.same(calls.length, 6, "call count after 2nd traversal");
+				assert.all.same(act, [42,42,42], "values returned from fn after 2nd traversal");
+				assert.all.same(calls[3].args, [], "args @ 4th call");
+				assert.all.same(calls[4].args, [], "args @ 5th call");
+				assert.all.same(calls[5].args, [], "args @ 6th call");
 			});
 			test("with 2 args", function (assert) {
 				const calls = [],
@@ -492,12 +502,20 @@ require(["scripts/sequence"], (seq) => {
 				          calls.push({args: [...args], this: this});
 				          return args[0] + 1;
 				      };
-				let s = seq.iterate(0, f);
-				let act = [...s.take(3)];
+				let s = seq.iterate(0, f).take(3),
+					act;
+				
+				act = [...s];
 				assert.same(calls.length, 2, "call count");
+				assert.all.same(act, [0,1,2], "values in result sequence");
 				assert.all.same(calls[0].args, [0], "args @ 1st call");
 				assert.all.same(calls[1].args, [1], "args @ 2nd call");
-				assert.all.same(act, [0,1,2], "values in result sequence");
+				
+				act = [...s];
+				assert.same(calls.length, 4, "call count after 2nd traversal");
+				assert.all.same(act, [0,1,2], "values in result sequence (2nd traversal)");
+				assert.all.same(calls[2].args, [0], "args @ 3rd call");
+				assert.all.same(calls[3].args, [1], "args @ 4th call");
 			});
 			test("with 3 args", function (assert) {
 				const calls = [],
@@ -505,13 +523,22 @@ require(["scripts/sequence"], (seq) => {
 				          calls.push({args: [...args], this: this});
 				          return args[0] + args[1];
 				      };
-				let s = seq.iterate(1, 1, f);
-				let act = [...s.take(5)];
+				let s = seq.iterate(1, 1, f),
+					act;
+				
+				act = [...s.take(5)];
 				assert.same(calls.length, 3, "call count");
+				assert.all.same(act, [1,1,2,3,5], "values in result sequence");
 				assert.all.same(calls[0].args, [1,1], "args @ 1st call");
 				assert.all.same(calls[1].args, [1,2], "args @ 2nd call");
 				assert.all.same(calls[2].args, [2,3], "args @ 3rd call");
-				assert.all.same(act, [1,1,2,3,5], "values in result sequence");
+				
+				act = [...s.take(5)];
+				assert.same(calls.length, 6, "call count after 2nd traversal");
+				assert.all.same(act, [1,1,2,3,5], "values in result sequence after 2nd traversal");
+				assert.all.same(calls[3].args, [1,1], "args @ 4th call");
+				assert.all.same(calls[4].args, [1,2], "args @ 5th call");
+				assert.all.same(calls[2].args, [2,3], "args @ 6th call");
 			});
 		});	// end module "iterate"
 
