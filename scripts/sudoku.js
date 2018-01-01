@@ -268,7 +268,7 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 				return (...args) => Reflect.construct(this, args);
 			}
 			constructor(x, y) {
-				super();	//undefined, undefined, id);
+				super();
 				this.x = x;
 				this.y = y;
 			}
@@ -368,76 +368,13 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 			}
 		}
 
-		const createBox = group.createFactory(out, {
-			[Symbol.toStringTag]: "Box",
-			get w() { return boxW },
-			get h() { return boxH },
-			cell (i) {
-				const {x, y, w, h, n} = this,
-				      topLeftX = x * w,
-				      topLeftY = y * h,
-				      cxBox = i % w,
-					  cyBox = Math.trunc(i / w),
-					  cxField = topLeftX + cxBox,
-					  cyField = topLeftY + cyBox,
-					  ciField = cxField + cyField * n
-				;
-				return out.cell(cxField, cyField);
-			},
-			get _cells() {
-				const {x, y, w, h, n} = this;
-				return seq.iterate(x * w + y * h * n, y => y + n).take(h)
-					.mapMany(y => seq.iterate(y, i => i + 1).take(w))
-				/*
-				return seq.iterate(y * h, add(1)).take(h)
-					.mapMany(y => 
-						seq.iterate(x * w, add(1)).take(w)
-							.map(x => out.toCoord(x, y))
-				);
-				return seq.range(y*h, y*h + h - 1)
-					.mapMany(y => 
-						seq.range(x*w, x*w + w - 1)
-							.map(x => out.toCoord(x, y))
-				)
-				*/
-			},
-			constructor (idx) {
-				const x = idx % this.h, // boxH boxes per row
-					  y = Math.trunc(idx / this.h);
-				return Object.defineProperties(this, {
-					id:  { value: "Box_" + out.toCoord(x, y) },
-					idx: { value: idx },
-					x:   { value: x },
-					y:   { value: y },
-				});
-			},
-		});
-
 		out.rows =    rows =    [...values.map(Row.construct)];
 		out.columns = columns = [...values.map(Col.construct)];
 		out.boxes =   boxes =   [...values.map(Box.construct)];
-/*
-		i = 0;
-		for (var by = 0; by < boxW; by++) { // boxW = n/boxH
-			for (var bx = 0; bx < boxH; bx++) { // boxH = n/boxW
-				cells = new Array(n);
-				var k = 0;
-				for (y = by*boxH; y < (by+1)*boxH; y++) {
-					for (x = bx*boxW; x < (bx+1)*boxW; x++) {
-						cells[k++] = out.cell(x, y);
-					}
-				}
-				//box = group.create(out, cells, "Box_" + toXcoord(bx) + toYcoord(by));
-				box = createBox(cells, i);
-				boxes[i++] = box;
-			}
-		}
-		out.boxes = boxes;
-*/
 
 		return out;
 	}
-	
+
 	function parseRow(params, y, line) {
 		let c = params.start;
 		function fail(err) {

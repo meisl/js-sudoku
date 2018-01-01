@@ -2,23 +2,6 @@ define(["./fn", "./sequence"], (fn, seq) => {
 	const memoize = fn.memoize;
 
 	class Group {
-		constructor(field, cells, id) {
-			if (id !== undefined) {
-				Object.defineProperty(this, "id", {
-					value: id, enumerable: true
-				})
-			}
-			if (field !== undefined) {
-				Object.defineProperty(this, "field", {
-					value: field, enumerable: true
-				})
-			}
-			if (cells !== undefined) {
-				Object.defineProperty(this, "cells", {
-					value: cells, enumerable: true
-				})
-			}
-		}
 		get [Symbol.toStringTag]() { return "Group" }
 
 		get n()     { return this.field.n(); }
@@ -84,54 +67,5 @@ define(["./fn", "./sequence"], (fn, seq) => {
 		}
 	};
 
-	function createGroup(field, cells, id) {
-		var out = new Group(field, cells, id);
-		return out;
-	}
-
-	function createFactory(field, proto) {
-		const customCtor = (proto.constructor)
-			? proto.constructor
-			: fn.returnThis
-		;
-		function ctor(cells, ...args) {
-			const g = Object.create(ctor.prototype);
-			Object.defineProperties(g, {
-				cells: {
-					get: function () {
-						const cellsArray = [...cells];
-						const cellsSeq   = seq.create(cellsArray);
-						Object.defineProperties(this, {
-							cell:  { value: i => cellsArray[i] },
-							cells: { value: cellsSeq },
-						});
-						return cellsSeq;
-					}, 
-					configurable: true 
-				}
-			});
-			customCtor.apply(g, args);
-			return g;
-		}
-		ctor.prototype = Object.create(Group.prototype, {
-			field: { value: field },
-		});
-		Reflect.ownKeys(proto).filter(key => key !== "constructor")
-			.forEach(key => {
-				const desc = Reflect.getOwnPropertyDescriptor(proto, key);
-				Reflect.defineProperty(ctor.prototype, key, desc);
-			});
-		return ctor;
-	};
-/*	
-	return Object.create(null, {
-		create:  { value: createGroup },
-		createFactory: { value: createFactory },
-	});
-*/
-
-
-	Group.create = createGroup;
-	Group.createFactory = createFactory;
 	return Group;
 });
