@@ -99,9 +99,9 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 		const boxW = options.box[0];
 		const boxH = options.box[1];
 		const n = boxW * boxH; // cells per group = nr of rows = nr of cols = nr of boxes
-		const rows = new Array(n);
-		const columns = new Array(n);
-		const boxes = new Array(n);
+		let rows = new Array(n);
+		let columns = new Array(n);
+		let boxes = new Array(n);
 		const todos = [];
 		//const cells = new Array(n*n);
 
@@ -261,25 +261,113 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 		var row, column, box;
 		const values = seq.range(0, n - 1);
 
+		class Rectangular extends group {
+			static get field() { return out; }
+			static get n() { return this.field.n; }
+			static get construct() {
+				return (...args) => Reflect.construct(this, args);
+			}
+			constructor(x, y) {
+				super();	//undefined, undefined, id);
+				this.x = x;
+				this.y = y;
+			}
 
-		const createRow = group.createFactory(out, {
-			constructor (y) {
-				return Object.defineProperties(this, {
-					id: { value: "Row_" + out.toYcoord(y) },
-					y:  { value: y },
-				});
-			},
-			[Symbol.toStringTag]: "Row"
+			// memoize on instances?
+			get field() { return this.constructor.field; }
+			get w()     { return this.constructor.w;     }
+			get h()     { return this.constructor.h;     }
+			get id() {
+				const {x, y, w, h, field} = this;
+				let id = this.constructor.name + "_";
+				if (h !== 1) id += field.toXcoord(x);
+				if (w !== 1) id += field.toYcoord(y);
+				return id;
+			}
+		}
+		Object.defineProperties(Rectangular.prototype, {
+			field: { value: out, enumerable: true }
 		});
-		const createCol = group.createFactory(out, {
-			constructor (x) {
-				return Object.defineProperties(this, {
-					id: { value: "Col_" + out.toXcoord(x) },
-					x:  { value: x },
+
+		class Row extends Rectangular {
+			static get w() { return this.n; }
+			static get h() { return 1; }
+			constructor(y) {
+				super(0, y);
+			}
+			get w() { return this.n; }
+			get h() { return 1; }
+			*cellIterator() {
+				const {y, n, field} = this,
+				      yOffset = y * n,
+				      hi = yOffset + n;
+				for (let i = yOffset, x = 0; i < hi; i++, x++) {
+					const c = cell.create(field, x, y);
+					yield c;
+					//yield field.toCoord(x, y);
+				}
+				/*
+				return seq.range(yOffset, yOffset + n - 1)
+					.map(i => field.toCoord(i % n, Math.trunc(i / n)))
+				;
+				*/
+			}
+		}
+
+		class Col extends Rectangular {
+			static get w() { return 1; }
+			static get h() { return this.n; }
+			constructor(x) {
+				super(x, 0);
+			}
+			get w() { return 1; }
+			get h() { return this.n; }
+			*cellIterator() {
+				const {x, n, field} = this,
+				      hi = n * n;
+				for (let i = x, y = 0; i < hi; i += n, y++) {
+					const c = field.cell(x, y);
+					yield c;
+				}
+				/*
+				return seq.iterate(x, i => i + n)
+					.take(n)
+					.map(i => field.toCoord(x, Math.trunc(i / n)))
+				;
+				*/
+			}
+		}
+
+		class Box extends Rectangular {
+			static get w() { return this.field.boxW() }
+			static get h() { return this.field.boxH() }
+			static get construct() {
+				const C = this,
+				      h = C.h;
+				const ctor = i => new C(i % h, Math.trunc(i / h));
+				return ctor;
+			}
+			constructor(x, y) {
+				super(x, y);
+			}
+			cellIterator() {
+				const {x, y, w, h, n, field} = this,
+				      tlX = x * w, // x-coord of top-left cell
+				      tlY = y * h, // y-coord of top-left cell
+				      tlI = tlX + tlY * n;
+				let ys = seq.iterate(tlI, cy => cy + n).take(h);
+				let is = ys.mapMany(cy => seq.iterate(cy, i => i + 1).take(w));
+				let cs = is.map(i => {
+					const cx = i % n,
+					      cy = Math.trunc(i / n);
+					const c = field.cell(cx, cy);
+					return c;
 				});
-			},
-			[Symbol.toStringTag]: "Col"
-		});
+
+				return cs[Symbol.iterator]();
+			}
+		}
+
 		const createBox = group.createFactory(out, {
 			[Symbol.toStringTag]: "Box",
 			get w() { return boxW },
@@ -298,7 +386,7 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 			},
 			get _cells() {
 				const {x, y, w, h, n} = this;
-				return seq.iterate(y * h * n + x * w, y => y + n).take(h)
+				return seq.iterate(x * w + y * h * n, y => y + n).take(h)
 					.mapMany(y => seq.iterate(y, i => i + 1).take(w))
 				/*
 				return seq.iterate(y * h, add(1)).take(h)
@@ -314,7 +402,7 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 				*/
 			},
 			constructor (idx) {
-				const x = idx % this.h, // boxH boxes per rows
+				const x = idx % this.h, // boxH boxes per row
 					  y = Math.trunc(idx / this.h);
 				return Object.defineProperties(this, {
 					id:  { value: "Box_" + out.toCoord(x, y) },
@@ -325,17 +413,10 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 			},
 		});
 
-		for (const y of values) {
-			const cells = [...values.map(x => cell.create(out, x, y))];
-			rows[y] = createRow(cells, y);
-		}
-		out.rows = rows;
-
-		for (const x of values) {
-			columns[x] = createCol(values.map(y => rows[y].cell(x)), x);
-		}
-		out.columns = columns;
-
+		out.rows =    rows =    [...values.map(Row.construct)];
+		out.columns = columns = [...values.map(Col.construct)];
+		out.boxes =   boxes =   [...values.map(Box.construct)];
+/*
 		i = 0;
 		for (var by = 0; by < boxW; by++) { // boxW = n/boxH
 			for (var bx = 0; bx < boxH; bx++) { // boxH = n/boxW
@@ -352,7 +433,7 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 			}
 		}
 		out.boxes = boxes;
-
+*/
 
 		return out;
 	}

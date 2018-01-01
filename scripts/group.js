@@ -1,59 +1,78 @@
 define(["./fn", "./sequence"], (fn, seq) => {
 	const memoize = fn.memoize;
 
-	function Group(field, cells, id) {
-		Object.defineProperties(this, {
-			id:    { value: id, enumerable: true  },
-			field: { get: () => field, enumerable: true },
-			cells: { value: seq.create(cells) }
-		});
-	}
-	Group.prototype = Object.create(Object.prototype, {
-		[Symbol.toStringTag]: { value: "Group" },
-		n: { get: function () {
-			return this.field.n();
-		} },
-		symbol: { value: function (val) {
-			return this.field.symbol(val);
-		} },
-		value: { value: function (sym) {
-			return this.field.value(sym);
-		} },
-		toString: { value: function () {
+	class Group {
+		constructor(field, cells, id) {
+			if (id !== undefined) {
+				Object.defineProperty(this, "id", {
+					value: id, enumerable: true
+				})
+			}
+			if (field !== undefined) {
+				Object.defineProperty(this, "field", {
+					value: field, enumerable: true
+				})
+			}
+			if (cells !== undefined) {
+				Object.defineProperty(this, "cells", {
+					value: cells, enumerable: true
+				})
+			}
+		}
+		get [Symbol.toStringTag]() { return "Group" }
+
+		get n()     { return this.field.n(); }
+		symbol(val) { return this.field.symbol(val); }
+		value(sym)  { return this.field.value(sym); }
+		addTodo(t)  { return this.field.addTodo(t); }
+
+		toString() {
 			return this.id;
-		} },
-		cell: { value: function (i) {
+		}
+		cellIterator() {
+			throw "subclass did not provide method cellIterator"
+		}
+		get cells() {
+			const cellsArr = [...this.cellIterator()];
+			const cellsSeq = seq.create(cellsArr);
+			Object.defineProperties(this, {
+				cells: { value: cellsSeq },
+				cell:  { value: i => cellsArr[i] },
+			});
+			return cellsSeq;
+		}
+		cell(i) {
 			return this.cells.skip(i).head();
-		} },
-		candidates: { value: function (v) {
+		}
+		candidates(v) {
 			return this.cells.filter(c => c.hasChoice(v));
-		} },
-		hasCandidate: { value: function (c, v) {
+		}
+		hasCandidate(c, v) {
 			return this.cells
 				.filter(d => (d === c) && c.hasChoice(v))
 				.length > 0;
-		} },
-		checkLastCandidate: { value: function (v, act) {
+		}
+		checkLastCandidate(v, act) {
 			const cs = this.candidates(v);
 			if (cs.length === 1) {
 				const c = cs.head();
 				if (!c.isFixated) {
 					const todo = () => { c.value = v; };
 					const desc = c.id 
-						+ ":=" + this.field.symbol(v) 
+						+ ":=" + this.symbol(v) 
 						+ " (last candidate in " + this.id 
 						+ " <- " + act
 						+ ")"
 					;
 					todo.toString = () => desc;
-					this.field.addTodo(todo, desc);
+					this.addTodo(todo, desc);
 				}
 			}
-		} },
-		removeCandidate: { value: function (c, v) {
+		}
+		removeCandidate(c, v) {
 			return c.removeChoice(v);
-		} },
-		cs: { get: function () {
+		}
+		get cs() {
 			let x = {};
 			for (let v = 0; v < this.n; v++) {
 				const cs = this.candidates(v);
@@ -62,8 +81,8 @@ define(["./fn", "./sequence"], (fn, seq) => {
 				}
 			}
 			return x;
-		} },
-	});
+		}
+	};
 
 	function createGroup(field, cells, id) {
 		var out = new Group(field, cells, id);
@@ -104,9 +123,15 @@ define(["./fn", "./sequence"], (fn, seq) => {
 			});
 		return ctor;
 	};
-	
+/*	
 	return Object.create(null, {
 		create:  { value: createGroup },
 		createFactory: { value: createFactory },
 	});
+*/
+
+
+	Group.create = createGroup;
+	Group.createFactory = createFactory;
+	return Group;
 });
