@@ -29,6 +29,10 @@ define(["./fn"], (fn) => {
 			// for sequences that are views of mutable things like array, set
 			// Reason: .tail should fail early on an empty sequence, but
 			// the underlying mutable thing might *become* empty only later
+			// Note:
+			// skip(1) has slightly different semantics (returns the empty
+			// sequence when called on an empty sequence), but maybe that's
+			// what you need...?
 		},
 		*/
 		filter: function (cb) {
