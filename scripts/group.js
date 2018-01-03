@@ -1,19 +1,47 @@
 define(["./fn", "./sequence"], (fn, seq) => {
 	const memoize = fn.memoize;
 
-	class Group {
-		get [Symbol.toStringTag]() { return "Group" }
+	Object.defineProperty(Object.prototype, Symbol.toStringTag, {
+		get() {
+			if ((this === Object.prototype) || !this.constructor)
+				return "Object";
+			const result = this.constructor.name || "Object";
+			const proto = this.constructor.prototype;
+			Reflect.defineProperty(proto, Symbol.toStringTag, {
+				value: result,
+				configurable: true
+			});
+			const p = Object.getPrototypeOf(proto);
+			if (p !== null) p[Symbol.toStringTag];
+			return result;
+		}	
+	});
 
-		get n()     { return this.field.n(); }
+	class Group {
+		static get construct() {
+			return (...args) => Reflect.construct(this, args);
+		}
+		static get className() {
+			return this.name || "<anonymous>";
+		}
+		
+		static get field() {
+			throw "subclass "
+				+ this.className + " should've provided a 'field' property";
+		}
+		static get n() { return this.field.n(); }
+
+		get className() { return this.constructor.className; }
+
+		get field() { return this.constructor.field; }
+		get n()     { return this.constructor.n; }
 		symbol(val) { return this.field.symbol(val); }
 		value(sym)  { return this.field.value(sym); }
 		addTodo(t)  { return this.field.addTodo(t); }
 
-		toString() {
-			return this.id;
-		}
 		cellIterator() {
-			throw "subclass did not provide method cellIterator"
+			throw "subclass "
+				+ this.className + " should've provided a 'cellIterator' method"
 		}
 		get cells() {
 			const cellsArr = [...this.cellIterator()];

@@ -263,10 +263,6 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 
 		class Rectangular extends group {
 			static get field() { return out; }
-			static get n() { return this.field.n; }
-			static get construct() {
-				return (...args) => Reflect.construct(this, args);
-			}
 			constructor(x, y) {
 				super();
 				this.x = x;
@@ -274,7 +270,6 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 			}
 
 			// memoize on instances?
-			get field() { return this.constructor.field; }
 			get w()     { return this.constructor.w;     }
 			get h()     { return this.constructor.h;     }
 			get id() {
@@ -284,6 +279,7 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 				if (w !== 1) id += field.toYcoord(y);
 				return id;
 			}
+			toString() { return this.id; }
 		}
 		Object.defineProperties(Rectangular.prototype, {
 			field: { value: out, enumerable: true }
@@ -295,8 +291,6 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 			constructor(y) {
 				super(0, y);
 			}
-			get w() { return this.n; }
-			get h() { return 1; }
 			*cellIterator() {
 				const {y, n, field} = this,
 				      yOffset = y * n,
@@ -320,8 +314,6 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 			constructor(x) {
 				super(x, 0);
 			}
-			get w() { return 1; }
-			get h() { return this.n; }
 			*cellIterator() {
 				const {x, n, field} = this,
 				      hi = n * n;
@@ -346,9 +338,6 @@ define(["./cell", "./group", "./sequence"], (cell, group, seq) => {
 				      h = C.h;
 				const ctor = i => new C(i % h, Math.trunc(i / h));
 				return ctor;
-			}
-			constructor(x, y) {
-				super(x, y);
 			}
 			cellIterator() {
 				const {x, y, w, h, n, field} = this,
