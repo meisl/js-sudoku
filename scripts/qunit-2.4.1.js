@@ -861,13 +861,19 @@
   					}
   				}
   				keys.sort();
-  				// Array.prototype.sort cannot handle Symbols
+  				// Array.prototype.sort cannot handle Symbols,
   				// so we just add any (enumerable own) Symbols at the end
   				for (key of Object.getOwnPropertySymbols(map)) {
   				  const desc = Object.getOwnPropertyDescriptor(map, key);
   				  if (desc.enumerable) {
   				    keys.push(key);
   				  }
+  				}
+  				// We also want to show Symbol.toStringTag if present,
+  				// even if non-enumerable and/or only inherited
+  				let toStringTag = map[Symbol.toStringTag] + " ";
+  				if (toStringTag === undefined) {
+  				  toStringTag = ""; 
   				}
   				for (i = 0; i < keys.length; i++) {
   					key = keys[i];
@@ -895,7 +901,7 @@
   					ret.push(keyStr + ": " + valStr);
   				}
   				dump.down();
-  				return join("{", ret, "}");
+  				return toStringTag + join("{", ret, "}");
   			},
   			node: function node(_node) {
   				var len,

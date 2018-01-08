@@ -132,6 +132,7 @@ require([], () => {
 				});
 			});
 		}); // end module ".assert"
+		
 		module(".dump.parse", () => { // -------------------------------------------------
 			test("own, enumerable Symbol properties", function (assert) {
 				const o = Object.defineProperties({}, {
@@ -183,7 +184,41 @@ require([], () => {
 				assert.ok(dump.indexOf(exp) >= 0, 
 					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
 			});
-		}); // end module ".assert"
+			test("shows [Symbol.toStringTag], even if not enumerable", function (assert) {
+				const p = Object.defineProperties({}, {
+					[Symbol.toStringTag]:  { value: "foo", enumerable: true },
+					normal: { value: 1, enumerable: true },
+				});
+				const dump = QUnit.dump.parse(p);
+				let exp;
+				exp = "\"normal\": 1";
+				assert.ok(dump.indexOf(exp) >= 0, 
+					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
+				exp = "foo {";
+				assert.ok(dump.indexOf(exp) === 0, 
+					"dump should start with '" + exp+ "': " + QUnit.dump.parse(dump));
+				//assert.same(dump, null, "debug these tests");
+			});
+			test("shows [Symbol.toStringTag], even if not enumerable and only inherited", function (assert) {
+				const p = Object.defineProperties({}, {
+					[Symbol.toStringTag]:  { value: "foo" },
+					normal_inherited: { value: 2, enumerable: true },
+				});
+				const o = Object.create(p, {
+					normal: { value: 1, enumerable: true },
+				});
+				const dump = QUnit.dump.parse(o);
+				let exp;
+				exp = "\"normal\": 1";
+				assert.ok(dump.indexOf(exp) >= 0, 
+					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
+				exp = "foo {";
+				assert.ok(dump.indexOf(exp) === 0, 
+					"dump should start with '" + exp+ "': " + QUnit.dump.parse(dump));
+				//assert.same(dump, null, "debug these tests");
+			});
+
+		}); // end module ".dump.parse"
 
 	}); // end module "QUnit-ext"
 
