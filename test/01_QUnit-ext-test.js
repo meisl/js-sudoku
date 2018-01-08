@@ -132,6 +132,59 @@ require([], () => {
 				});
 			});
 		}); // end module ".assert"
+		module(".dump.parse", () => { // -------------------------------------------------
+			test("own, enumerable Symbol properties", function (assert) {
+				const o = Object.defineProperties({}, {
+					[Symbol.iterator]:   { value: 1, enumerable: true },
+					[Symbol.for("foo")]: { value: 2, enumerable: true },
+					[Symbol.for("bar")]: { value: 3, enumerable: false },
+				});
+				const dump = QUnit.dump.parse(o);
+				let exp;
+				exp = "Symbol(Symbol.iterator): 1";
+				assert.ok(dump.indexOf(exp) >= 0, 
+					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
+				exp = "Symbol(foo): 2";
+				assert.ok(dump.indexOf(exp) >= 0, 
+					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
+				exp = "Symbol(bar): 3";
+				assert.notOk(dump.indexOf(exp) >= 0, 
+					"dump should NOT contain '" + exp+ "': " + QUnit.dump.parse(dump));
+			});
+			test("own, enumerable getters that throw", function (assert) {
+				const o = Object.defineProperties({}, {
+					fine:           { get: () => 1, enumerable: true },
+					throwingError:  { get: () => { throw new Error("bar") }, enumerable: true },
+					throwingString: { get: () => { throw "foo" }, enumerable: true },
+				});
+				const dump = QUnit.dump.parse(o);
+				let exp;
+				exp = "\"fine\": 1";
+				assert.ok(dump.indexOf(exp) >= 0, 
+					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
+				exp = "\"throwingError\": [Exception: Error: bar]";
+				assert.ok(dump.indexOf(exp) >= 0, 
+					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
+				exp = "\"throwingString\": [Exception: \"foo\"]";
+				assert.ok(dump.indexOf(exp) >= 0, 
+					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
+			});
+			test("own, enumerable getters with Symbol keys that throw", function (assert) {
+				const o = Object.defineProperties({}, {
+					[Symbol.for("error")]:  { get: () => { throw new Error("bar") }, enumerable: true },
+					[Symbol.for("string")]: { get: () => { throw "foo" }, enumerable: true },
+				});
+				const dump = QUnit.dump.parse(o);
+				let exp;
+				exp = "Symbol(error): [Exception: Error: bar]";
+				assert.ok(dump.indexOf(exp) >= 0, 
+					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
+				exp = "Symbol(string): [Exception: \"foo\"]";
+				assert.ok(dump.indexOf(exp) >= 0, 
+					"dump should contain '" + exp+ "': " + QUnit.dump.parse(dump));
+			});
+		}); // end module ".assert"
+
 	}); // end module "QUnit-ext"
 
 }); // end require

@@ -78,7 +78,7 @@ require([], () => {
 		if (what === undefined) {
 			what = "iterable";
 		}
-		this.isObject(value, what, message);
+		//this.isObject(value, what, message);
 		this.isFunction(value[Symbol.iterator],
 			what + "'s [Symbol.iterator] method", message);
 		this.isIterator(value[Symbol.iterator](), 
@@ -104,7 +104,7 @@ require([], () => {
 			eAct = itAct.next();
 			eExp = itExp.next();
 			if (eAct.done !== eExp.done) {
-				this.pushResult({
+				const res = {
 					result: false,
 					actual: eAct,
 					expected: eExp,
@@ -114,7 +114,8 @@ require([], () => {
 							+ (eAct.done ? "fewer" : "more")
 							+ " elems than expected)"
 						+ message
-				});
+				};
+				this.pushResult(res);
 				return;
 			} else {
 				let vAct = eAct.value;

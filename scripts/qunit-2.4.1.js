@@ -861,10 +861,38 @@
   					}
   				}
   				keys.sort();
+  				// Array.prototype.sort cannot handle Symbols
+  				// so we just add any (enumerable own) Symbols at the end
+  				for (key of Object.getOwnPropertySymbols(map)) {
+  				  const desc = Object.getOwnPropertyDescriptor(map, key);
+  				  if (desc.enumerable) {
+  				    keys.push(key);
+  				  }
+  				}
   				for (i = 0; i < keys.length; i++) {
   					key = keys[i];
-  					val = map[key];
-  					ret.push(dump.parse(key, "key") + ": " + dump.parse(val, undefined, stack));
+  					// dump.parse cannot handle Symbols
+  				    // (because Symbols cannot be converted to strings)
+  				    // so...:
+  					const keyStr = (typeof key === "symbol")
+  					   ? key.toString()
+  					   : dump.parse(key, "key");
+  					//if (keyStr === "Symbol(\"blah\")") {
+  					//  console.log(keyStr);
+  					//}
+  				    // Accessing a getter might throw.
+  				    // We'd like to report this properly as well:
+  				    let valStr;
+  					try {
+  					    val = map[key];
+  					    valStr = dump.parse(val, undefined, stack);
+ 					} catch (e) {
+  					     const eStr = (e instanceof Error)
+  				          ? e.toString() // dump.parse(anError) would not show the Error class
+  				          : dump.parse(e);
+  				        valStr = "[Exception: " + eStr + "]";
+  					}
+  					ret.push(keyStr + ": " + valStr);
   				}
   				dump.down();
   				return join("{", ret, "}");
