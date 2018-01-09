@@ -123,17 +123,17 @@ require(["scripts/lazylist"], (lzy) => {
 					assert.all.same(xs, [42,4711], "cons(42,cons(4711, <>)), 2nd traversal");
 				});
 
-				test(".append", function (assert) {
+				test(".concat/'+++'", function (assert) {
 					const xs = cons(42, cons(4711, nil));
 					let ys;
 					
-					ys = xs.append(nil);
-					assert.all.same(ys, [42,4711], "cons(42,cons(4711, <>)).append(nil) 1st traversal");
-					assert.all.same(ys, [42,4711], "cons(42,cons(4711, <>)).append(nil) 2nd traversal");
+					ys = xs.concat(nil);
+					assert.all.same(ys, [42,4711], "cons(42,cons(4711, <>)).concat(nil) 1st traversal");
+					assert.all.same(ys, [42,4711], "cons(42,cons(4711, <>)).concat(nil) 2nd traversal");
 
-					ys = xs.append(xs);
-					assert.all.same(ys, [42,4711,42,4711], "xs.append(xs) where xs == cons(42,cons(4711, <>)); 1st traversal");
-					assert.all.same(ys, [42,4711,42,4711], "xs.append(xs) where xs == cons(42,cons(4711, <>)); 2nd traversal");
+					ys = xs.concat(xs);
+					assert.all.same(ys, [42,4711,42,4711], "xs.concat(xs) where xs == cons(42,cons(4711, <>)); 1st traversal");
+					assert.all.same(ys, [42,4711,42,4711], "xs.concat(xs) where xs == cons(42,cons(4711, <>)); 2nd traversal");
 				});
 			}); // end module "cons" (cons)
 
@@ -148,21 +148,21 @@ require(["scripts/lazylist"], (lzy) => {
 				assert.all.same(xs, [42], "2nd travsersal");
 			});
 
-			test(".append", function (assert) {
+			test(".concat/'+++'", function (assert) {
 				const xs = single(42);
 				let ys;
 				
-				ys = xs.append(nil);
-				assert.all.same(ys, [42], "<42>.append(<>) 1st traversal");
-				assert.all.same(ys, [42], "<42>.append(<>), 2nd traversal");
+				ys = xs.concat(nil);
+				assert.all.same(ys, [42], "<42>.concat(<>) 1st traversal");
+				assert.all.same(ys, [42], "<42>.concat(<>), 2nd traversal");
 				
-				ys = xs.append(xs);
-				assert.all.same(ys, [42,42], "<42>.append(<42>) 1st traversal");
-				assert.all.same(ys, [42,42], "<42>.append(<42>), 2nd traversal");
+				ys = xs.concat(xs);
+				assert.all.same(ys, [42,42], "<42>.concat(<42>) 1st traversal");
+				assert.all.same(ys, [42,42], "<42>.concat(<42>), 2nd traversal");
 				
-				ys = xs.append(single(4711));
-				assert.all.same(ys, [42,4711], "<42>.append(<4711>) 1st traversal");
-				assert.all.same(ys, [42,4711], "<42>.append(<4711>), 2nd traversal");
+				ys = xs.concat(single(4711));
+				assert.all.same(ys, [42,4711], "<42>.concat(<4711>) 1st traversal");
+				assert.all.same(ys, [42,4711], "<42>.concat(<4711>), 2nd traversal");
 			});
 		}); // end module "single"
 
@@ -174,7 +174,7 @@ require(["scripts/lazylist"], (lzy) => {
 				assert.all.same(xs, [3,4,5], "1st travsersal");
 				assert.all.same(xs, [3,4,5], "2nd travsersal");
 			});
-			test("mapMany(single, ...)", function (assert) {
+			todo("mapMany(single, ...)", function (assert) {
 				let ys = cons(3, cons(4, single(5)));
 				let xs = mapMany(single, ys);
 
@@ -236,7 +236,7 @@ require(["scripts/lazylist"], (lzy) => {
 				y_expr = y.expr;
 				assert.same(y_expr, "(filter even " + x_expr + ")", "y.expr");
 				assert.same(y.isEmpty, false, "y.isEmpty");
-				assert.same(y.expr, "2:((filter even ([3]" + + " +++ " + t_expr + ")))",
+				assert.same(y.expr, "2:((filter even ([3]" + " +++ " + t_expr + ")))",
 					"y.expr after y.isEmpty");
 
 				function odd(x) { return (x % 2) === 1 }

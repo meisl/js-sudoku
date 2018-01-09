@@ -1,35 +1,6 @@
 define(["./fn"], (fn) => {
-	
-	const nilIt = Object.create(null, {
-		[Symbol.toStringTag]: { value: "NilIt" },
-		append: { value: it => it }
-	});
-
-
-	function* values() {
-		let cont = this,
-			value;
-		while (true) {
-			({ value, cont } = cont());
-			if (cont === undefined) return;
-			yield value;
-		}
-	}
-
-	function makeIterable(cont) {
-		cont[Symbol.iterator] = values;
-		return cont;
-	}
 
 	const EOL = { cont: void 0, done: true };
-
-	function _nil(cont) {
-		//return cont ? cont() : EOL;
-		return EOL;
-	}
-	makeIterable(_nil);
-	_nil.append = c => c;	//	makeAppend(_nil); //	
-
 
 	class LazyList {
 		static get construct() {
@@ -39,20 +10,9 @@ define(["./fn"], (fn) => {
 			this.destructure = destructure;
 		}
 		concat(suffix) {
-			if (suffix === nilObj) return this;
-			/*
-			const prefix = this;
-			let res = new LazyList(() => {
-				let e = prefix.destructure();
-				if (e === EOL) {
-					// prefix.concat = Nil.concat;
-					// prefix.destructure = Nil.destructure;
-					return suffix.destructure();
-				}
-				return { value: e.value, cont: e.cont.concat(suffix) };
-			});
-			*/
-			const res = new Concat(this, suffix);
+			const res = (suffix === nilObj)
+				? this
+				: new Concat(this, suffix);
 			return res;
 		}
 		cons(x)      { return new Cons(x, this)    }
@@ -89,7 +49,7 @@ define(["./fn"], (fn) => {
 
 		get expr() {
 			if (typeof this.getExpr !== "function")
-				throw { msg: "fuck", thisVal: this };
+				throw "subclass should've implemented method getExpr";
 			return this.getExpr();
 		}
 
@@ -311,85 +271,20 @@ define(["./fn"], (fn) => {
 		}
 		// isEmpty (filter p [])   = true
 		// isEmpty (filter p x:xs) = (!(p x)) || isEmpty (filter p xs)
-		get evaluated()   { return undefined }
-		set evaluated(ys) {
-			function updateEvaluated(zs) {
-				Object.defineProperties(this, {
-					evaluated: {
-						get: function () {
-							let ys = zs;
-							while (ys.evaluated && (ys.evaluated != ys))
-								ys = ys.evaluated;
-							if (ys !== zs)
-								this.evaluated = ys;
-							return ys;
-						},
-						set: updateEvaluated,
-						configurable: true
-					},
-				});
-			}
-			updateEvaluated.call(this, ys);
-		}
-		get xxxhead() {
-			while (true) {
-				if (this.evaluated) {
-					const res = this.evaluated.head;
-					Object.defineProperty(this, "head", {
-						value: res
-					});
-					return res;
-				}
-				if (this.isEmpty)
-					throw_head_on_empty();
-			}
-		}		
-		get xxxtail() {
-			while (true) {
-				if (this.evaluated) {
-					const res = this.evaluated.tail;
-					Object.defineProperty(this, "tail", {
-						value: res
-					});
-					return res;
-				}
-				if (this.isEmpty)
-					throw_tail_on_empty();
-			}
-		}
 		get isEmpty() {
-			/*
-			if (this.evaluated) {
-				const res = this.evaluated.isEmpty;
-				Object.defineProperty(this, "isEmpty", {
-					value: res
-				});
-				return res;
-			}
-			*/
 			let { p, xs } = this;
 			while (true) {
 				if (xs.isEmpty) {
-					//this.evaluated = nilObj;
 					this.set({
 						isEmpty: true,
 						getExpr: nilObj.getExpr,
 						head:    throw_head_on_empty,
 						tail:    throw_tail_on_empty
 					});
-					/*
-					Object.defineProperties(this, {
-						isEmpty: { value: true },
-						head:    { get: throw_head_on_empty },
-						tail:    { get: throw_tail_on_empty },
-						expr:    { value: "[]" }
-					});
-					*/
 					return true;
 				}
 				let x = xs.head;
 				if (p(x)) {
-					//this.evaluated = xs.tail.filter(p).cons(x);
 					this.set({
 						isEmpty: false,
 						getExpr: Cons.getExpr,
@@ -400,31 +295,12 @@ define(["./fn"], (fn) => {
 							return tail;
 						}
 					});
-					/*
-					Object.defineProperties(this, {
-						isEmpty: { value: false },
-						head:    { value: x },
-						tail:    { value: xs.tail.filter(p) },
-						expr:    Object.getOwnPropertyDescriptor(Cons.prototype, "expr")
-						//expr:    { get: function () {
-						//	return this.head + ":" + this.tail.expr;
-						//} }
-					});
-					*/
 					return false;
 				}
 				xs = xs.tail;			
 			}
 		}
 		getExpr() {
-			/*
-			if (this.evaluated) {
-				Object.defineProperty(this, "expr", {
-					get: function () { return this.evaluated.expr }
-				});
-				return this.evaluated.expr;
-			}
-			*/
 			let pExpr = this.p.expr;
 			if (!pExpr) {
 				pExpr = this.p.name || "(" + this.p.toString() + ")";
@@ -487,193 +363,13 @@ define(["./fn"], (fn) => {
 	});
 
 
-
-
-
-
-	function _cons(x, tail) {
-		const out = () => ({ value: x, cont: tail });
-		//out.append = c => _cons(x, tail.append(c));
-		out.append = makeAppend(out);
-		return makeIterable(out);
-	}
-
-
-	function _single(x) {
-		//return c => ({ value: x, cont: c || _nil });
-		/*
-		function singleton (c) {
-			return { value: x, cont: c || _nil };
-		}
-		return makeIterable(singleton);
-		*/
-		const out = _cons(x, _nil);
-		return out;
-	}
-
-	function append(prefix, suffix) {
-		if (suffix === _nil || suffix === undefined) return prefix;
-		if (prefix === _nil) return suffix;
-		return makeIterable(cont => prefix(append(suffix, cont)));
-	}
-
-	function cons(x, cont) {
-		return append(_single(x), cont);
-		//return c2 => ({ value: x, cont: append(cont, c2) })
-	}
-
-	function mapMany(f, xs) {
-		return (xs === _nil)
-			? _nil
-			: makeIterable(c2 => {
-				const { value, cont } = xs();
-				const ys = append(f(value), mapMany(f, cont));
-				return ys(c2);
-			})
-	}
-	
-	function _mapMany(f, xs) {
-		if (xs === _nil) return _nil;
-		/*
-		const step = () => {
-			console.log("accessing xs: " + xs);
-			const e = xs();
-			if (e === EOL) return EOL;
-			const { value, cont } = e;
-			const expanded = f(value).append(_mapMany(f, cont));
-			return expanded();
-		};
-		const out = makeIterable(step);
-		*/
-		const out = makeStep(xs, _nil, (v,c) => 
-			f(v).append(_mapMany(f, c))()
-		);
-		/*
-		out.append = suffix => {
-			if (suffix === _nil) return out;
-
-			//return makeIterable(() => {
-			//	const e = out();
-			//	if (e === EOL) return suffix();
-			//	const { value, cont } = e;
-			//	return { value: value, cont: cont.append(suffix) };
-			//});
-
-			return makeStep(out, suffix,
-				(v,c) => ({ value: v, cont: c.append(suffix) })
-			);
-		};
-		*/
-		out.append = makeAppend(out);
-		return out;
-	}
-
-	function makeStep(inner, onEOL, onElem) {
-		const out = () => {
-			const e = inner();
-			return (e === EOL)
-				? onEOL()
-				: onElem(e.value, e.cont);
-		};
-		return makeIterable(out);
-	}
-
-	function makeAppend(inner) {
-		return suffix => {
-			return (suffix === _nil)
-				? inner
-				: makeStep(inner, suffix,
-					(v,c) => {
-						return { value: v, cont: c.append(suffix) };
-					}
-				)
-		}
-	}
-
-	function _filter(p, xs) {
-		return _mapMany(x => p(x) ? _single(x) : _nil, xs);
-	};
-
-	function _map(f, xs) {
-		return _mapMany(x => _single(f(x)), xs);
-	};
-
-	function filter(p, xs) {
-		//return mapMany(x => p(x) ? _single(x) : _nil, xs);
-		if (xs === _nil) return _nil;
-		let cont = xs;
-		const step = c => {
-			let value;
-			({value, cont} = cont());
-			if (cont === undefined) {
-				return _nil(c);
-			}
-			if (p(value))
-				return { value: value, cont: cont === _nil ? _nil : step };
-			//return filter(p, cont)(c); // tail-call optimization needed!
-			return step(c);
-		};
-		return makeIterable(step);
-	}
-
-	function asIterable(it) {
-		return {
-			*[Symbol.iterator]() {
-				let value, cont = it;
-				while (cont !== _nil) {
-					({ value, cont } = cont());
-					yield value;
-				}
-			}
-		}
-	}
-
-	const _singleton = x => {
-		const it = singletonIt(x);
-		return () => it;
-	}
-
-	const nil = Object.create(LazyList.prototype, {
-		it: { value: () => nilIt, enumerable: true },
-	});
-
-	class Singleton extends LazyList {
-		constructor(x) {
-			const it = singletonIt(x);
-			super(() => it);
-		}
-	}
-
-	const singletonIt = function singletonIt(value) {
-		const itOut = { value: value, cont: nilIt };
-		const it = () => itOut;
-		it.append = suffixIt => {
-			return () => ({ value: value, cont: suffixIt });
-		};
-		return it;
-	}
-
-
-	const appendIt = function appendIt(cont, suff) {
-		if (cont === nilIt) return suff;
-		if (suff === nilIt) return cont;
-		const step = () => {
-			let value;
-			({ value, cont } = cont());
-			return { value: value, cont: cont === nilIt ? suff : step };
-		};
-		return step;
-	}
-
 	return Object.create(null, {
 		nil:  { value: LazyList.nil   },
 		cons: { value: Cons.construct },
-		single: { value: _single },
-		//asIterable: { value: asIterable },
-		//append: { value: append },
-		mapMany: { value: _mapMany },
-		filter: { value: _filter },
-		map: { value: _map },
+		single: { value: x => new Cons(x, nilObj) },
+		//mapMany: { value: _mapMany },
+		//filter: { value: _filter },
+		//map: { value: _map },
 		LazyList: { value: LazyList },
 	});
 
