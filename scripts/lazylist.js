@@ -1,13 +1,8 @@
 define(["./fn"], (fn) => {
 
-	const EOL = { cont: void 0, done: true };
-
 	class LazyList {
 		static get construct() {
 			return (...args) => Reflect.construct(this, args);
-		}
-		constructor(destructure) {
-			this.destructure = destructure;
 		}
 		concat(suffix) {
 			const res = (suffix === nilObj)
@@ -66,29 +61,15 @@ define(["./fn"], (fn) => {
 		}
 
 		*[Symbol.iterator]() {
-			let cont = this,
-				value;
-			while (true) {
-				({ value, cont } = cont.destructure());
-				if (cont === undefined) return;
-				yield value;
-			}			
+			for (let xs = this; !xs.isEmpty; xs = xs.tail)
+				yield xs.head;
 		}
 	}
 
 	class Concat extends LazyList {
 		constructor(prefix, suffix) {
-			super(() => {
-				let e = prefix.destructure();
-				if (e === EOL) {
-					// prefix.concat = Nil.concat;
-					// prefix.destructure = Nil.destructure;
-					return suffix.destructure();
-				}
-				return { value: e.value, cont: e.cont.concat(suffix) };
-			});
-			this.prefix = prefix;
-			this.suffix = suffix;
+			super();
+			this.set({ prefix, suffix });
 		}
 		get isEmpty() {
 			const { prefix, suffix } = this;
@@ -140,10 +121,8 @@ define(["./fn"], (fn) => {
 
 	class Cons extends LazyList {
 		constructor(head, tail) {
-			super(() => ({ value: head, cont: tail }));
+			super();
 			this.set({ head, tail });
-			//this.head = head;
-			//this.tail = tail;
 		}
 		/*
 		// concat []     ys = ys
@@ -190,6 +169,7 @@ define(["./fn"], (fn) => {
 
 	class MapMany extends LazyList {
 		constructor(f, xs) {
+			/*
 			super(() => {
 				const e = xs.destructure();
 				if (e === EOL) {
@@ -209,6 +189,8 @@ define(["./fn"], (fn) => {
 				}
 				return res;
 			});
+			*/
+			super();
 			this.f = f;
 			this.xs = xs;
 		}
@@ -236,6 +218,7 @@ define(["./fn"], (fn) => {
 
 	class SkipUntil extends LazyList {
 		constructor(p, xs) {
+			/*
 			super(() => {
 				while (true) {
 					let e = xs.destructure();
@@ -251,6 +234,8 @@ define(["./fn"], (fn) => {
 					}
 				}
 			});
+			*/
+			super();
 			this.p = p;
 			this.xs = xs;
 		}
@@ -258,6 +243,7 @@ define(["./fn"], (fn) => {
 
 	class Filter extends LazyList {
 		constructor(p, xs) {
+			/*
 			super(() => {
 				let e = new SkipUntil(p, xs).destructure();
 				if (e === EOL) {
@@ -266,6 +252,8 @@ define(["./fn"], (fn) => {
 				let { value, cont } = e;
 				return { value: value, cont: cont.filter(p) };
 			});
+			*/
+			super();
 			this.p = p;
 			this.xs = xs;
 		}
@@ -335,7 +323,7 @@ define(["./fn"], (fn) => {
 	})
 	const nilObj = Object.create(nilProto, {
 		isEmpty:	 { value: true },
-		head:        { get: throw_head_on_empty, enumerable: true },
+		head:        { get: throw_head_on_empty },
 		tail:        { get: throw_tail_on_empty },
 
 		cons:        { value: x => new Cons(x, nilObj) },
@@ -349,18 +337,12 @@ define(["./fn"], (fn) => {
 		filter:      { value: fn.returnThis },
 
 		toString:    { value: () => "[]" },
-		getExpr: { value: () => "[]" },
+		getExpr:     { value: () => "[]" },
 		[Symbol.iterator]: { value: getEmptyIterator },
-		[Symbol.for("blah")]: { get: () => {
-			throw new Error("asdfasdf") 
-		}, enumerable: true },
-
-
-		destructure: { value: () => EOL },
 	});
-	const success = Reflect.defineProperty(LazyList, "nil", {
-		value: nilObj, enumerable: true, writable: false, configurable: false
-	});
+	const success = Reflect.defineProperty(LazyList, "nil",
+		{ value: nilObj, enumerable: true }
+	);
 
 
 	return Object.create(null, {

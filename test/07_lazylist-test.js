@@ -187,6 +187,7 @@ require(["scripts/lazylist"], (lzy) => {
 
 		module("class LazyLlist", () => { // ------------------------------------------
 			test("foobar", function (assert) {
+				let desc;
 				const LazyList = lzy.LazyList;
 				const nil = LazyList.nil;
 
@@ -233,11 +234,16 @@ require(["scripts/lazylist"], (lzy) => {
 				x_expr = x.expr;
 				assert.same(x_expr, "(" + t_expr + " +++ " + t_expr + ")");
 				y = x.filter(even);
+				desc = "(filter even " + x_expr + ")";
 				y_expr = y.expr;
-				assert.same(y_expr, "(filter even " + x_expr + ")", "y.expr");
-				assert.same(y.isEmpty, false, "y.isEmpty");
+				assert.same(y_expr, desc, desc + ".expr (right after creation)");
+				assert.same(y.isEmpty, false, desc + ".isEmpty");
 				assert.same(y.expr, "2:((filter even ([3]" + " +++ " + t_expr + ")))",
-					"y.expr after y.isEmpty");
+					desc + ".expr after y.isEmpty");
+				assert.all.same(y, [2,2], desc + " 1st traversal");
+				assert.all.same(y, [2,2], desc + " 2nd traversal");
+				assert.same(y.expr, "[2,2]",
+					desc + ".expr after traversal");
 
 				function odd(x) { return (x % 2) === 1 }
 				v = u.filter(odd);
