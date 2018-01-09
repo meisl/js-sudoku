@@ -23,10 +23,22 @@
 		"./test/04a_sudoku-coords-test",
 		"./test/05_cell-test",
 		"./test/06_group-test",
+		"./test/07_lazylist-test",
 	], () => {});
 
-	require(["./scripts/sudoku", "./scripts/group", "./scripts/sequence", "./scripts/fn"], 
-		(su, group, sq, fn) => { sdk = su; grp = group; seq = sq; this.fn = fn; });
+	require([
+		"./scripts/sudoku", 
+		"./scripts/group", 
+		"./scripts/sequence", 
+		"./scripts/fn",
+		"./scripts/lazylist"
+	], (su, group, sq, fn, lzy) => {
+		sdk = su; 
+		grp = group; 
+		seq = sq; 
+		this.fn = fn;
+		this.lzy = lzy;
+	});
   </script>
 
 </body>
