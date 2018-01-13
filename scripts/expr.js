@@ -55,7 +55,6 @@ define(["./fn"], (fn) => { with (fn) {
 		}
 
 		get isConst()  { return false }
-		get isFun()    { return false }
 		get isVar()    { return false }
 		get isApp()    { return false }
 		get isIf()     { return false }

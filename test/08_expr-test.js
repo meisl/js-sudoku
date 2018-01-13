@@ -42,15 +42,6 @@ require(["scripts/expr"], (Expr) => {
 	QUnit.assert.isConst = function isConst(value, desc) {
 		this.isExpr(value, desc);
 		this.same(value.isConst, true,  desc + ".isConst");
-		this.same(value.isFun,   false, desc + ".isFun");
-		this.same(value.isVar,   false, desc + ".isVar");
-		this.same(value.isApp,   false, desc + ".isApp");
-		this.same(value.isIf,    false, desc + ".isIf");
-	};
-	QUnit.assert.isFun = function isFun(value, desc) {
-		this.isExpr(value, desc);
-		this.same(value.isConst, false, desc + ".isConst");
-		this.same(value.isFun,   true,  desc + ".isFun");
 		this.same(value.isVar,   false, desc + ".isVar");
 		this.same(value.isApp,   false, desc + ".isApp");
 		this.same(value.isIf,    false, desc + ".isIf");
@@ -58,7 +49,6 @@ require(["scripts/expr"], (Expr) => {
 	QUnit.assert.isVar = function isConst(value, desc) {
 		this.isExpr(value, desc);
 		this.same(value.isConst, false, desc + ".isConst");
-		this.same(value.isFun,   false, desc + ".isFun");
 		this.same(value.isVar,   true,  desc + ".isVar");
 		this.same(value.isApp,   false, desc + ".isApp");
 		this.same(value.isIf,    false, desc + ".isIf");
@@ -66,7 +56,6 @@ require(["scripts/expr"], (Expr) => {
 	QUnit.assert.isApp = function isConst(value, desc) {
 		this.isExpr(value, desc);
 		this.same(value.isConst, false, desc + ".isConst");
-		this.same(value.isFun,   false, desc + ".isFun");
 		this.same(value.isVar,   false, desc + ".isVar");
 		this.same(value.isApp,   true,  desc + ".isApp");
 		this.same(value.isIf,    false, desc + ".isIf");
@@ -74,7 +63,6 @@ require(["scripts/expr"], (Expr) => {
 	QUnit.assert.isIf = function isConst(value, desc) {
 		this.isExpr(value, desc);
 		this.same(value.isConst, false, desc + ".isConst");
-		this.same(value.isFun,   false, desc + ".isFun");
 		this.same(value.isVar,   false, desc + ".isVar");
 		this.same(value.isApp,   false, desc + ".isApp");
 		this.same(value.isIf,    true,  desc + ".isIf");
