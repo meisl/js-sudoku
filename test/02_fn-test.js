@@ -2,9 +2,6 @@ require(["scripts/fn"], (fn) => {
     const { test, todo, skip, module } = QUnit;
 
     module("fn", () => { // ----------------------------------------
-		test("module object", function (assert) {
-			assert.same(Object.getPrototypeOf(fn), null, "has null __proto__");
-		});
 
 		module("id", () => { // ----------------------------------------
 			test("std call", function (assert) {

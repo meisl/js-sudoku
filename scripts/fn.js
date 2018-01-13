@@ -1,6 +1,17 @@
 define([], () => {
 
 	const id = function id(x) { return x };
+
+	const typeofIs   = function typeofIs(tpStr, x) { return (typeof x) === tpStr }
+
+	const isBoolean  = function isBoolean(x)  { return typeofIs("boolean", x) }
+	const isNumber   = function isNumber(x)   { return typeofIs("number", x) }
+	const isString   = function isString(x)   { return typeofIs("string", x) };
+	const isSymbol   = function isSymbol(x)   { return typeofIs("symbol", x) };
+	const isObject   = function isObject(x)   { return typeofIs("object", x) };
+	const isArray    = function isArray(x)    { return Array.isArray(x) };
+	const isFunction = function isFunction(x) { return typeofIs("function", x) };
+
 	
 	const returnThis = function returnThis() { return this };
 
@@ -54,12 +65,32 @@ define([], () => {
 		return out;
 	};
 
+
+	const module = {
+		id,
+
+		typeofIs,
+		isBoolean,
+		isNumber,
+		isString,
+		isSymbol,
+		isObject,
+		isArray,
+		isFunction,
+
+		returnThis,
+		insist_nonNegativeInt,
+		getDescriptors,
+		memoize,
+	};
+	return module;
+/*
 	return Object.create(null, {
 		id: { value: id },
 		returnThis: { value: returnThis },
 		insist_nonNegativeInt: { value: insist_nonNegativeInt },
 		getDescriptors: { value: getDescriptors },
 		memoize: { value: memoize },
-	});
+*/
 });
 

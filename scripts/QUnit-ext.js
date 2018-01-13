@@ -4,7 +4,7 @@ require([], () => {
 		return this.strictEqual(v, x, m);
 	}
 
-	QUnit.assert.typeof = function(value, expected, what, message) {
+	QUnit.assert.typeof = function (value, expected, what, message) {
 		let actual = typeof value;
 
 		if (message !== undefined) {
