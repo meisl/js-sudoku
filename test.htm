@@ -24,6 +24,7 @@
 		"./test/05_cell-test",
 		"./test/06_group-test",
 		"./test/07_lazylist-test",
+		"./test/08_expr-test",
 	], () => {});
 
 	require([
@@ -31,13 +32,15 @@
 		"./scripts/group", 
 		"./scripts/sequence", 
 		"./scripts/fn",
-		"./scripts/lazylist"
-	], (su, group, sq, fn, lzy) => {
+		"./scripts/lazylist",
+		"./scripts/expr"
+	], (su, group, sq, fn, lzy, Expr) => {
 		sdk = su; 
 		grp = group; 
 		seq = sq; 
 		this.fn = fn;
 		this.lzy = lzy;
+		this.Expr = Expr;
 	});
   </script>
 
