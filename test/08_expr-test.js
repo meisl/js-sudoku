@@ -108,7 +108,6 @@ require(["scripts/expr"], (Expr) => {
 					
 					assert.isVar(x, desc);
 					assert.same(x.name, v, desc + ".name");
-					assert.same(x.isSelfEvaluating, false, desc + ".isSelfEvaluating");
 				});
 				invalidArgs.forEach(v => {
 					const desc = mkDesc(v);
@@ -153,7 +152,6 @@ require(["scripts/expr"], (Expr) => {
 					const desc = mkDesc(v);
 					assert.isConst(x, desc);
 					assert.same(x.value, v, desc + ".value");
-					assert.same(x.isSelfEvaluating, true, desc + ".isSelfEvaluating");
 				});
 				invalidArgs.forEach(v => {
 					const desc = mkDesc(v);

@@ -54,10 +54,6 @@ define(["./fn"], (fn) => { with (fn) {
 			throw which + " not implemented in " + this.constructor.name;
 		}
 
-		get isSelfEvaluating() {
-			this.throwNotImplemented("isSelfEvaluating");
-		}
-
 		get isConst()  { return false }
 		get isFun()    { return false }
 		get isVar()    { return false }
@@ -84,11 +80,6 @@ define(["./fn"], (fn) => { with (fn) {
 			}
 			return "Const " + v;
 		}
-
-		eval(context) {
-			return this;
-		}
-		get isSelfEvaluating() { return true; }
 	}
 	Object.defineProperties(ConstExpr.prototype, {
 		[Symbol.toStringTag]: { value: "ConstExpr", configurable: true },
@@ -112,19 +103,6 @@ define(["./fn"], (fn) => { with (fn) {
 		}
 		toString() {
 			return "Var " + QUnit.dump.parse(this.name);
-		}
-
-		get isSelfEvaluating() { return false; }
-		eval(context) {
-			const target = context[this.name];
-			if (!isExpr(target)) {
-				if (target === (void 0)) {
-					throw "unbound var " + name;
-				} else {
-					throw "bad context: var " + name + " bound to non-Expr " + target
-				}
-			}
-			return target;
 		}
 	}
 	Object.defineProperties(VarExpr.prototype, {
@@ -158,14 +136,6 @@ define(["./fn"], (fn) => { with (fn) {
 			Object.assign(this, { condX, thenX, elseX });
 		}
 		get isIf() { return true }
-
-		eval(context) {
-			const condE = this.condX.eval(context);
-			if (condE instanceof ConstExpr) {
-				return condE.value ? this.thenX.eval(context) : this.elseX.eval(context);
-			}
-			throw "evaluation error: " + condE;
-		}
 	}
 	Object.defineProperties(IfExpr.prototype, {
 		[Symbol.toStringTag]: { value: "IfExpr", configurable: true },
