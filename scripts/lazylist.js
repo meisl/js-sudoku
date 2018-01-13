@@ -1,8 +1,114 @@
-define(["./fn"], (fn) => {
+define(["./fn"], (fn) => { with (fn) {
+
+	const fnExpr = f => {
+		const fExpr = f.expr;
+		if (fExpr) return "(" + f.expr + ")";
+		return f.name || "(" + f.toString() + ")";
+	};
+
 
 	class LazyList {
 		static get construct() {
 			return (...args) => Reflect.construct(this, args);
+		}
+		static get nil() {
+			Object.defineProperty(LazyList, "nil", {
+				value: nilObj, enumerable: true}
+			);
+			return nilObj;
+		}
+		static toString() {
+			let name = this.name;
+			if (name !== "") {
+				name += " ";
+			}
+			const proto = Object.getPrototypeOf(this);
+			if (proto === Function.prototype) {
+				return super.toString();
+			} else {
+				let s = super.toString();
+				s = " " + s.substr(s.indexOf("{"));
+				return "class " + name 
+					+ "extends " + proto.name + s; 
+			}
+		}
+		static derive(name, parameters, ...body) {
+			function argsToProps(args) {
+				const props = {};
+				let i = 0;
+				for (const name of parameters) {
+					props[name] = args[i++];
+				}
+				return props;
+			}
+			const res = class extends this {
+				constructor(...args) {
+					super(argsToProps(args));
+				}
+			};
+
+			Object.defineProperties(res, {
+				name:   { value: name },
+				length: { value: parameters.length },
+			});
+			return res;
+		}
+
+		static iterate(f, x) {
+			// iterate f x = cons x (iterate f (f x))
+			// derive("iterate", ["f", "x"], [
+			//     Cons, "x", ["iterate", "f", ["f" "x"]]
+			//]);
+			return new LazyList({
+				isEmpty: false, // because it's an App of cons
+				getExpr: function () {
+					return "(iterate " + fnExpr(f) + " " + x + ")";
+				},
+				head: function () {
+					this.set({
+						head: x,
+						getExpr: Cons.getExpr
+					});
+					return x;
+				},
+				tail: function () {
+					const res = LazyList.iterate(f, f(x));
+					this.set({
+						tail: res,
+						getExpr: Cons.getExpr
+					})
+					return res;
+				},
+			})
+		}
+
+		static fromArgs(...args) {
+			// fromArgs args = let n = length args
+			//                     f = \i.if (i >= n) then nil
+			//                            else (cons (nth args i) (f (i + 1)))
+			//                 in (f 0)
+			// or
+			// fromArgs args = let n  = length args
+			//                     is = take n (iterate (\i.i+1) 0)
+			//                 in (map (nth args) is)
+			if (args.length === 0) return LazyList.nil;
+			return new LazyList({
+				i: 0,
+				isEmpty: false,
+				head: function () {
+					const res = args[this.i];
+					return res;
+				},
+				tail: function () {
+
+				}
+			});
+		}
+		constructor(props) {
+			//super();
+			if (props) {
+				this.set(props);
+			}
 		}
 		concat(suffix) {
 			const res = (suffix === nilObj)
@@ -51,7 +157,9 @@ define(["./fn"], (fn) => {
 		set(props) {
 			for (const key in props) {
 				let v = props[key];
-				if ((typeof v === "function") && (key !== "getExpr")) {
+				if (key === "getExpr") {
+					props[key] = { value: v, configurable: true };
+				} else if (typeof v === "function") {
 					props[key] = { get: v, configurable: true };
 				} else {
 					props[key] = { value: v };
@@ -68,8 +176,7 @@ define(["./fn"], (fn) => {
 
 	class Concat extends LazyList {
 		constructor(prefix, suffix) {
-			super();
-			this.set({ prefix, suffix });
+			super({ prefix, suffix });
 		}
 		get isEmpty() {
 			const { prefix, suffix } = this;
@@ -121,8 +228,7 @@ define(["./fn"], (fn) => {
 
 	class Cons extends LazyList {
 		constructor(head, tail) {
-			super();
-			this.set({ head, tail });
+			super({ head, tail });
 		}
 		/*
 		// concat []     ys = ys
@@ -136,7 +242,9 @@ define(["./fn"], (fn) => {
 		}
 		*/
 		getExpr() {
-			const { head, tail } = this;
+			//const { head, tail } = this;
+			const head = this.head;
+			const tail = this.tail;
 			const headExpr = (head instanceof LazyList)
 				? head.expr
 				: head + ""
@@ -146,11 +254,14 @@ define(["./fn"], (fn) => {
 				res = "[" + headExpr + "]";
 			} else {
 				let tailExpr = tail.getExpr();
-				if ((tail.getExpr === Cons.getExpr)
-					&& tailExpr.startsWith("[")
-					&& tailExpr.endsWith("]")
-				) {
-					res = "[" + headExpr + "," + tailExpr.substr(1);
+				if (tail.getExpr === Cons.getExpr) {
+					if (tailExpr.startsWith("[") && tailExpr.endsWith("]")) {
+						res = "[" + headExpr + "," + tailExpr.substr(1);
+					} else {
+						res = headExpr + ":" + tailExpr;
+					}
+				} else if (tail.getExpr === Concat.prototype.getExpr) {
+					res = headExpr + ":" + tailExpr;
 				} else {
 					res = headExpr + ":(" + tailExpr + ")";
 				}
@@ -253,9 +364,10 @@ define(["./fn"], (fn) => {
 				return { value: value, cont: cont.filter(p) };
 			});
 			*/
-			super();
-			this.p = p;
-			this.xs = xs;
+			super({
+				p: () => p,
+				xs: xs
+			});
 		}
 		// isEmpty (filter p [])   = true
 		// isEmpty (filter p x:xs) = (!(p x)) || isEmpty (filter p xs)
@@ -289,11 +401,7 @@ define(["./fn"], (fn) => {
 			}
 		}
 		getExpr() {
-			let pExpr = this.p.expr;
-			if (!pExpr) {
-				pExpr = this.p.name || "(" + this.p.toString() + ")";
-			}
-			return "(filter " + pExpr + " " + this.xs.expr + ")"
+			return "(filter " + fnExpr(this.p) + " " + this.xs.expr + ")"
 		}
 	}
 
@@ -319,7 +427,7 @@ define(["./fn"], (fn) => {
 	}
 
 	const nilProto = Object.create(LazyList.prototype, {
-		[Symbol.toStringTag]: { value: "LazyNil" },
+		[Symbol.toStringTag]: { value: "nil" },
 	})
 	const nilObj = Object.create(nilProto, {
 		isEmpty:	 { value: true },
@@ -340,9 +448,6 @@ define(["./fn"], (fn) => {
 		getExpr:     { value: () => "[]" },
 		[Symbol.iterator]: { value: getEmptyIterator },
 	});
-	const success = Reflect.defineProperty(LazyList, "nil",
-		{ value: nilObj, enumerable: true }
-	);
 
 
 	return Object.create(null, {
@@ -355,4 +460,4 @@ define(["./fn"], (fn) => {
 		LazyList: { value: LazyList },
 	});
 
-});
+} /* end with(fn) */ });

@@ -77,7 +77,7 @@ require(["scripts/lazylist"], (lzy) => {
 				assert.same(act.isEmpty, false, desc + ".isEmpty");
 				assert.same(act.expr, desc, desc + ".expr after .isEmpty (but no traversal)");
 				assert.same(act.head, nil, desc + ".head");
-				assert.same(act.expr, "[]:(([[]] +++ [[],[]]))", desc + ".expr after .head (but no traversal)");
+				assert.same(act.expr, "[]:([[]] +++ [[],[]])", desc + ".expr after .head (but no traversal)");
 			});
 
 		}); // end module "nil"
@@ -189,8 +189,7 @@ require(["scripts/lazylist"], (lzy) => {
 			test("foobar", function (assert) {
 				let desc;
 				const LazyList = lzy.LazyList;
-				const nil = LazyList.nil;
-
+				
 				assert.same(nil.expr, "[]", "[].expr");
 				assert.same(nil.isEmpty, true, "[].isEmpty");
 				assert.same(nil.isSingle, false, "[].isSingle");
@@ -211,9 +210,9 @@ require(["scripts/lazylist"], (lzy) => {
 				assert.same(u.isEmpty, false, "u.isEmpty");
 				assert.same(u.expr, "(" + t_expr + " +++ " + t_expr + ")");
 				u_head = u.head;
-				assert.same(u.expr, "1:(([2,3] +++ " + t_expr + "))");
+				assert.same(u.expr, "1:([2,3] +++ " + t_expr + ")");
 				u_tail_tail = u.tail.tail;
-				assert.same(u.expr, "1:(2:(([3] +++ " + t_expr + ")))");
+				assert.same(u.expr, "1:2:([3] +++ " + t_expr + ")");
 
 				let v, v_expr, w, w_head;
 				v = t.concat(t);
@@ -224,8 +223,8 @@ require(["scripts/lazylist"], (lzy) => {
 				assert.same(w.expr, "(" + v_expr + " +++ " + v_expr + ")");
 				w_head = w.head;
 				v_expr = v.expr;
-				assert.same(v_expr, "1:(([2,3] +++ [1,2,3]))", "v.expr");
-				assert.same(w.expr, "1:((([2,3] +++ [1,2,3]) +++ " + v_expr + "))");
+				assert.same(v_expr, "1:([2,3] +++ [1,2,3])", "v.expr");
+				assert.same(w.expr, "1:(([2,3] +++ [1,2,3]) +++ " + v_expr + ")");
 				
 				function Kfalse(_) { return false }
 				function even(x) { return (x % 2) === 0 }
@@ -251,6 +250,38 @@ require(["scripts/lazylist"], (lzy) => {
 				v_expr = v.expr;
 
 				assert.ok(true);
+			});
+
+			test("iterate", function (assert) {
+				const LazyList = lzy.LazyList;
+				let xs, f;
+				f = x => x + 1;
+				f.expr = "\\x.x+1";
+				xs = LazyList.iterate(f, 0);
+				desc = "(iterate (" + f.expr + ") 0)";
+				assert.same(xs.expr, desc, desc + ".expr right after creation");
+				assert.same(xs.isEmpty, false, desc + ".isEmpty");
+				assert.same(xs.expr, desc, desc + ".expr after .isEmpty");
+				assert.same(xs.head, 0, desc + ".head");
+				assert.same(xs.expr, "0:((iterate (" + f.expr + ") 1))",
+					desc + ".expr after .head");
+				
+				assert.same(xs.tail.head, 1, desc + ".nth(1)");
+				assert.same(xs.tail.tail.head, 2, desc + ".nth(2)");
+				assert.same(xs.tail.tail.tail.head, 3, desc + ".nth(3)");
+				assert.same(xs.expr, "0:1:2:3:((iterate (" + f.expr + ") 4))",
+					desc + ".expr after .nth(3)");
+			});
+
+			todo("fromArgs", function (assert) {
+				const LazyList = lzy.LazyList;
+				let xs;
+
+				xs = LazyList.fromArgs();
+				assert.same(xs, nil, ".fromArgs()");
+
+				xs = LazyList.fromArgs(1);
+				assert.all.same(xs, [1], ".fromArgs(1), 1st traversal");
 			});
 		});  // end module "class LazyLlist"
 
