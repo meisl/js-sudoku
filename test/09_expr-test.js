@@ -1,43 +1,47 @@
+
 require(["scripts/expr"], (Expr) => {
-	const { test, todo, skip, module } = QUnit;
+
+	const isExpr = Expr.isExpr;
 
 	const Const = Expr.const;
-	const Fun   = Expr.fun;
 	const Var   = Expr.var;
 	const App   = Expr.app;
 	const If    = Expr.if;
 
-	QUnit.assert.isExpr = function isExpr(value, desc) {
-		let message, result;
-		if (!desc) desc = "...";
-		message = ".isExpr(" + desc + ")"
+/*	
+require(["scripts/Datatype", "scripts/expr"], (Datatype, Expr) => {
+	const { isDatavalue } = Datatype;
 
-		result = value instanceof Expr;
-		if (result === false) {
-			this.pushResult({
-				result:   false,
-				actual:   value,
-				expected: "an Expr instance",
-				message:  message
-			});
-		} else {
-			result = Expr.isExpr(value);
-			if (result === true) {
-				this.pushResult({
-					result:   true,
-					actual:   value,
-					expected: "an Expr instance",
-					message:  message
-				});
-			} else {
-				this.pushResult({
-					result:   false,
-					actual:   value,
-					expected: "an Expr instance",
-					message:  message
-				});
-			}
+	const isExpr = v => isDatavalue(v) && (v.datatype === Expr);
+
+	Expr = new Datatype("Expr", {
+		Const: { value: v => !Number.isNaN(v) }, 
+		Var:   { name:  n => typeof n === "string" },
+		App: {
+			f: isExpr,
+			x: isExpr,
+		},
+		If: {
+			condX: isExpr,
+			thenX: isExpr,
+			elseX: isExpr,
 		}
+	});
+
+	const { Const, Var, App, If } = Expr;
+*/
+
+	const { test, todo, skip, module } = QUnit;
+
+	QUnit.assert.isExpr = function (actual, desc) {
+		let message, expected, result;
+		if (!desc) desc = "...";
+		message  = ".isExpr(" + desc + ")";
+		expected = "an Expr instance";
+
+		result = isExpr(actual);
+
+		this.pushResult({ result, actual, expected, message });
 	};
 	QUnit.assert.isConst = function isConst(value, desc) {
 		this.isExpr(value, desc);
@@ -69,7 +73,7 @@ require(["scripts/expr"], (Expr) => {
 	};
 
 	module("Expr", () => { // ------------------------------------------
-		module(".var", () => { // ------------------------------------------
+		module(".Var", () => { // ------------------------------------------
 			const validArgs = [
 				"_", "a", "b", "foo",
 				"__", "_0", "_bar",
@@ -82,7 +86,7 @@ require(["scripts/expr"], (Expr) => {
 				[],
 				() => 42,
 				//Symbol.iterator,	// TODO: does throw but only because Symbol cannot be converted to String
-				Expr.const(5),
+				Const(5),
 				"", " ", "-", "0", "1", "-a", 
 				"foo.bar", "foo-bar", "foo bar", 
 				"foo\tbar", "foo\n", "foo\rbar", "foo\r\nbar", "foo\n\rbar",
@@ -102,8 +106,8 @@ require(["scripts/expr"], (Expr) => {
 					assert.throws(() => construct(v), /invalid/, desc + " should throw");
 				});
 			}
-			test("Expr.var", function (assert) {
-				runTests(assert, v => Expr.var(v), "Expr.var");
+			test("Expr.Var", function (assert) {
+				runTests(assert, v => Var(v), "Expr.Var");
 			});
 			test(".parse(...)", function (assert) {
 				let x, desc;
@@ -123,7 +127,7 @@ require(["scripts/expr"], (Expr) => {
 			})
 		}); // end module ".var"
 
-		module(".const", () => { // ------------------------------------------
+		module(".Const", () => { // ------------------------------------------
 			const validArgs = [
 				true, false,
 				"", "foo", 
@@ -146,8 +150,8 @@ require(["scripts/expr"], (Expr) => {
 					assert.throws(() => construct(v), /invalid/, desc + " should throw");
 				});
 			}
-			test("create with Expr.const(...)", function (assert) {
-				runTests(assert, v => Expr.const(v), "Expr.const");
+			test("create with Expr.Const(...)", function (assert) {
+				runTests(assert, v => Const(v), "Expr.Const");
 			});
 
 			const bools = [true, false];
@@ -198,13 +202,13 @@ require(["scripts/expr"], (Expr) => {
 			}) // end module ".toString"
 		}); // end module ".const"
 
-		module(".app", () => { // ------------------------------------------
-			test("Expr.app", function (assert) {
+		module(".App", () => { // ------------------------------------------
+			test("Expr.App", function (assert) {
 				let f, a, x, desc;
 
-				f = Expr.var("f");
-				a = Expr.const(42);
-				x = Expr.app(f, a);
+				f = Var("f");
+				a = Const(42);
+				x = App(f, a);
 				desc = "(App (Var 'f') (Const 42))"
 
 				assert.isApp(x, desc);
@@ -257,20 +261,17 @@ require(["scripts/expr"], (Expr) => {
 			
 			module(".toString", () => { // ------------------------------------------
 				test("[Var,Const]", function (assert) {
-					const x   = Expr.parse(["f", 42]);
-					//const x   = App(Var("f"), Const(42));
+					const x   = App(Var("f"), Const(42));
 					const exp = 'App (Var "f") (Const 42)';
 					assert.same(x.toString(), exp);
 				});
 				test("[Var,Const,Const]", function (assert) {
-					const x   = Expr.parse(["f", 42, 5]);
-					//const x   = App(App(Var("f"), Const(42)), Const(5));
+					const x   = App(App(Var("f"), Const(42)), Const(5));
 					const exp = 'App (App (Var "f") (Const 42)) (Const 5)';
 					assert.same(x.toString(), exp);
 				});
 				test("[Var,[Var,Const]]", function (assert) {
-					const x   = Expr.parse(["f", ["g", 5]]);
-					//const x   = App(Var("f"), App(Var("g"), Const(5)));
+					const x   = App(Var("f"), App(Var("g"), Const(5)));
 					const exp = 'App (Var "f") (App (Var "g") (Const 5))';
 					assert.same(x.toString(), exp);
 				});
@@ -284,15 +285,15 @@ require(["scripts/expr"], (Expr) => {
 					const arrowFn = x => x;
 					let x, exp;
 					
-					x   = Expr.parse([namedFn, 42]);
+					x = App(Const(namedFn), Const(42));
 					exp = "App (Const namedFn) (Const 42)";
 					assert.same(x.toString(), exp);
 					
-					x   = Expr.parse([anonFn, 42]);
+					x = App(Const(anonFn), Const(42));
 					exp = "App (Const ?) (Const 42)";
 					assert.same(x.toString(), exp);
 					
-					x   = Expr.parse([arrowFn, 42]);
+					x = App(Const(arrowFn), Const(42));
 					exp = "App (Const ?) (Const 42)";
 					assert.same(x.toString(), exp);
 				});
@@ -314,7 +315,7 @@ require(["scripts/expr"], (Expr) => {
 				assert.same(x.thenX, t, desc + ".thenX");
 				assert.same(x.elseX, e, desc + ".elseX");
 			});
-		}); // end module ".app"
+		}); // end module ".if"
 
 	}); // end module "Expr"
 }); // end require

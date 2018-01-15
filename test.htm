@@ -23,8 +23,10 @@
 		"./test/04a_sudoku-coords-test",
 		"./test/05_cell-test",
 		"./test/06_group-test",
-		"./test/07_lazylist-test",
-		"./test/08_expr-test",
+		"./test/07_Datatype-test",
+		"./test/08_Pattern-test",
+		"./test/09_expr-test",
+		"./test/10_lazylist-test",
 	], () => {});
 
 	require([
@@ -32,15 +34,19 @@
 		"./scripts/group", 
 		"./scripts/sequence", 
 		"./scripts/fn",
+		"./scripts/Datatype",
+		"./scripts/Pattern",
+		"./scripts/expr",
 		"./scripts/lazylist",
-		"./scripts/expr"
-	], (su, group, sq, fn, lzy, Expr) => {
+	], (su, group, sq, fn, Datatype, Pattern, Expr, lzy) => {
 		sdk = su; 
 		grp = group; 
 		seq = sq; 
 		this.fn = fn;
-		this.lzy = lzy;
+		this.Datatype = Datatype;
+		this.Pattern = Pattern;
 		this.Expr = Expr;
+		this.lzy = lzy;
 	});
   </script>
 

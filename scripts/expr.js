@@ -64,7 +64,7 @@ define(["./fn"], (fn) => { with (fn) {
 		constructor(value) {
 			super();
 			if (Number.isNaN(value))
-				throw "invalid arg NaN - cannot construct ConstExpr";
+				throw "Const: invalid arg NaN - cannot construct ConstExpr";
 			Object.assign(this, { value });
 		}
 		toString() {
@@ -78,6 +78,11 @@ define(["./fn"], (fn) => { with (fn) {
 				return "Const ?";
 			}
 			return "Const " + v;
+		}
+		match(v) {
+			if (v === this.value) {
+				return {};
+			}
 		}
 	}
 	Object.defineProperties(ConstExpr.prototype, {
@@ -95,13 +100,18 @@ define(["./fn"], (fn) => { with (fn) {
 		constructor(name) {
 			super();
 			if (!VarExpr.isValidName(name))
-				throw "invalid variable name "
+				throw "Var: invalid variable name "
 					+ (isString(name) ? "'" + name + "'" : name);
 			//this.name = name;
 			Object.assign(this, { name });
 		}
 		toString() {
-			return "Var " + QUnit.dump.parse(this.name);
+			return "Var \"" + this.name + "\"";
+		}
+		match(v) {
+			return (this.name === "_") 
+				? {}
+				: { [this.name]: v };
 		}
 	}
 	Object.defineProperties(VarExpr.prototype, {
@@ -115,13 +125,25 @@ define(["./fn"], (fn) => { with (fn) {
 		constructor(f, x) {
 			super();
 			if (!isExpr(f))
-				throw "invalid arg 'f' - not an Expr: " + f;
+				throw "App: invalid arg 'f' - not an Expr: " + f;
 			if (!isExpr(x))
-				throw "invalid arg 'x' - not an Expr: " + x;
+				throw "App: invalid arg 'x' - not an Expr: " + x;
 			Object.assign(this, { f, x });
 		}
 		toString() {
 			return "App (" + this.f.toString() + ") (" + this.x.toString() + ")";
+		}
+		match(v) {
+			if (!isObject(v))
+				throw new TypeError("App.match: not a data value: " + v);
+			let ctor = this.f.value;
+			if (v.constructor === ctor) {
+				return this.x.match(v);
+			} else {
+				let dataType = Object.getPrototypeOf(ctor);
+				if (!v instanceof dataType)
+					throw new TypeError("App.match: not a " + dataType.name + ": " + v);
+			}
 		}
 	}
 	Object.defineProperties(AppExpr.prototype, {
@@ -143,6 +165,16 @@ define(["./fn"], (fn) => { with (fn) {
 
 	const isExpr = Expr.isExpr;
 
+	Object.defineProperties(Expr, {
+		dataCtors: { 
+			value: {
+				Const: ConstExpr,
+				Var:   VarExpr,
+				App:   AppExpr,
+				If:    IfExpr
+			}
+		}
+	});
 
 
 	return Expr;

@@ -43,27 +43,27 @@ require([], () => {
 	};
 
 	QUnit.assert.isObject = function (value, what, message) {
-		QUnit.assert.typeof(value, "object", what, message);
+		this.typeof(value, "object", what, message);
 	};
 
 	QUnit.assert.isFunction = function (value, what, message) {
-		QUnit.assert.typeof(value, "function", what, message);
+		this.typeof(value, "function", what, message);
 	};
 
 	QUnit.assert.isSymbol = function (value, what, message) {
-		QUnit.assert.typeof(value, "symbol", what, message);
+		this.typeof(value, "symbol", what, message);
 	};
 
 	QUnit.assert.isBoolean = function (value, what, message) {
-		QUnit.assert.typeof(value, "boolean", what, message);
+		this.typeof(value, "boolean", what, message);
 	};
 
 	QUnit.assert.isNumber = function (value, what, message) {
-		QUnit.assert.typeof(value, "number", what, message);
+		this.typeof(value, "number", what, message);
 	};
 
 	QUnit.assert.isString = function (value, what, message) {
-		QUnit.assert.typeof(value, "string", what, message);
+		this.typeof(value, "string", what, message);
 	};
 
 	QUnit.assert.isIterator = function(value, what, message) {
