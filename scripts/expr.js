@@ -58,6 +58,8 @@ define(["./fn"], (fn) => { with (fn) {
 		get isVar()    { return false }
 		get isApp()    { return false }
 		get isIf()     { return false }
+
+		get datactor() { return this.constructor }
 	}
 	
 	class ConstExpr extends Expr {

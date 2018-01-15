@@ -1,5 +1,7 @@
-	
-require(["scripts/expr"], (Expr) => {
+require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr) => {
+	const { test, todo, skip, module } = QUnit;
+	const { isDatavalue } = Datatype;
+
 
 	const isExpr = Expr.isExpr;
 
@@ -9,9 +11,6 @@ require(["scripts/expr"], (Expr) => {
 	const If    = Expr.if;
 
 /*
-require(["scripts/Datatype", "scripts/expr"], (Datatype, Expr) => {
-	const { isDatavalue } = Datatype;
-
 	const isExpr = v => isDatavalue(v) && (v.datatype === Expr);
 
 	Expr = new Datatype("Expr", {
@@ -31,7 +30,6 @@ require(["scripts/Datatype", "scripts/expr"], (Datatype, Expr) => {
 	const { Const, Var, App, If } = Expr;
 */
 
-	const { test, todo, skip, module } = QUnit;
 
 	QUnit.assert.isExpr = function (actual, desc) {
 		let message, expected, result;
@@ -40,6 +38,16 @@ require(["scripts/Datatype", "scripts/expr"], (Datatype, Expr) => {
 		expected = "an Expr instance";
 
 		result = isExpr(actual);
+		if (result) {
+			const ctor = actual.datactor;
+			if (!fn.isObject(ctor) && !fn.isFunction(ctor)) {
+				result = false;
+				actual = ctor;
+				message = desc + ".datactor should be Object or Function";
+			} else {
+
+			}
+		}
 
 		this.pushResult({ result, actual, expected, message });
 	};
@@ -57,8 +65,21 @@ require(["scripts/Datatype", "scripts/expr"], (Datatype, Expr) => {
 		}
 	});
 
-	module("Expr", () => { // ------------------------------------------
+	QUnit.assert.dataEqual = function (actual, expected, description) {
+		if ((typeof actual !== "object") || (actual === null))
+			throw new TypeError("assert.dataEqual: arg actual is not a data value: "
+				+ QUnit.dump.parse(actual));
+		if ((typeof expected !== "object") || (expected === null))
+			throw new TypeError("assert.dataEqual: arg expected is not a data value: "
+				+ QUnit.dump.parse(expected));
+		
+		this.same(actual.datactor, expected.datactor, 
+			description + ".datactor should be " + expected.datactor
+		);
+		this.deepEqual(actual, expected, description + " properties");		
+	}
 
+	module("Expr", () => { // ------------------------------------------
 		const mkDesc = (desc,v) => desc + "(" + QUnit.dump.parse(v) + ")";
 
 		module(".Var", () => { // ------------------------------------------
@@ -113,12 +134,14 @@ require(["scripts/Datatype", "scripts/expr"], (Datatype, Expr) => {
 
 			test(".parse(...)", function (assert) {
 				const describe = v => mkDesc(".parse", v);
+				const expect = Var;
 				const act = Expr.parse;
 				validArgs.forEach(v => {
-					const actual = act(v);
 					const desc = describe(v);
-					assert.isVar(actual, desc);
-					assert.deepEqual(actual, Var(v), desc);
+					const expected = expect(v);
+					const actual = act(v);
+
+					assert.dataEqual(actual, expected, desc);
 				});
 			});
 		}); // end module ".var"
@@ -186,14 +209,15 @@ require(["scripts/Datatype", "scripts/expr"], (Datatype, Expr) => {
 
 			module(".parse", () => {  // ------------------------------------------
 				const describe = v => mkDesc(".parse", v);
+				const expect = Const;
 				const act = Expr.parse;
 				function doTests(which, values) {
 					test(which, function (assert) {
 						values.forEach(v => {
-							const actual = act(v);
-							const desc   = describe(v);
-							assert.isConst(actual, desc);
-							assert.deepEqual(actual, Const(v), desc);
+							const desc     = describe(v);
+							const expected = expect(v);
+							const actual   = act(v);
+							assert.dataEqual(actual, expected, desc);
 						});
 					});
 				}
