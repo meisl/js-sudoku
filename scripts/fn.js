@@ -12,7 +12,29 @@ define([], () => {
 	const isArray    = function isArray(x)    { return Array.isArray(x) };
 	const isFunction = function isFunction(x) { return typeofIs("function", x) };
 
-	
+	const toStrLiteral = function (s, outerQuote) {
+		if (!isString(s))
+			throw new TypeError("toStrLiteral: not a string: " + s);
+		if (outerQuote === undefined)
+			outerQuote = '"';
+		if ((outerQuote !== undefined) && (outerQuote !== '"') && (outerQuote !== "'"))
+			throw new TypeError("toStrLiteral: invalid arg outerQuote "
+				+ outerQuote
+			);
+		let res = s
+			.replace(/\\/gm, "\\\\")
+			.replace(/\r/gm, "\\r")
+			.replace(/\n/gm, "\\n")
+			.replace(/\t/gm, "\\t")
+		;
+		if (outerQuote === '"') {
+			res = res.replace(/\"/gm, '\\"');
+		} else {
+			res = res.replace(/\'/gm, "\\'");
+		}
+		return outerQuote + res + outerQuote;
+	}
+
 	const returnThis = function returnThis() { return this };
 
 	const insist_nonNegativeInt = n => {
@@ -77,6 +99,8 @@ define([], () => {
 		isObject,
 		isArray,
 		isFunction,
+
+		toStrLiteral,
 
 		returnThis,
 		insist_nonNegativeInt,

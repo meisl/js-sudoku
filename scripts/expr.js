@@ -72,7 +72,7 @@ define(["./fn"], (fn) => { with (fn) {
 		toString() {
 			const v = this.value;
 			if (fn.isString(v)) {
-				return "Const " + QUnit.dump.parse(v);
+				return "Const " + fn.toStrLiteral(v);
 			} else if (fn.isFunction(v)) {
 				if (v.name) {
 					return "Const " + v.name;

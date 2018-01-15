@@ -2,85 +2,93 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 	const { test, todo, skip, module } = QUnit;
 	const { isDatavalue } = Datatype;
 
+	let isExpr, Const, Var, App, If;
 
-	const isExpr = Expr.isExpr;
+	const old = 1;
 
-	const Const = Expr.const;
-	const Var   = Expr.var;
-	const App   = Expr.app;
-	const If    = Expr.if;
-
-/*
-	const isExpr = v => isDatavalue(v) && (v.datatype === Expr);
-
-	Expr = new Datatype("Expr", {
-		Const: { value: v => !Number.isNaN(v) }, 
-		Var:   { name:  n => typeof n === "string" },
-		App: {
-			f: isExpr,
-			x: isExpr,
-		},
-		If: {
-			condX: isExpr,
-			thenX: isExpr,
-			elseX: isExpr,
-		}
-	});
-
-	const { Const, Var, App, If } = Expr;
-*/
-
-
-	QUnit.assert.isExpr = function (actual, desc) {
-		let message, expected, result;
-		if (!desc) desc = "...";
-		message  = ".isExpr(" + desc + ")";
-		expected = "an Expr instance";
-
-		result = isExpr(actual);
-		if (result) {
-			const ctor = actual.datactor;
-			if (!fn.isObject(ctor) && !fn.isFunction(ctor)) {
-				result = false;
-				actual = ctor;
-				message = desc + ".datactor should be Object or Function";
-			} else {
-
+	if (old) {
+		isExpr = Expr.isExpr;
+		Const = Expr.const;
+		Var   = Expr.var;
+		App   = Expr.app;
+		If    = Expr.if;
+	} else {
+		isExpr = v => isDatavalue(v) && (v.datatype === Expr);
+		Expr = new Datatype("Expr", {
+			Const: { value: v => !Number.isNaN(v) }, 
+			Var:   { name:  n => typeof n === "string" },
+			App: {
+				f: isExpr,
+				x: isExpr,
+			},
+			If: {
+				condX: isExpr,
+				thenX: isExpr,
+				elseX: isExpr,
 			}
-		}
-
-		this.pushResult({ result, actual, expected, message });
-	};
-
-	// make assertions .isConst, .isVar, .isApp, .isIf
-	const ctorTests = ["isConst", "isVar", "isApp", "isIf"];
-	ctorTests.forEach(asserted => {
-		QUnit.assert[asserted] = function (value, desc) {
-			this.isExpr(value, desc);
-			ctorTests.forEach(current => {
-				const expected = (current === asserted);
-				this.same(value[current], expected,
-					desc + "." + current + " should be " + expected);
-			});
-		}
-	});
-
-	QUnit.assert.dataEqual = function (actual, expected, description) {
-		if ((typeof actual !== "object") || (actual === null))
-			throw new TypeError("assert.dataEqual: arg actual is not a data value: "
-				+ QUnit.dump.parse(actual));
-		if ((typeof expected !== "object") || (expected === null))
-			throw new TypeError("assert.dataEqual: arg expected is not a data value: "
-				+ QUnit.dump.parse(expected));
-		
-		this.same(actual.datactor, expected.datactor, 
-			description + ".datactor should be " + expected.datactor
-		);
-		this.deepEqual(actual, expected, description + " properties");		
+		});
+		({ Const, Var, App, If } = Expr);
 	}
 
+	extendAssert();
+	runTests();
+
+	function extendAssert() {
+		QUnit.assert.isExpr = function (actual, desc) {
+			let message, expected, result;
+			if (!desc) desc = "...";
+			message  = ".isExpr(" + desc + ")";
+			expected = "an Expr instance";
+
+			result = isExpr(actual);
+			if (result) {
+				const ctor = actual.datactor;
+				if (!fn.isObject(ctor) && !fn.isFunction(ctor)) {
+					result = false;
+					actual = ctor;
+					message = desc + ".datactor should be Object or Function";
+				} else {
+
+				}
+			}
+
+			this.pushResult({ result, actual, expected, message });
+		};
+
+		// make assertions .isConst, .isVar, .isApp, .isIf
+		const ctorTests = ["isConst", "isVar", "isApp", "isIf"];
+		ctorTests.forEach(asserted => {
+			QUnit.assert[asserted] = function (value, desc) {
+				this.isExpr(value, desc);
+				ctorTests.forEach(current => {
+					const expected = (current === asserted);
+					this.same(value[current], expected,
+						desc + "." + current + " should be " + expected);
+				});
+			}
+		});
+
+		QUnit.assert.dataEqual = function (actual, expected, description) {
+			if ((typeof actual !== "object") || (actual === null))
+				throw new TypeError("assert.dataEqual: arg actual is not a data value: "
+					+ QUnit.dump.parse(actual));
+			if ((typeof expected !== "object") || (expected === null))
+				throw new TypeError("assert.dataEqual: arg expected is not a data value: "
+					+ QUnit.dump.parse(expected));
+
+			this.same(actual.datactor, expected.datactor, 
+				description + ".datactor should be " + expected.datactor
+			);
+			this.deepEqual(actual, expected, description + " properties");		
+		}
+	} // end function extendAssert
+
+	function runTests() {
 	module("Expr", () => { // ------------------------------------------
-		const mkDesc = (desc,v) => desc + "(" + QUnit.dump.parse(v) + ")";
+		const mkDesc = (desc,v) => desc + "(" 
+			+ (fn.isString(v) ? fn.toStrLiteral(v) : QUnit.dump.parse(v))
+			+ ")"
+		;
 
 		module(".Var", () => { // ------------------------------------------
 			const validArgs = [
@@ -121,7 +129,8 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				const act = v => construct(v).toString();
 				validArgs.forEach(v => {
 					const exp = 'Var "' + v + '"';
-					assert.same(act(v), exp, describe(v));
+					const actual = act(v);
+					assert.same(actual, exp, describe(v));
 				});
 			});
 			test("argument checking", function (assert) {
@@ -149,7 +158,11 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 		module(".Const", () => { // ------------------------------------------
 			const bools = [true, false];
 			const numbers = [-1, 0, 1, 42, 3.1415];
-			const strings = ["", "foo", "\"bar\"", "a b c"];
+			const strings = [
+				"", "foo", "a b c", "\"bar\"", 
+				"\r", "\n", "\r\n",
+				"\t"
+			];
 				
 			const validArgs = [
 				...bools, ...numbers, ...strings,
@@ -193,7 +206,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				});
 				test("string arg", function (assert) {
 					strings.forEach(v => {
-						const exp = "Const " + QUnit.dump.parse(v);
+						const exp = "Const " + fn.toStrLiteral(v);
 						assert.same(act(v), exp, describe(v));
 					});
 				});
@@ -324,10 +337,10 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 			test("Expr.if", function (assert) {
 				let c, t, e, x, desc;
 
-				c = Expr.var("cond");
-				t = Expr.const("then");
-				e = Expr.const("else");
-				x = Expr.if(c).then(t).else(e);
+				c = Var("cond");
+				t = Const("then");
+				e = Const("else");
+				x = If(c).then(t).else(e);
 				desc = "(If (Var 'cond') (Const 'then') (Const 'else'))"
 
 				assert.isIf(x, desc);
@@ -338,4 +351,5 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 		}); // end module ".if"
 
 	}); // end module "Expr"
+	} // end function runTests
 }); // end require
