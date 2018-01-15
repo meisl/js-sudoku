@@ -246,52 +246,36 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 			module(".parse", () => { // ------------------------------------------
 				const describe = v => mkDesc(".parse", v);
 				const act = Expr.parse;
-				const expect = v => App(Var(v[0]), Const(v[1]));
 				test("[aVar,aConst]", function (assert) {
 					let v = ["f", 42];
-					const desc = describe(v);
-					const expected = expect(v);
-					const actual = act(v);
-					assert.isApp(actual, desc);
-					assert.deepEqual(actual, expected, desc);
+					const expected = App(Var("f"), Const(42));
+					assert.dataEqual(act(v), expected, describe(v));
 				});			
 				test("[aVar,aConst,aConst]", function (assert) {
 					let v = ["f", 42, 5];
-					assert.deepEqual(
-						act(v),
-						App(App(Var("f"), Const(42)), Const(5)),
-						describe(v)
-					);
+					const expected = App(App(Var("f"), Const(42)), Const(5));
+					assert.dataEqual(act(v), expected, describe(v));
 				});
 				test("[aVar,[aVar,aConst]]", function (assert) {
 					let v = ["f", ["g", 5]];
-					assert.deepEqual(
-						act(v),
-						App(Var("f"), App(Var("g"), Const(5))),
-						describe(v)
-					);
+					const expected = App(Var("f"), App(Var("g"), Const(5)));
+					assert.dataEqual(act(v), expected, describe(v));
 				});
 				test("[aExpr,aConst]", function (assert) {
 					function aFunction(x) {
 						return x;
 					}
 					let v = [Const(aFunction), 42];
-					assert.deepEqual(
-						act(v),
-						App(Const(aFunction), Const(42)),
-						describe(v)
-					);
+					const expected = App(Const(aFunction), Const(42));
+					assert.dataEqual(act(v), expected, describe(v));
 				});
 				test("[Fn,Const]", function (assert) {
 					function aFunction(x) {
 						return x;
 					}
 					let v = [aFunction, 42];
-					assert.deepEqual(
-						act(v),
-						App(Const(aFunction), Const(42)),
-						describe(v)
-					);
+					const expected = App(Const(aFunction), Const(42));
+					assert.dataEqual(act(v), expected, describe(v));
 				});
 			}); // end module ".parse"
 			
