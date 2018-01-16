@@ -52,14 +52,12 @@ define(["./fn"], (fn) => { with (fn) {
 					let res = this.datactor.name;
 					this.forEachArg(arg => {
 						res += " "
-							+ ((isDatavalue(arg)
-							 	&& (arg.datactor.length > 0)
-								)
+							+ (fn.isString(arg)
+								? fn.toStrLiteral(arg)
+								: (isDatavalue(arg) && (arg.datactor.length > 0)
 									? "(" + arg.toString() + ")"
-									: (fn.isString(arg)
-										? '"' + arg + '"'
-										: "" + arg
-									)
+									: "" + arg
+								)
 							);
 					});
 					return res;
@@ -183,6 +181,11 @@ define(["./fn"], (fn) => { with (fn) {
 					});
 				}
 				ctors.push(ctor);
+				Object.defineProperties(valuePrototype, {
+					["is" + ctorName]: { get: function () {
+						return this.datactor === ctor;
+					} },
+				});
 				Object.defineProperty(this, ctorName, {
 					value: ctor,
 					enumerable: true

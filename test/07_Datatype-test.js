@@ -182,9 +182,36 @@ require(["scripts/Datatype"], (Datatype) => {
 				assert.same(vBinary.toString(), 
 					"Binary (Binary 1 2) (Binary 3 4)",
 					desc + ": .toString()");
+			});
+		
+			test("ctor test: .isXYZ", function (assert) {
+				const Dat = new Datatype("Dat", {
+					C0: {},
+					C1: { x: () => true },
+					C2: { a: () => true, b: () => true },
+				});
+				let v, desc;
 
+				v = Dat.C0;
+				desc = "Dat.C0";
+				assert.same(v.isC0, true,  desc + ".isC0");
+				assert.same(v.isC1, false, desc + ".isC1");
+				assert.same(v.isC2, false, desc + ".isC2");
+
+				v = Dat.C1(42);
+				desc = "Dat.C1(42)";
+				assert.same(v.isC0, false, desc + ".isC0");
+				assert.same(v.isC1, true,  desc + ".isC1");
+				assert.same(v.isC2, false, desc + ".isC2");
+				
+				v = Dat.C2("a", "b");
+				desc = "Dat.C2('a', 'b')";
+				assert.same(v.isC0, false, desc + ".isC0");
+				assert.same(v.isC1, false, desc + ".isC1");
+				assert.same(v.isC2, true,  desc + ".isC2");
 				
 			});
+
 		}); // end module "datavalues"
 
 		module("isDatatype", () => { // ------------------------------------------
