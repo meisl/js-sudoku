@@ -4,7 +4,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 	let isExpr, Const, Var, App, If;
 
-	const old = 0;
+	const old = 1;
 
 	if (old) {
 		isExpr = Expr.isExpr;
@@ -89,26 +89,55 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 			+ (fn.isString(v) ? fn.toStrLiteral(v) : QUnit.dump.parse(v))
 			+ ")"
 		;
+		const bools = [true, false];
+		const numbers = [-1, 0, 1, 42, 3.1415];
+		const strings = [
+			"", "foo", "a b c", "\"bar\"", 
+			"\r", "\n", "\r\n",
+			"\t"
+		];
+		const testArgs = {
+			Var: {
+				validArgs: [
+					"_", "a", "b", "foo",
+					"__", "_0", "_bar",
+				],
+				invalidArgs: [
+					...bools,
+					...numbers,
+					NaN, undefined,
+					null, {},
+					[],
+					() => 42,
+					//Symbol.iterator,	// TODO: does throw but only because Symbol cannot be converted to String
+					Const(5),
+					"", " ", "-", "0", "1", "-a", 
+					"foo.bar", "foo-bar", "foo bar", 
+					"foo\tbar", "foo\n", "foo\rbar", "foo\r\nbar", "foo\n\rbar",
+					"()", "<>", "[]", "{}",
+				],
+			},
+			Const: {
+				validArgs: [
+					...bools, ...numbers, ...strings,
+					null, undefined, {},
+					Symbol.iterator,
+					x => x + 1,
+				],
+				invalidArgs: [NaN],
+			},
+			App: {
+				validArgs: [],
+				invalidArgs: [],
+			},
+			If: {
+				validArgs: [],
+				invalidArgs: [],
+			},
+		};
 
 		module(".Var", () => { // ------------------------------------------
-			const validArgs = [
-				"_", "a", "b", "foo",
-				"__", "_0", "_bar",
-			];
-			const invalidArgs = [
-				true, false,
-				0, 1, -1, 42,
-				NaN, undefined,
-				null, {},
-				[],
-				() => 42,
-				//Symbol.iterator,	// TODO: does throw but only because Symbol cannot be converted to String
-				Const(5),
-				"", " ", "-", "0", "1", "-a", 
-				"foo.bar", "foo-bar", "foo bar", 
-				"foo\tbar", "foo\n", "foo\rbar", "foo\r\nbar", "foo\n\rbar",
-				"()", "<>", "[]", "{}",
-			];
+			const { validArgs, invalidArgs } = testArgs.Var;
 
 			let construct = Var;
 			
@@ -133,45 +162,11 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 					assert.same(actual, exp, describe(v));
 				});
 			});
-			test("argument checking", function (assert) {
-				const describe = v => mkDesc("Var", v) + " should throw";
-				const act = construct;
-				invalidArgs.forEach(v => {
-					assert.throws(() => act(v), /invalid/, describe(v));
-				});
-			});
 
-			test(".parse(...)", function (assert) {
-				const describe = v => mkDesc(".parse", v);
-				const expect = Var;
-				const act = Expr.parse;
-				validArgs.forEach(v => {
-					const desc = describe(v);
-					const expected = expect(v);
-					const actual = act(v);
-
-					assert.dataEqual(actual, expected, desc);
-				});
-			});
 		}); // end module ".var"
 
 		module(".Const", () => { // ------------------------------------------
-			const bools = [true, false];
-			const numbers = [-1, 0, 1, 42, 3.1415];
-			const strings = [
-				"", "foo", "a b c", "\"bar\"", 
-				"\r", "\n", "\r\n",
-				"\t"
-			];
-				
-			const validArgs = [
-				...bools, ...numbers, ...strings,
-				null, undefined, {},
-				Symbol.iterator,
-				x => x + 1,
-			];
-			const invalidArgs = [NaN];
-
+			const { validArgs, invalidArgs } = testArgs.Const;
 			let construct = Const;
 
 			test("ctor test: .isConst", function (assert) {
@@ -230,36 +225,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				});
 			}) // end module ".toString"
 
-			test("argument checking", function (assert) {
-				const describe = v => mkDesc("Const", v) + " should throw";
-				const act = construct;
-				invalidArgs.forEach(v => {
-					assert.throws(() => act(v), /invalid/, describe(v));
-				});
-			});
-
-			module(".parse", () => {  // ------------------------------------------
-				const describe = v => mkDesc(".parse", v);
-				const expect = Const;
-				const act = Expr.parse;
-				function doTests(which, values) {
-					test(which, function (assert) {
-						values.forEach(v => {
-							const desc     = describe(v);
-							const expected = expect(v);
-							const actual   = act(v);
-							assert.dataEqual(actual, expected, desc);
-						});
-					});
-				}
-
-				doTests("bool arg", bools);
-				doTests("number arg", numbers);
-				// Note: plain strings are parsed as Vars
-
-			}); // end module ".const"
-
-		}); // end module ".const"
+		}); // end module ".Const"
 
 		module(".App", () => { // ------------------------------------------
 			test("Expr.App", function (assert) {
@@ -274,42 +240,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				assert.same(x.f, f, desc + ".f");
 				assert.same(x.x, a, desc + ".x");
 			});
-			module(".parse", () => { // ------------------------------------------
-				const describe = v => mkDesc(".parse", v);
-				const act = Expr.parse;
-				test("[aVar,aConst]", function (assert) {
-					let v = ["f", 42];
-					const expected = App(Var("f"), Const(42));
-					assert.dataEqual(act(v), expected, describe(v));
-				});			
-				test("[aVar,aConst,aConst]", function (assert) {
-					let v = ["f", 42, 5];
-					const expected = App(App(Var("f"), Const(42)), Const(5));
-					assert.dataEqual(act(v), expected, describe(v));
-				});
-				test("[aVar,[aVar,aConst]]", function (assert) {
-					let v = ["f", ["g", 5]];
-					const expected = App(Var("f"), App(Var("g"), Const(5)));
-					assert.dataEqual(act(v), expected, describe(v));
-				});
-				test("[aExpr,aConst]", function (assert) {
-					function aFunction(x) {
-						return x;
-					}
-					let v = [Const(aFunction), 42];
-					const expected = App(Const(aFunction), Const(42));
-					assert.dataEqual(act(v), expected, describe(v));
-				});
-				test("[Fn,Const]", function (assert) {
-					function aFunction(x) {
-						return x;
-					}
-					let v = [aFunction, 42];
-					const expected = App(Const(aFunction), Const(42));
-					assert.dataEqual(act(v), expected, describe(v));
-				});
-			}); // end module ".parse"
-			
+						
 			module(".toString", () => { // ------------------------------------------
 				test("[Var,Const]", function (assert) {
 					const x   = App(Var("f"), Const(42));
@@ -367,6 +298,98 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				assert.same(x.elseX, e, desc + ".elseX");
 			});
 		}); // end module ".if"
+
+
+
+
+		module(".parse", () => { // ------------------------------------------
+			test("Var", function (assert) {
+				const describe = v => mkDesc(".parse", v);
+				const expect = Var;
+				const act = Expr.parse;
+				testArgs.Var.validArgs.forEach(v => {
+					const desc = describe(v);
+					const expected = expect(v);
+					const actual = act(v);
+
+					assert.dataEqual(actual, expected, desc);
+				});
+			});
+			module("Const", () => {  // ------------------------------------------
+				const describe = v => mkDesc(".parse", v);
+				const expect = Const;
+				const act = Expr.parse;
+				function doTests(which, values) {
+					test(which, function (assert) {
+						values.forEach(v => {
+							const desc     = describe(v);
+							const expected = expect(v);
+							const actual   = act(v);
+							assert.dataEqual(actual, expected, desc);
+						});
+					});
+				}
+
+				doTests("bool arg", bools);
+				doTests("number arg", numbers);
+				// Note: plain strings are parsed as Vars
+
+			}); // end module "Const"
+			
+			module("App", () => { // ------------------------------------------
+				const describe = v => mkDesc(".parse", v);
+				const act = Expr.parse;
+				test("[aVar,aConst]", function (assert) {
+					let v = ["f", 42];
+					const expected = App(Var("f"), Const(42));
+					assert.dataEqual(act(v), expected, describe(v));
+				});			
+				test("[aVar,aConst,aConst]", function (assert) {
+					let v = ["f", 42, 5];
+					const expected = App(App(Var("f"), Const(42)), Const(5));
+					assert.dataEqual(act(v), expected, describe(v));
+				});
+				test("[aVar,[aVar,aConst]]", function (assert) {
+					let v = ["f", ["g", 5]];
+					const expected = App(Var("f"), App(Var("g"), Const(5)));
+					assert.dataEqual(act(v), expected, describe(v));
+				});
+				test("[aExpr,aConst]", function (assert) {
+					function aFunction(x) {
+						return x;
+					}
+					let v = [Const(aFunction), 42];
+					const expected = App(Const(aFunction), Const(42));
+					assert.dataEqual(act(v), expected, describe(v));
+				});
+				test("[Fn,Const]", function (assert) {
+					function aFunction(x) {
+						return x;
+					}
+					let v = [aFunction, 42];
+					const expected = App(Const(aFunction), Const(42));
+					assert.dataEqual(act(v), expected, describe(v));
+				});
+			}); // end module "App"
+		}); // end module ".parse"
+
+		module("arguments checking", () => { // ------------------------------------------
+			test("Var", function (assert) {
+				const describe = v => mkDesc("Var", v) + " should throw";
+				const act = Var;
+				testArgs.Var.invalidArgs.forEach(v => {
+					assert.throws(() => act(v), /invalid/, describe(v));
+				});
+			});
+			test("Const", function (assert) {
+				const describe = v => mkDesc("Const", v) + " should throw";
+				const act = Const;
+				testArgs.Const.invalidArgs.forEach(v => {
+					assert.throws(() => act(v), /invalid/, describe(v));
+				});
+			});
+			
+		}); // end module ".arguments checking"
 
 	}); // end module "Expr"
 	} // end function runTests
