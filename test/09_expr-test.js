@@ -4,7 +4,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 	let isExpr, Const, Var, App, If;
 
-	const old = 1;
+	const old = 0;
 
 	if (old) {
 		isExpr = Expr.isExpr;
@@ -210,6 +210,24 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 						assert.same(act(v), exp, describe(v));
 					});
 				});
+				test("function arg", function (assert) {
+					function namedFn(x) {
+						return x;
+					}
+					const anonFn = function (x) {
+						return x;
+					};
+					const arrowFn = x => x;
+
+					const act = v => Const(v).toString();
+
+					assert.same(act(namedFn), "Const namedFn",
+						"Const(function namedFn() {...}).toString()");
+					assert.same(act(anonFn), "Const ?",
+						"Const(function (){...}).toString()");
+					assert.same(act(arrowFn), "Const ?",
+						"Const(x => ...).toString()");
+				});
 			}) // end module ".toString"
 
 			test("argument checking", function (assert) {
@@ -319,15 +337,15 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 					let x, exp;
 					
 					x = App(Const(namedFn), Const(42));
-					exp = "App (Const namedFn) (Const 42)";
+					exp = "App (" + Const(namedFn).toString() + ") (Const 42)";
 					assert.same(x.toString(), exp);
 					
 					x = App(Const(anonFn), Const(42));
-					exp = "App (Const ?) (Const 42)";
+					exp = "App (" + Const(anonFn).toString() + ") (Const 42)";
 					assert.same(x.toString(), exp);
 					
 					x = App(Const(arrowFn), Const(42));
-					exp = "App (Const ?) (Const 42)";
+					exp = "App (" + Const(arrowFn).toString() + ") (Const 42)";
 					assert.same(x.toString(), exp);
 				});
 			}); // end module ".toString"

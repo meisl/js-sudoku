@@ -27,6 +27,18 @@ define(["./fn"], (fn) => { with (fn) {
 		return fn.isObject(x) && (x !== null) && isDatactor(x.datactor);
 	}
 
+	function stringify(v) {
+		if (fn.isString(v)) {
+			return fn.toStrLiteral(v);
+		} else if (fn.isFunction(v)) {
+			return (v.name !== "")
+				? v.name
+				: "?";
+		} else {
+			return "" + v;
+		}
+	}
+
 	class Datatype {
 		constructor(name, ctorsDef) {
 			if (!isString(name) || (name === ""))
@@ -52,12 +64,9 @@ define(["./fn"], (fn) => { with (fn) {
 					let res = this.datactor.name;
 					this.forEachArg(arg => {
 						res += " "
-							+ (fn.isString(arg)
-								? fn.toStrLiteral(arg)
-								: (isDatavalue(arg) && (arg.datactor.length > 0)
-									? "(" + arg.toString() + ")"
-									: "" + arg
-								)
+							+ (isDatavalue(arg) && (arg.datactor.length > 0)
+								? "(" + arg.toString() + ")"
+								: stringify(arg)
 							);
 					});
 					return res;
