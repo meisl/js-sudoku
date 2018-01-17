@@ -27,7 +27,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				elseX: isExpr,
 			}
 		});
-		Expr.parse = function (v) {
+		Expr.make = function (v) {
 			if (isExpr(v)) return v;
 			if (fn.isString(v)) {
 				if (v === "")
@@ -37,7 +37,13 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 					throw "NYI: accessor syntax in '" + v + "'";
 				return new Var(v);
 			}
-			throw "NYI: " + v;
+			if (fn.isArray(v)) {
+				if (v.length < 2)
+					throw "cannot create Expr from array with less than 2 elems: "
+						+ "[" + v + "]";
+				return v.map(Expr.make).reduce((f, a) => App(f, a));
+			}
+			return Const(v);
 		};
 		({ Const, Var, App, If } = Expr);
 	}
@@ -108,6 +114,12 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 			"\r", "\n", "\r\n",
 			"\t"
 		];
+		const functions = [
+			function namedFn(x) { return x },
+			function (x) { return x},
+			x => x,
+			x => x + 1,
+		];
 		const testArgs = {
 			Var: {
 				validArgs: [
@@ -117,10 +129,10 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				invalidArgs: [
 					...bools,
 					...numbers,
+					...functions,
 					NaN, undefined,
 					null, {},
 					[],
-					() => 42,
 					//Symbol.iterator,	// TODO: does throw but only because Symbol cannot be converted to String
 					Const(5),
 					"", " ", "-", "0", "1", "-a", 
@@ -131,10 +143,9 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 			},
 			Const: {
 				validArgs: [
-					...bools, ...numbers, ...strings,
+					...bools, ...numbers, ...strings, ...functions,
 					null, undefined, {},
 					Symbol.iterator,
-					x => x + 1,
 				],
 				invalidArgs: [NaN],
 			},
@@ -321,7 +332,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 
 
-		module(".parse", () => { // ------------------------------------------
+		module(".make", () => { // ------------------------------------------
 			test("Expr arg: should simply be returned", function (assert) {
 				const vars = testArgs.Var.validArgs.map(s => Var(s));
 				const consts = testArgs.Const.validArgs.map(v => Const(v));
@@ -335,14 +346,19 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 				const exprs = [...vars, ...consts, ...apps, ...ifs];
 				exprs.forEach(x => {
-					assert.same(Expr.parse(x), x, 
+					assert.same(Expr.make(x), x, 
 						"arg: " + x.toString());
 				});
 			});
-			test("Var", function (assert) {
-				const describe = v => mkDesc(".parse", v);
+			test("string arg: interpret as Var", function (assert) {
+				const describe = v => mkDesc(".make", v);
 				const expect = Var;
-				const act = Expr.parse;
+				const act = Expr.make;
+				let v;
+		
+				v = "";
+				assert.throws(() => act(v), /empty/, describe(v) + " should throw");
+
 				testArgs.Var.validArgs.forEach(v => {
 					const desc = describe(v);
 					const expected = expect(v);
@@ -351,10 +367,10 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 					assert.dataEqual(actual, expected, desc);
 				});
 			});
-			module("Const", () => {  // ------------------------------------------
-				const describe = v => mkDesc(".parse", v);
+			module("interpret as Const", () => {  // ------------------------------------------
+				const describe = v => mkDesc(".make", v);
 				const expect = Const;
-				const act = Expr.parse;
+				const act = Expr.make;
 				function doTests(which, values) {
 					test(which, function (assert) {
 						values.forEach(v => {
@@ -368,13 +384,22 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 				doTests("bool arg", bools);
 				doTests("number arg", numbers);
+				doTests("function arg", functions);
 				// Note: plain strings are parsed as Vars
 
-			}); // end module "Const"
+			}); // end module "interpret as Const"
 			
-			module("App", () => { // ------------------------------------------
-				const describe = v => mkDesc(".parse", v);
-				const act = Expr.parse;
+			module("array arg: interpret as App", () => { // ------------------------------------------
+				const describe = v => mkDesc(".make", v);
+				const act = Expr.make;
+				let v;
+
+				test("fewer than 2 elems should throw", function (assert) {
+					[[], ["f"]].forEach( v =>
+						assert.throws(() => act(v), /cannot/, describe(v))
+					);
+				});
+
 				test("[aVar,aConst]", function (assert) {
 					let v = ["f", 42];
 					const expected = App(Var("f"), Const(42));
@@ -407,7 +432,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 					assert.dataEqual(act(v), expected, describe(v));
 				});
 			}); // end module "App"
-		}); // end module ".parse"
+		}); // end module ".make"
 
 		module("arguments checking", () => { // ------------------------------------------
 			test("Var", function (assert) {

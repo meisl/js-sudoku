@@ -4,11 +4,11 @@ define(["./fn"], (fn) => { with (fn) {
 		static isExpr(x) {
 			return x instanceof Expr;
 		}
-		static parse(v) {
+		static make(v) {
 			if (isExpr(v)) return v;
 			if (isString(v)) {
 				if (v === "")
-					throw "cannot parse empty string ''";
+					throw "cannot create Expr from empty string ''";
 				let i = v.indexOf(".");
 				if (i >= 0)
 					throw "NYI: accessor syntax in '" + v + "'";
@@ -16,14 +16,15 @@ define(["./fn"], (fn) => { with (fn) {
 			}
 			if (isArray(v)) {
 				if (v.length < 2)
-					throw "invalid app syntax [" + v + "] - need at least 2 elems";
-				return v.map(Expr.parse).reduce(Expr.app);
+					throw "cannot create Expr from array with less than 2 elems: "
+						+ "[" + v + "]";
+				return v.map(Expr.make).reduce(Expr.app);
 			}
 			if (isFunction(v)) {
 				return new ConstExpr(v);
 			}
 			if (isObject(v)) {
-				throw "cannot parse object " + v;
+				throw "cannot create Expr from object " + v;
 			}
 			return new ConstExpr(v);
 		}
