@@ -4,7 +4,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 	let isExpr, Const, Var, App, If;
 
-	const old = 1;
+	const old = 0;
 
 	if (old) {
 		isExpr = Expr.isExpr;
@@ -42,6 +42,9 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 					throw "cannot create Expr from array with less than 2 elems: "
 						+ "[" + v + "]";
 				return v.map(Expr.make).reduce((f, a) => App(f, a));
+			}
+			if (fn.isObject(v)) {
+				throw "cannot create Expr from object " + v;
 			}
 			return Const(v);
 		};
@@ -333,6 +336,9 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 
 		module(".make", () => { // ------------------------------------------
+			const describe = v => mkDesc(".make", v);
+			const act = Expr.make;
+
 			test("Expr arg: should simply be returned", function (assert) {
 				const vars = testArgs.Var.validArgs.map(s => Var(s));
 				const consts = testArgs.Const.validArgs.map(v => Const(v));
@@ -346,14 +352,12 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 				const exprs = [...vars, ...consts, ...apps, ...ifs];
 				exprs.forEach(x => {
-					assert.same(Expr.make(x), x, 
+					assert.same(act(x), x, 
 						"arg: " + x.toString());
 				});
 			});
 			test("string arg: interpret as Var", function (assert) {
-				const describe = v => mkDesc(".make", v);
 				const expect = Var;
-				const act = Expr.make;
 				let v;
 		
 				v = "";
@@ -368,9 +372,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				});
 			});
 			module("interpret as Const", () => {  // ------------------------------------------
-				const describe = v => mkDesc(".make", v);
 				const expect = Const;
-				const act = Expr.make;
 				function doTests(which, values) {
 					test(which, function (assert) {
 						values.forEach(v => {
@@ -384,22 +386,37 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 				doTests("bool arg", bools);
 				doTests("number arg", numbers);
-				doTests("function arg", functions);
 				// Note: plain strings are parsed as Vars
+				doTests("function arg", functions);
 
 			}); // end module "interpret as Const"
 			
+			test("object arg: should throw", function (assert) {
+				[	{},
+					null,
+				].forEach( v =>
+					assert.throws(() => act(v), /cannot/, describe(v))
+				);
+			});
+			
 			module("array arg: interpret as App", () => { // ------------------------------------------
-				const describe = v => mkDesc(".make", v);
-				const act = Expr.make;
-				let v;
-
+				/*
+				const expect = arr => {
+					const n = arr.length - 1;
+					return App(
+						(n === 1) 
+							? Expr.make(arr[0])
+							: expect(arr.slice(0, n)),
+						Expr.make(arr[n])
+					);
+				};
+				*/
+				
 				test("fewer than 2 elems should throw", function (assert) {
 					[[], ["f"]].forEach( v =>
 						assert.throws(() => act(v), /cannot/, describe(v))
 					);
 				});
-
 				test("[aVar,aConst]", function (assert) {
 					let v = ["f", 42];
 					const expected = App(Var("f"), Const(42));
@@ -431,7 +448,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 					const expected = App(Const(aFunction), Const(42));
 					assert.dataEqual(act(v), expected, describe(v));
 				});
-			}); // end module "App"
+			}); // end module "array arg"
 		}); // end module ".make"
 
 		module("arguments checking", () => { // ------------------------------------------
