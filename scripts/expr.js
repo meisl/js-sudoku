@@ -78,6 +78,8 @@ define(["./fn"], (fn) => { with (fn) {
 					return "Const " + v.name;
 				}
 				return "Const ?";
+			} else if (fn.isSymbol(v)) {
+				return "Const " + v.toString();
 			}
 			return "Const " + v;
 		}

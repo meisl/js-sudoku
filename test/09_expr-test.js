@@ -11,7 +11,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 		Const = Expr.const;
 		Var   = Expr.var;
 		App   = Expr.app;
-		If    = Expr.if;
+		If    = (...args) => new Expr.dataCtors.If(...args);
 	} else {
 		isExpr = v => isDatavalue(v) && (v.datatype === Expr);
 		Expr = new Datatype("Expr", {
@@ -27,6 +27,18 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				elseX: isExpr,
 			}
 		});
+		Expr.parse = function (v) {
+			if (isExpr(v)) return v;
+			if (fn.isString(v)) {
+				if (v === "")
+					throw "cannot create Expr from empty string ''";
+				let i = v.indexOf(".");
+				if (i >= 0)
+					throw "NYI: accessor syntax in '" + v + "'";
+				return new Var(v);
+			}
+			throw "NYI: " + v;
+		};
 		({ Const, Var, App, If } = Expr);
 	}
 
@@ -223,6 +235,13 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 					assert.same(act(arrowFn), "Const ?",
 						"Const(x => ...).toString()");
 				});
+				test("Symbol arg", function (assert) {
+					const v = Symbol.iterator;
+					const act = v => Const(v).toString();
+					assert.same(act(v), "Const " + v.toString(),
+						"Const(Symbol.iterator).toString()");
+
+				});
 			}) // end module ".toString"
 
 		}); // end module ".Const"
@@ -282,14 +301,14 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 			}); // end module ".toString"
 		}); // end module ".app"
 
-		module(".if", () => { // ------------------------------------------
+		module(".If", () => { // ------------------------------------------
 			test("Expr.if", function (assert) {
 				let c, t, e, x, desc;
 
 				c = Var("cond");
 				t = Const("then");
 				e = Const("else");
-				x = If(c).then(t).else(e);
+				x = If(c, t, e);
 				desc = "(If (Var 'cond') (Const 'then') (Const 'else'))"
 
 				assert.isIf(x, desc);
@@ -303,6 +322,23 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 
 
 		module(".parse", () => { // ------------------------------------------
+			test("Expr arg: should simply be returned", function (assert) {
+				const vars = testArgs.Var.validArgs.map(s => Var(s));
+				const consts = testArgs.Const.validArgs.map(v => Const(v));
+				const apps = [
+					App(Var("f"), Const(42)),
+					App(Const(x => x + 1), Const(0)),
+				];
+				const ifs = [
+					If(Var("condition"), Const(false), Const(true)),
+				];
+
+				const exprs = [...vars, ...consts, ...apps, ...ifs];
+				exprs.forEach(x => {
+					assert.same(Expr.parse(x), x, 
+						"arg: " + x.toString());
+				});
+			});
 			test("Var", function (assert) {
 				const describe = v => mkDesc(".parse", v);
 				const expect = Var;

@@ -34,6 +34,8 @@ define(["./fn"], (fn) => { with (fn) {
 			return (v.name !== "")
 				? v.name
 				: "?";
+		} else if (fn.isSymbol(v)) {
+			return v.toString();
 		} else {
 			return "" + v;
 		}
