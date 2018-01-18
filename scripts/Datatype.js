@@ -100,17 +100,17 @@ define(["./fn"], (fn) => { with (fn) {
 					});
 					
 				} else {
+					
 					let prototype;
 					ctor = function (...args) {
-						let res = new.target 
-							? this
-							: Object.create(prototype);
+						ctor.checkArgs(args);
+						let res = Object.create(prototype);
 						Object.assign(res, args);
 						/*
-						argNames.forEach((prop, i) => 
+						argNames.forEach((prop, i) => {
 							//res[prop] = args[i]
-							res[i] = args[i]
-						);
+							res[i] = arg[i];
+						});
 						*/
 						//res = Object.freeze(res);
 						return res;
@@ -122,6 +122,21 @@ define(["./fn"], (fn) => { with (fn) {
 						},
 						
 					});
+					ctor.checkArgs = function checkArgs(args) {
+						const n = this.length;
+						this.parameters.forEach((argName, i) => {
+							const arg = args[i];
+							const test = ctorDef[argName];
+							if (!test(arg)) {
+								const tag = this.prototype[Symbol.toStringTag];
+								throw new TypeError(
+									tag + " invalid " + argName
+									+ ": !(" + stringify(test) 
+									+ " " + stringify(arg) + ")"
+								);
+							}
+						});
+					};					
 					const idxAccessors = argNames
 						.map((n,i) => function () { return this[n]; })
 						.map((f,i) => ({ get: f }))

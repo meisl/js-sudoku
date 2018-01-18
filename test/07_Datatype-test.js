@@ -1,4 +1,4 @@
-require(["scripts/Datatype"], (Datatype) => {
+require(["scripts/fn", "scripts/Datatype"], (fn, Datatype) => {
 	const { test, todo, skip, module } = QUnit;
 
 	const { isDatatype, isDatactor, isDatavalue } = Datatype;
@@ -203,7 +203,7 @@ require(["scripts/Datatype"], (Datatype) => {
 				assert.same(v.isC0, false, desc + ".isC0");
 				assert.same(v.isC1, true,  desc + ".isC1");
 				assert.same(v.isC2, false, desc + ".isC2");
-				
+
 				v = Dat.C2("a", "b");
 				desc = "Dat.C2('a', 'b')";
 				assert.same(v.isC0, false, desc + ".isC0");
@@ -314,13 +314,78 @@ require(["scripts/Datatype"], (Datatype) => {
 					"nullary ctor " + Foo.C0 + " is ALSO a datavalue");
 				
 				assert.same(isDatavalue(Foo.C1), false,
-					"unary ctor " + Foo.C1);
+					"unary ctor " + Foo.C1 + " itself is NOT a datavalue");
 				const v1a = Foo.C1("x");
 				const v1b = Foo.C1("y");
 				assert.same(isDatavalue(v1a), true);
 				assert.same(isDatavalue(v1b), true);
 			});
 		}); // end module "isDatavalue"
+
+		module("ctor args check", () => { // ------------------------------------------
+			todo("too few", () => { // ------------------------------------------
+			}); // end module "too few"
+			
+			todo("too many", () => { // ------------------------------------------
+			}); // end module "too many"
+			
+			function spy(f) {
+				const res = function (...args) {
+					const rec = {
+						args: args
+					};
+					res.calls.push(rec);
+					let returned;
+					returned = f(...args);
+					rec.returned = returned;
+					return returned;
+				};
+				Object.defineProperties(res, {
+					name:  { value: f.name },
+					calls: { value: [] },
+				})
+				return res;
+			}
+
+			test("provided test fns", function (assert) {
+				const test_a = spy(() => true);
+				const test_x = spy(() => true);
+				const test_y = spy(fn.isString);
+				const D = new Datatype("D", {
+					C1: { arg: test_a },
+					C2: {
+						x: test_x,
+						y: test_y,
+					}
+				});
+
+				D.C1(42);
+				assert.same(test_a.calls.length, 1, "C1(42) ~> test_a call count");
+				assert.propEqual(test_a.calls[0].args, [42],
+					"C1(42) ~> test_a args at call 0"
+				);
+
+				D.C2(42, "five");
+				assert.same(test_x.calls.length, 1, "C2(42, 'five') ~> test_x call count");
+				assert.propEqual(test_x.calls[0].args, [42],
+					"C2(42, 'five') ~> test_x args at call 0"
+				);
+				assert.same(test_y.calls.length, 1, "C2(42, 'five') ~> test_y call count");
+				assert.propEqual(test_y.calls[0].args, ["five"],
+					"C2(42, 'five') ~> test_y args at call 0"
+				);
+
+				assert.throws(() => D.C2(4711, 5), /invalid.+y.+isString.+5/, 
+					"C2(4711, 5) should throw because of 2nd arg");
+				// do NOT require 1st test fn to have been called!
+				assert.same(test_y.calls.length, 2, "C2(42, 5) ~> test_y call count");
+				assert.propEqual(test_y.calls[1].args, [5],
+					"C2(42, 5) ~> test_y args at call 1"
+				);
+
+			});
+
+		}); // end module "ctor args check"
 		
 	}); // end module "Datatype"
 }); // end require
