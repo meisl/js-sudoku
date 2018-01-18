@@ -14,9 +14,12 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 		If    = (...args) => new Expr.dataCtors.If(...args);
 	} else {
 		isExpr = v => isDatavalue(v) && (v.datatype === Expr);
+		function isValidVarName(n) {
+			return fn.isString(n) && /^[_a-zA-Z][_a-zA-Z0-9]*$/g.test(n);
+		}
 		Expr = new Datatype("Expr", {
 			Const: { value: v => !Number.isNaN(v) }, 
-			Var:   { name:  n => typeof n === "string" },
+			Var:   { name:  isValidVarName },
 			App: {
 				f: isExpr,
 				x: isExpr,
@@ -411,7 +414,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 					);
 				};
 				*/
-				
+
 				test("fewer than 2 elems should throw", function (assert) {
 					[[], ["f"]].forEach( v =>
 						assert.throws(() => act(v), /cannot/, describe(v))
