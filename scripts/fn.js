@@ -64,7 +64,7 @@ define([], () => {
 		return result;
 	};
 
-	const memoize = function (f) {
+	const memoize = function memoize(f) {
 		if ((typeof f !== "function") || (f.length !== 0))
 			throw "invalid arg - must be nullary function: " + f;
 		const out = function () {
@@ -87,6 +87,19 @@ define([], () => {
 		return out;
 	};
 
+	const stringify = function stringify(v) {
+		if (isString(v)) {
+			return toStrLiteral(v);
+		} else if (isFunction(v)) {
+			return (v.name !== "")
+				? v.name
+				: "?";
+		} else if (isSymbol(v)) {
+			return v.toString();
+		} else {
+			return "" + v;	// TODO: stringify(Object.create(null)) throws "TypeError: Cannot convert object to primitive value"
+		}
+	};
 
 	const module = {
 		id,
@@ -106,6 +119,8 @@ define([], () => {
 		insist_nonNegativeInt,
 		getDescriptors,
 		memoize,
+
+		stringify,
 	};
 	return module;
 /*

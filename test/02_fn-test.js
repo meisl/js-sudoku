@@ -322,6 +322,25 @@ require(["scripts/fn"], (fn) => {
 			});
 		});  // end module "fn.memoize"
 
+		module("stringify", () => { // ----------------------------------------
+			test("with string arg", function (assert) {
+				assert.same(fn.stringify(""), '""', 'stringify("")');
+			});
+			module("with object arg", () => { // ----------------------------------------
+				test("null", function (assert) {
+					assert.same(fn.stringify(null), "null")
+				});
+				todo("{}", function (assert) {
+					assert.same(fn.stringify({}), "{}");
+				});
+				todo("object with null [[prototype]]", function (assert) {
+					const o = Object.create(null)
+					assert.same(fn.stringify(o), "{}");
+				});
+			});  // end module "stringify">"with object arg"
+
+		});  // end module "stringify"
+
     }); // end module "fn"
 
 }); // end require
