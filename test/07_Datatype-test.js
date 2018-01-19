@@ -387,5 +387,11 @@ require(["scripts/fn", "scripts/Datatype"], (fn, Datatype) => {
 
 		}); // end module "ctor args check"
 		
+		module("(simple) pattern matching", () => { // ------------------------------------------
+			skip("blah", function (assert) {
+				
+			}); // end module "too few"
+		}); // end module "(simple) pattern matching"
+
 	}); // end module "Datatype"
 }); // end require

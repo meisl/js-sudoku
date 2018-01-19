@@ -104,7 +104,7 @@ require(["scripts/fn", "scripts/Datatype", "scripts/expr"], (fn, Datatype, Expr)
 				description + ".datactor should be " + expected.datactor
 			);
 			this.deepEqual(actual, expected, description + " properties");		
-		}
+		};
 	} // end function extendAssert
 
 	function runTests() {

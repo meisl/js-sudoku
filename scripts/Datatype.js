@@ -1,18 +1,20 @@
-define(["./fn"], (fn) => { with (fn) {
+define(["./fn"], (fn) => {
+
+	const { isString, isObject, isFunction, stringify } = fn;
 
 	function isDatatype(x) {
 		return x instanceof Datatype;
 	}
 
 	function isDatactor(x) {
-		if (fn.isObject(x) && (x !== null)) {
+		if (isObject(x) && (x !== null)) {
 			const dt = x.datatype;
 			const n = x.length;
 			return isDatatype(dt)
 				&& (n === 0)
 				&& (dt[x.name] === x)
 			;
-		} else if (fn.isFunction(x)) {
+		} else if (isFunction(x)) {
 			const dt = x.datatype;
 			const n = x.length;
 			return isDatatype(dt)
@@ -24,21 +26,7 @@ define(["./fn"], (fn) => { with (fn) {
 	}
 
 	function isDatavalue(x) {
-		return fn.isObject(x) && (x !== null) && isDatactor(x.datactor);
-	}
-
-	function stringify(v) {
-		if (fn.isString(v)) {
-			return fn.toStrLiteral(v);
-		} else if (fn.isFunction(v)) {
-			return (v.name !== "")
-				? v.name
-				: "?";
-		} else if (fn.isSymbol(v)) {
-			return v.toString();
-		} else {
-			return "" + v;
-		}
+		return isObject(x) && (x !== null) && isDatactor(x.datactor);
 	}
 
 	class Datatype {
@@ -233,28 +221,78 @@ define(["./fn"], (fn) => { with (fn) {
 		isDatavalue: { value: isDatavalue },
 	});
 
-
-	const Pattern = new Datatype("Pattern", {
-		Any:   {},
-		Var:   { name: name => isString(name) && (name !== "") },
-		Const: { value: v => !Number.isNaN(v) },
-		Data:  { ctor: Datatype.isDatactor },
-		App:   {
-			fun: fun => Pattern.hasValue(fun),
-			arg: arg => Pattern.hasValue(arg)
-		},
-		
-	});
-	let v = Pattern.Var("x");
-	switch (v.datactor) {
-		case Pattern.Any: console.log("Any");
-			break;
-		case Pattern.Var: console.log("Var " + v.name);
-			break;
-		case Pattern.Const: console.log("Const " + v.value);
-			break;
+/*
+	function isList(v) {
+		return isDatavalue(v) && (v.datatype === List);
 	}
-	//let x = X.App(X.Any, X.Const(42));
+	const List = new Datatype("List", {
+		Nil: {},
+		Cons: {
+			head: x => true,
+			tail: isList
+		}
+	});
+	function _List_length (xs, acc) {
+		return (xs.datactor === List.Nil)
+			? acc
+			: _List_length(xs.tail, acc + 1);	// tail-recursive
+	}
+	List.length = function (xs) {
+		if (!isList(xs))
+			throw new TypeError("List.length: not a list: " + xs);
+		return _List_length(xs, 0);
+	}
+
+	const SimplePattern = new Datatype("Pattern", {
+		Any:   {},
+		Const: { value: v => !Number.isNaN(v) },
+		Var:   { name: name => isString(name) && (name !== "") },
+		Data:  {
+			ctor: Datatype.isDatactor,
+			args: function (args) {
+				return isList(args); //&& (List.length(args) === this.ctor.length);
+			}
+		},
+	});
+	SimplePattern.match = function (pat, env, val) { // returns a Maybe Env
+		switch (pat.datactor) {
+			case SimplePattern.Any:
+				return Maybe.Some(env);
+				break;
+			case SimplePattern.Const:
+				return (val === pat.value)
+					? Maybe.Some(env)
+					: Maybe.None;
+				break;
+			case SimplePattern.Var:
+				const name = pat.name;
+				const lookedup = Env.lookup(name, env);
+				switch (lookedup.datactor) {
+					case Maybe.None:
+						return SimplePattern.match(
+							pat,
+							Env.extend(name, lookedup, env),
+							val
+						);
+						break;
+					case Maybe.Some:
+						return SimplePattern.match(
+							SimplePattern.Const(lookedup.value),
+							env,
+							val
+						);
+						break;
+			}
+			throw new TypeError("SimplePattern.match(Var): "
+				+ "not a Maybe: " + lookedup
+			);
+		}
+		throw new TypeError("SimplePattern.match: "
+			+ "not a SimplePattern: " + pat
+		);
+	};
+
+*/
 
 	return Datatype;
-} /* end with(fn) */ });
+});

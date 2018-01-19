@@ -24,6 +24,8 @@
 		"./test/05_cell-test",
 		"./test/06_group-test",
 		"./test/07_Datatype-test",
+		"./test/07a_Data_Maybe-test",
+		"./test/07b_Env-test",
 		"./test/08_Pattern-test",
 		"./test/09_expr-test",
 		"./test/10_lazylist-test",
@@ -35,15 +37,19 @@
 		"./scripts/sequence", 
 		"./scripts/fn",
 		"./scripts/Datatype",
+		"./scripts/Data_Maybe",
+		"./scripts/Env",
 		"./scripts/Pattern",
 		"./scripts/expr",
 		"./scripts/lazylist",
-	], (su, group, sq, fn, Datatype, Pattern, Expr, lzy) => {
+	], (su, group, sq, fn, Datatype, Maybe, Env, Pattern, Expr, lzy) => {
 		sdk = su; 
 		grp = group; 
 		seq = sq; 
 		this.fn = fn;
 		this.Datatype = Datatype;
+		this.Maybe = Maybe;
+		this.Env = Env;
 		this.Pattern = Pattern;
 		this.Expr = Expr;
 		this.lzy = lzy;
