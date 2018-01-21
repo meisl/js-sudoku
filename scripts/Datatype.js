@@ -295,18 +295,37 @@ define(["./fn"], (fn) => {
 */
 
 
+
+/* todo
+	// type Cont a c = a -> Env -> c
+
+
+	// type Pattern a c = (Cont a c) -> c -> a -> Env -> c
+	//                  = (Cont a c) -> c -> (Cont a c)
+
+	const patChain = (p, q) => cT => cF => (x, e) => p(cT)(q(cT))
+
+	// patChoice = (Pattern a c) -> (Pattern a c) -> (Pattern a c)
+	patChoice = (p, q) => (cT, cF) =>
+		p(cT, q(cT, cF))
+	;
+
+	// type Clause a c = (Pattern a c) -> a -> c
+
+	// mkClause :: (Pattern a c) -> (Cont a c) -> (Clause a c)
+	// \p cT.\pElse x.(p cT (\x e.)) x
+*/
+
+
 	// type Cont a c = a -> Env -> c
 	// type Pattern a c = (Cont a c) -> (Cont a c) -> (Cont a c)
 
-	// patAny :: a -> Pattern a c
-	const patAny = () => {
-		const res = (cT, cF) => (x, e) => {
-			console.log(stringify(x) + " ~> TRUE");
-			return cT(x, e);
-		};
-		res.toString = () => "_";
-		return res;
+	// patAny :: Pattern a c
+	const patAny = (cT, cF) => (x, e) => {
+		console.log(stringify(x) + " ~> TRUE");
+		return cT(x, e);
 	};
+	patAny.toString = () => "_";
 
 	// patConst :: a -> Pattern a c
 	const patConst = v => {
@@ -328,7 +347,8 @@ define(["./fn"], (fn) => {
 			if (v !== undefined) {
 				return (x === v) ? cT(x, e) : cF(x, e);
 			}
-			return cT(x, Object.create(e, { [name]: { value: x, enumerable: true }}));
+			const newEnv = Object.create(e, { [name]: { value: x, enumerable: true }});
+			return cT(x, newEnv);
 		};
 		res.toString = () => name;
 		return res;
@@ -391,22 +411,45 @@ define(["./fn"], (fn) => {
 	};
 
 	// patChoice = (Pattern a c) -> (Pattern a c) -> (Pattern a c)
+	// Note: this is different from pushClause, as it deals only with
+	//       Patterns, NO right-hand-sides.
 	const patChoice = (p, q) => (cT, cF) => (x, e) =>
-		p(cT, (x2, e2) => q(cT, cF)(x, e))(x, e)
+		p(cT, () => q(cT, cF)(x, e))(x, e)
 	;
 
-	// contError :: Cont a c
-	const contError = (x, e) => {
-		throw "no match: " + stringify(x) + ", env: " + QUnit.dump.parse(e)
+	// catchAll :: Cont a c
+	const catchAll = (x, e) => {
+		throw "inexhaustive patterns: " + stringify(x) + ", env: " + QUnit.dump.parse(e)
 	};
 	
-	// contSuccess :: Cont a c
-	const contSuccess = (x, e) => {
-		console.log("success; x: " + stringify(x)
+	// contMatch :: Cont a c
+	const contMatch = (x, e) => {
+		console.log("successful match; x: " + stringify(x)
 			+ ", env: " + QUnit.dump.parse(e)
 		);
 		return [x, e];
 	};
+
+	// pushClause :: (Pattern a c) -> (Env -> c) -> (Cont a c) -> (Cont a c)
+	const pushClause = (pat, rhs, subsequentClauses) =>
+		pat(
+			(x2, e2) => rhs(e2),
+			subsequentClauses
+		);
+	/*
+	const pushClause = (pat, rhs, subsequentClauses) =>
+		(x, e) => pat(
+			(x2, e2) => rhs(e2), 
+			(_x, _e) => subsequentClauses(x, e)
+		)(x, e);
+	*/
+	/*
+	const pushClause = (pat, rhs, subsequentClauses) =>
+		(x, e) => pat(
+			(x2, e2) => () => rhs(e2), 
+			() => subsequentClauses(x, e)
+		)(x, e);
+	*/
 
 	const pNil = patData(List.Nil);
 	const pSingle = patData(List.Cons, patVar("x"), pNil);
@@ -415,35 +458,36 @@ define(["./fn"], (fn) => {
 		pSingle, pNil
 	);
 
-	console.log(QUnit.dump.parse({
-		['patAny()']: 			patAny().toString(),
-		['patConst(5)']: 		patConst(5).toString(),
-		['patConst("five")']:	patConst("five").toString(),
-		['patVar("x")']: 		patVar("x").toString(),
-		['pNil']: 				pNil.toString(),
-		['pSingle']: 			pSingle.toString(),
-		['pMore']: 				pMore.toString(),
-		['pComplicated']:		pComplicated.toString(),
-	}));
-
-
-	const cases = pSingle(
-		(x, e) => "pSingle matched: " + QUnit.dump.parse(contSuccess(x, e)),
-		pMore(
-			(x, e) => "pMore matched: " + QUnit.dump.parse(contSuccess(x, e)),
-			contError
-		)
+	const clauses = [
+		[pSingle, e => "matched " + pSingle + ": " + QUnit.dump.parse(e)],
+		[pMore,   e => "matched " + pMore + ": " + QUnit.dump.parse(e)],
+	].reduceRight(
+		(acc, clause) => pushClause(...clause, acc),
+		catchAll
 	);
 
 	const match = v => {
-		let res = cases(v, {});
+		let res = clauses(v, {});
 		console.log(res);
 		return res;
 	};
 
-	const xs = List.Cons(4, List.Cons(5, List.Nil));
+	match(List.Cons(4, List.Cons(5, List.Nil)));
+	match(List.Cons(5, List.Nil));
+	//match(List.Nil);
 
-	match(xs);
+	Datatype.pattern = {
+		patAny,
+		patConst: c => {
+			if (isDatavalue(c) || isDatactor(c))
+				throw "invalid const pattern - use patData(..) instead";
+			return patConst(c);
+		},
+		patVar,
+		patData,
+		catchAll,
+		pushClause,
+	};
 
 	return Datatype;
 });

@@ -387,11 +387,101 @@ require(["scripts/fn", "scripts/Datatype"], (fn, Datatype) => {
 
 		}); // end module "ctor args check"
 		
-		module("(simple) pattern matching", () => { // ------------------------------------------
-			skip("blah", function (assert) {
+		module("pattern matching", () => { // ------------------------------------------
+			// prep:
+			const { patAny, patConst, patVar, patData, catchAll, pushClause } = Datatype.pattern;
+			function isList(v) {
+				return isDatavalue(v) && (v.datatype === List);
+			}
+			const List = new Datatype("List", {
+				Nil: {},
+				Cons: {
+					head: x => true,
+					tail: isList
+				}
+			});
+
+			test("patAny", function (assert) {
+				assert.same(patAny.toString(), "_", "patAny.toString()");
+			});
+
+			module("patConst", () => { // -----------------------------------------
+				const act = c => patConst(c).toString();
+				const describe = (c, more) => "patConst(" + QUnit.dump.parse(c) + ")"
+					+ ".toString()" + (more ? " " + more : "");
+
+				test("with scalar", function (assert) {
+					assert.same(act(5), "5", describe(5));
+					assert.same(act('five'), '"five"', describe('five'));
+				});
+				test("with datavalue (invalid)", function (assert) {
+					let x;
+					x = List.Nil;
+					assert.same(act(x), x.toString(), 
+						describe('List.Nil', "should equal List.Nil.toString()"));
+					x = List.Cons(42, List.Nil);
+					assert.same(act(x), x.toString(), describe("List.Cons(42, List.Nil)"));
+				});
+			}); // end module "patConst"
+
+			module("patVar", () => { // -----------------------------------------
+				const act = c => patVar(c).toString();
+				const describe = (c, more) => "patVar(" + QUnit.dump.parse(c) + ")"
+					+ ".toString()" + (more ? " " + more : "");
+
+				test("with valid arg", function (assert) {
+					assert.same(act("x"), "x", describe("x"));
+					assert.same(act("xs"), "xs", describe("xs"));
+				});
+			
+				todo("with invalid arg", function (assert) {
+					assert.throws( () => act(""), /invalid/, describe("", "should throw"));
+					assert.throws( () => act(" "), /invalid/, describe(" ", "should throw"));
+					assert.throws( () => act("_"), /invalid/, describe("_", "should throw"));
+				});
+			}); // end module "patVar"
+
+			module("patData", () => { // -----------------------------------------
+				const act = args => patData(...args).toString();
 				
-			}); // end module "too few"
-		}); // end module "(simple) pattern matching"
+				test("with valid args", function (assert) {
+					let args;
+					args = [List.Nil];
+
+					const pNil = patData(List.Nil);
+					const pSingle = patData(List.Cons, patVar("x"), pNil);
+					const pSingle_42 = patData(List.Cons, patConst(42), pNil);
+					const pNonNil = patData(List.Cons, patVar("x"), patVar("xs"));
+					const pComplicated = patData(List.Cons,
+						pSingle, pNonNil
+					);
+
+					assert.same(pNil.toString(),
+						"Nil", 
+						"patData(List.Nil).toString()");
+					
+					assert.same(pSingle_42.toString(),
+						"(Cons 42 Nil)",
+						"patData(List.Cons, patConst(42), patData(List.Nil))");
+					
+					assert.same(pSingle.toString(),
+						"(Cons x Nil)",
+						'patData(List.Cons, patVar("x"), patData(List.Nil))');
+					
+					assert.same(pNonNil.toString(),
+						"(Cons x xs)",
+						'patData(List.Cons, patVar("x"), patVar("xs"))');
+					
+					assert.same(pComplicated.toString(),
+						"(Cons (Cons x Nil) (Cons x xs))",
+						'patData(List.Cons, patData(List.Cons, patVar("x"), patData(List.Nil)), patData(List.Cons, patVar("x"), patVar("xs")))');
+				});
+			
+				todo("with invalid args", function (assert) {
+				});
+			}); // end module "patData"
+			
+		}); // end module "pattern matching"
 
 	}); // end module "Datatype"
 }); // end require
