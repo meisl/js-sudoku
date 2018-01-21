@@ -221,7 +221,7 @@ define(["./fn"], (fn) => {
 		isDatavalue: { value: isDatavalue },
 	});
 
-/*
+
 	function isList(v) {
 		return isDatavalue(v) && (v.datatype === List);
 	}
@@ -242,7 +242,7 @@ define(["./fn"], (fn) => {
 			throw new TypeError("List.length: not a list: " + xs);
 		return _List_length(xs, 0);
 	}
-
+/*
 	const SimplePattern = new Datatype("Pattern", {
 		Any:   {},
 		Const: { value: v => !Number.isNaN(v) },
@@ -293,6 +293,157 @@ define(["./fn"], (fn) => {
 	};
 
 */
+
+
+	// type Cont a c = a -> Env -> c
+	// type Pattern a c = (Cont a c) -> (Cont a c) -> (Cont a c)
+
+	// patAny :: a -> Pattern a c
+	const patAny = () => {
+		const res = (cT, cF) => (x, e) => {
+			console.log(stringify(x) + " ~> TRUE");
+			return cT(x, e);
+		};
+		res.toString = () => "_";
+		return res;
+	};
+
+	// patConst :: a -> Pattern a c
+	const patConst = v => {
+		const res = (cT, cF) => (x, e) => {
+			console.log(stringify(x) + "=?=" + stringify(v));
+			return (x === v) ? cT(x, e) : cF(x, e)
+		};
+		res.toString = () => stringify(v);
+		return res;
+	};
+
+	// patVar :: Str -> Pattern a c
+	const patVar = name => {
+		const res = (cT, cF) => (x, e) => {
+			console.log("var " + name + " ~? " + stringify(x)
+				+ "; e: " + QUnit.dump.parse(e)
+			);
+			const v = e[name];
+			if (v !== undefined) {
+				return (x === v) ? cT(x, e) : cF(x, e);
+			}
+			return cT(x, Object.create(e, { [name]: { value: x, enumerable: true }}));
+		};
+		res.toString = () => name;
+		return res;
+	};
+
+	// patProp :: Key -> (Pattern b c) -> (Pattern a c)
+	const patProp = (key, p) => {
+		const res = (cT, cF) => (x, e) => 
+			p((_, e2) => cT(x, e2), () => cF(x, e))(x[key], e)
+		;
+		res.toString = p.toString;
+		return res;
+	};
+	
+	// patChain :: (Pattern a c) -> (Pattern a c) -> (Pattern a c)
+	//const patChain = (p, q) => (cT, cF) => p(q(cT, cF), cF)
+	const patChain = (p, q) => {
+		const res = (cT, cF) => (x, e) => {
+			const onFail = () => cF(x, e);
+			return p(q(cT, onFail), onFail)(x, e);
+		};
+		res.toString = () => p.toString() + " " + q.toString();
+		return res;
+	};
+
+	// patData :: DataCtor -> [Pattern b c] -> (Pattern a c)
+	const patData = (ctor, ...argPatterns) => {
+		const n = ctor.length;
+		if (argPatterns.length !== n)
+			throw "wrong arity " + n + " !== " + argPatterns.length;
+		const patCtor = patProp("datactor", patConst(ctor))
+		if (n === 0) {
+			patCtor.toString = () => ctor.name;
+			return patCtor;
+		}
+		/*
+		let res = argPatterns.reduce(
+			(acc, pat, i) => patChain(acc, patProp(i, pat)),
+			patCtor
+		);
+		*/
+		let i = n - 1;
+		let pat = argPatterns[i];
+		let chained = patProp(i, pat);
+		let str = " " + pat.toString() + ")";
+		while (i > 0) {
+			i--;
+			const pat = argPatterns[i];
+			str = " " + pat.toString() + str;
+			chained = patChain(patProp(i, pat), chained);
+		}
+		chained = patChain(patCtor, chained);
+		//str = "(" + ctor.name + str;
+		const inner_toString = chained.toString;
+		res = chained;
+		//res = (cT, cF) => (x, e) => chained(cT, (x2, _) => cF(x, e))(x, e);
+		
+		res.toString = () => "(" + inner_toString() + ")";
+		return res;
+	};
+
+	// patChoice = (Pattern a c) -> (Pattern a c) -> (Pattern a c)
+	const patChoice = (p, q) => (cT, cF) => (x, e) =>
+		p(cT, (x2, e2) => q(cT, cF)(x, e))(x, e)
+	;
+
+	// contError :: Cont a c
+	const contError = (x, e) => {
+		throw "no match: " + stringify(x) + ", env: " + QUnit.dump.parse(e)
+	};
+	
+	// contSuccess :: Cont a c
+	const contSuccess = (x, e) => {
+		console.log("success; x: " + stringify(x)
+			+ ", env: " + QUnit.dump.parse(e)
+		);
+		return [x, e];
+	};
+
+	const pNil = patData(List.Nil);
+	const pSingle = patData(List.Cons, patVar("x"), pNil);
+	const pMore = patData(List.Cons, patVar("x"), patVar("xs"));
+	const pComplicated = patData(List.Cons,
+		pSingle, pNil
+	);
+
+	console.log(QUnit.dump.parse({
+		['patAny()']: 			patAny().toString(),
+		['patConst(5)']: 		patConst(5).toString(),
+		['patConst("five")']:	patConst("five").toString(),
+		['patVar("x")']: 		patVar("x").toString(),
+		['pNil']: 				pNil.toString(),
+		['pSingle']: 			pSingle.toString(),
+		['pMore']: 				pMore.toString(),
+		['pComplicated']:		pComplicated.toString(),
+	}));
+
+
+	const cases = pSingle(
+		(x, e) => "pSingle matched: " + QUnit.dump.parse(contSuccess(x, e)),
+		pMore(
+			(x, e) => "pMore matched: " + QUnit.dump.parse(contSuccess(x, e)),
+			contError
+		)
+	);
+
+	const match = v => {
+		let res = cases(v, {});
+		console.log(res);
+		return res;
+	};
+
+	const xs = List.Cons(4, List.Cons(5, List.Nil));
+
+	match(xs);
 
 	return Datatype;
 });
