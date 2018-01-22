@@ -309,11 +309,6 @@ define(["./fn"], (fn) => {
 	patChoice = (p, q) => (cT, cF) =>
 		p(cT, q(cT, cF))
 	;
-
-	// type Clause a c = (Pattern a c) -> a -> c
-
-	// mkClause :: (Pattern a c) -> (Cont a c) -> (Clause a c)
-	// \p cT.\pElse x.(p cT (\x e.)) x
 */
 
 
@@ -322,7 +317,6 @@ define(["./fn"], (fn) => {
 
 	// patAny :: Pattern a c
 	const patAny = (cT, cF) => (x, e) => {
-		console.log(stringify(x) + " ~> TRUE");
 		return cT(x, e);
 	};
 	patAny.toString = () => "_";
@@ -330,7 +324,6 @@ define(["./fn"], (fn) => {
 	// patConst :: a -> Pattern a c
 	const patConst = v => {
 		const res = (cT, cF) => (x, e) => {
-			console.log(stringify(x) + "=?=" + stringify(v));
 			return (x === v) ? cT(x, e) : cF(x, e)
 		};
 		res.toString = () => stringify(v);
@@ -342,9 +335,6 @@ define(["./fn"], (fn) => {
 	// patVar :: Str -> Pattern a c
 	const patVar = name => {
 		const res = (cT, cF) => (x, e) => {
-			console.log("var " + name + " ~? " + stringify(x)
-				+ "; e: " + QUnit.dump.parse(e)
-			);
 			const v = e[name];
 			if (v !== undefined) {
 				return (x === v) ? cT(x, e) : cF(x, e);
@@ -431,46 +421,9 @@ define(["./fn"], (fn) => {
 		pat(
 			(_, e) => rhs(e),
 			(_, _e) => onFail(x)
-		)(x, emptyEnv);
-	/*
-	const pushClause = (pat, rhs, subsequentClauses) =>
-		(x, e) => pat(
-			(x2, e2) => rhs(e2), 
-			(_x, _e) => subsequentClauses(x, e)
-		)(x, e);
-	*/
-	/*
-	const pushClause = (pat, rhs, subsequentClauses) =>
-		(x, e) => pat(
-			(x2, e2) => () => rhs(e2), 
-			() => subsequentClauses(x, e)
-		)(x, e);
-	*/
+		)(x, emptyEnv)
+	;
 
-	const pNil = patData(List.Nil);
-	const pSingle = patData(List.Cons, patVar("x"), pNil);
-	const pMore = patData(List.Cons, patVar("x"), patVar("xs"));
-	const pComplicated = patData(List.Cons,
-		pSingle, pNil
-	);
-
-	const clauses = [
-		[pSingle, e => "matched " + pSingle + ": " + QUnit.dump.parse(e)],
-		[pMore,   e => "matched " + pMore + ": " + QUnit.dump.parse(e)],
-	].reduceRight(
-		(acc, clause) => pushClause(...clause, acc),
-		catchAll
-	);
-
-	const match = v => {
-		let res = clauses(v, emptyEnv);
-		console.log(res);
-		return res;
-	};
-
-	match(List.Cons(4, List.Cons(5, List.Nil)));
-	match(List.Cons(5, List.Nil));
-	//match(List.Nil);
 
 	Datatype.pattern = {
 		patAny,
