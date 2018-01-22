@@ -337,6 +337,8 @@ define(["./fn"], (fn) => {
 		return res;
 	};
 
+	const emptyEnv = {};
+
 	// patVar :: Str -> Pattern a c
 	const patVar = name => {
 		const res = (cT, cF) => (x, e) => {
@@ -384,6 +386,7 @@ define(["./fn"], (fn) => {
 			patCtor.toString = () => ctor.name;
 			return patCtor;
 		}
+		let res;
 		/*
 		let res = argPatterns.reduce(
 			(acc, pat, i) => patChain(acc, patProp(i, pat)),
@@ -417,25 +420,18 @@ define(["./fn"], (fn) => {
 		p(cT, () => q(cT, cF)(x, e))(x, e)
 	;
 
-	// catchAll :: Cont a c
-	const catchAll = (x, e) => {
-		throw "inexhaustive patterns: " + stringify(x) + ", env: " + QUnit.dump.parse(e)
-	};
-	
-	// contMatch :: Cont a c
-	const contMatch = (x, e) => {
-		console.log("successful match; x: " + stringify(x)
-			+ ", env: " + QUnit.dump.parse(e)
-		);
-		return [x, e];
+	// catchAll :: a -> c
+	const catchAll = x => {
+		throw "inexhaustive patterns: " + stringify(x)
 	};
 
-	// pushClause :: (Pattern a c) -> (Env -> c) -> (Cont a c) -> (Cont a c)
-	const pushClause = (pat, rhs, subsequentClauses) =>
+
+	// pushClause :: (Pattern a c) -> (Env -> c) -> (a -> c) -> (a -> c)
+	const pushClause = (pat, rhs, onFail) => x =>
 		pat(
-			(x2, e2) => rhs(e2),
-			subsequentClauses
-		);
+			(_, e) => rhs(e),
+			(_, _e) => onFail(x)
+		)(x, emptyEnv);
 	/*
 	const pushClause = (pat, rhs, subsequentClauses) =>
 		(x, e) => pat(
@@ -467,7 +463,7 @@ define(["./fn"], (fn) => {
 	);
 
 	const match = v => {
-		let res = clauses(v, {});
+		let res = clauses(v, emptyEnv);
 		console.log(res);
 		return res;
 	};
@@ -484,7 +480,11 @@ define(["./fn"], (fn) => {
 			return patConst(c);
 		},
 		patVar,
-		patData,
+		patData: (ctor, ...argPatterns) => {
+			if (!isDatactor(ctor))
+				throw new TypeError("not a datactor: " + stringify(ctor));
+			return patData(ctor, ...argPatterns);
+		},
 		catchAll,
 		pushClause,
 	};

@@ -416,11 +416,29 @@ require(["scripts/fn", "scripts/Datatype"], (fn, Datatype) => {
 				});
 				test("with datavalue (invalid)", function (assert) {
 					let x;
+					
 					x = List.Nil;
-					assert.same(act(x), x.toString(), 
-						describe('List.Nil', "should equal List.Nil.toString()"));
+					assert.throws(() => patConst(x),
+						/invalid.+patData/,
+						"patConst(List.Nil) should throw");
+					
 					x = List.Cons(42, List.Nil);
-					assert.same(act(x), x.toString(), describe("List.Cons(42, List.Nil)"));
+					assert.throws(() => patConst(x),
+						/invalid.+patData/,
+						"patConst(List.Cons(42, List.Nil)) should throw");
+				});
+				test("with datactor (invalid)", function (assert) {
+					let x;
+					
+					x = List.Nil;
+					assert.throws(() => patConst(x),
+						/invalid.+patData/,
+						"patConst(List.Nil) should throw");
+					
+					x = List.Cons;
+					assert.throws(() => patConst(x),
+						/invalid.+patData/,
+						"patConst(List.Cons) should throw");
 				});
 			}); // end module "patConst"
 
@@ -477,9 +495,235 @@ require(["scripts/fn", "scripts/Datatype"], (fn, Datatype) => {
 						'patData(List.Cons, patData(List.Cons, patVar("x"), patData(List.Nil)), patData(List.Cons, patVar("x"), patVar("xs")))');
 				});
 			
-				todo("with invalid args", function (assert) {
+				test("with invalid args", function (assert) {
+					let x;
+					
+					assert.throws(() => patData(),
+						/not.*data.*ctor/,
+						"patData() should throw");
+					
+					assert.throws(() => patData(5),
+						/not.*data.*ctor/,
+						"patData(5) should throw");
+					
+					assert.throws(() => patData(patAny),
+						/not.*data.*ctor/,
+						"patData(patAny) should throw");
+					
+					x = List.Cons(42, List.Nil);
+					assert.throws(() => patData(x),
+						/not.*data.*ctor/,
+						"patData(List.Cons(42, List.Nil)) should throw");
 				});
 			}); // end module "patData"
+
+			module("clauses", () => { // -----------------------------------------
+				const nil = List.Nil;
+				const lst_5 = List.Cons(5, nil);
+				const lst_42 = List.Cons(42, nil);
+				const lst_42_5 = List.Cons(42, lst_5);
+
+				const pNil = patData(List.Nil);
+				const pSingle = patData(List.Cons, patVar("x"), pNil);
+				const pSingle_42 = patData(List.Cons, patConst(42), pNil);
+				const pNonNil = patData(List.Cons, patVar("x"), patVar("xs"));
+				const pComplicated = patData(List.Cons,
+					pSingle, pNonNil
+				);
+				
+				test("catchAll", function (assert) {
+					assert.throws(() => catchAll(),
+						/inexhaustive/,
+						"catchAll() should throw");
+					assert.throws(() => catchAll(5),
+						/inexhaustive/,
+						"catchAll(5) should throw");
+					assert.throws(() => catchAll(nil),
+						/inexhaustive/,
+						"catchAll(List.Nil) should throw");
+					assert.throws(() => catchAll(lst_5),
+						/inexhaustive/,
+						"catchAll(List.Cons(5, List.Nil)) should throw");
+				});
+				test("pushClause patAny", function (assert) {
+					const out1 = {};
+					let match = pushClause(patAny, e => out1, catchAll);
+					assert.same(match(5), out1,
+						"matching 5 against `_ -> out1` yields out1");
+					assert.same(match(nil), out1,
+						"matching List.Nil against `_ -> out1` yields out1");
+				});
+				test("pushClause patConst", function (assert) {
+					const out1 = { [Symbol.toStringTag]: "out1" };
+					const out2 = { [Symbol.toStringTag]: "out2" };
+					let match;
+					match = pushClause(patConst(2), e => out2, catchAll);
+					match = pushClause(patConst(1), e => out1, match);
+					
+					assert.same(match(1), out1,
+						"matching 1 against `1 -> out1; 2 -> out2` yields out1");
+					assert.same(match(2), out2,
+						"matching 2 against `1 -> out1; 2 -> out2` yields out2");
+					assert.throws(() => match(0),
+						/inexhaustive/,
+						"matching 0 against `1 -> out1; 2 -> out2` throws");
+				});
+				test("pushClause patVar", function (assert) {
+					const out1 = { [Symbol.toStringTag]: "out1" };
+					let match;
+
+					match = pushClause(patVar("x"), e => out1, catchAll);
+					assert.same(match(1), out1,
+						"matching 1 against `x -> out1` yields out1");
+					assert.same(match(2), out1,
+						"matching 2 against `x -> out1` yields out1");
+
+					match = pushClause(patVar("x"), e => e.x, catchAll);
+					assert.same(match(1), 1,
+						"matching 1 against `x -> e.x` yields 1");
+					assert.same(match(2), 2,
+						"matching 2 against `x -> e.x` yields 2");
+					assert.same(match(nil), nil,
+						"matching List.Nil against `x -> e.x` yields nil");
+					assert.same(match(lst_5), lst_5,
+						"matching List.Nil against `x -> e.x` yields nil");
+				});
+				test("pushClause patData", function (assert) {
+					const nilClause = { [Symbol.toStringTag]: "nilClause" };
+					const single42Clause = { [Symbol.toStringTag]: "single42Clause" };
+					let match;
+					
+					// [] -> out1
+					// x  -> x
+					match = pushClause(patVar("x"), e => e.x, catchAll);
+					match = pushClause(pNil, e => nilClause, match);
+					assert.same(match(1), 1,
+						"matching 1 against `[] -> nilClause; x -> e.x` yields 1");
+					assert.same(match(nil), nilClause,
+						"matching [] against `[] -> nilClause; x -> e.x` yields nilClause");
+					assert.same(match(lst_5), lst_5,
+						"matching [5] against `[] -> nilClause; x -> e.x` yields [5]");
+					
+					// []   -> nilClause
+					// [42] -> single42Clause
+					// [x]  -> [x]
+					// x:xs -> [x,xs]
+					match = pushClause(
+						pNonNil, 
+						e => [e.x, e.xs], catchAll);
+					match = pushClause(
+						pSingle,
+						e => [e.x], match);
+					match = pushClause(
+						pSingle_42,
+						e => single42Clause, match);
+					match = pushClause(
+						pNil,
+						e => nilClause, match);
+
+					const describe = (x, exp) => "matching "
+						+ x.toString() + " against `"
+						+ "[] -> nilClause; " 
+						+ " [42] -> single42Clause; "
+						+ " [x] -> [x]; "
+						+ " x:xs -> [x,xs]`"
+						+ " yields " + QUnit.dump.parse(exp)
+					;
+					const doTest = (x, exp) => {
+						if (fn.isArray(exp))
+							return assert.propEqual(match(x), exp,
+								describe(x, exp));
+						return assert.same(match(x), exp,
+							describe(x, exp));
+					};
+					doTest(nil, nilClause);
+					doTest(lst_5, [5]);
+					doTest(lst_42, single42Clause);
+					doTest(lst_42_5, [42, lst_5]);
+				});
+				module("Pair patterns", () => { // -----------------------------------------
+					const Pair = new Datatype("Pair", {
+						Pair: {
+							fst: () => true,
+							snd: () => true,
+						}
+					});
+					test("bound var", function (assert) {
+						let match;
+
+						// Pair x x -> x
+						// Pair x y -> [x, y]
+						match = pushClause(
+							patData(Pair.Pair, patVar("x"), patVar("y")),
+							e => [e.x, e.y],
+							catchAll
+						);
+						match = pushClause(
+							patData(Pair.Pair, patVar("x"), patVar("x")),
+							e => e.x,
+							match
+						);
+						assert.same(
+							match(Pair.Pair(5, 5)),
+							5
+						);
+						assert.propEqual(
+							match(Pair.Pair(5, 42)),
+							[5, 42]
+						);
+						assert.propEqual(
+							match(Pair.Pair(42, 5)),
+							[42, 5]
+						);
+					});
+					test("bound var, with subpattern", function (assert) {
+						let match;
+
+						// Pair x x -> x
+						// Pair (Pair x x) x -> [x]
+						// Pair x y -> [x, y]
+						match = pushClause(
+							patData(Pair.Pair, patVar("x"), patVar("y")),
+							e => [e.x, e.y],
+							catchAll
+						);
+						match = pushClause(
+							patData(Pair.Pair, patData(Pair.Pair, patVar("x"), patVar("x")), patVar("x")),
+							e => {
+								return [e.x];
+							},
+							match
+						);
+						match = pushClause(
+							patData(Pair.Pair, patVar("x"), patVar("x")),
+							e => e.x,
+							match
+						);
+						assert.same(match(Pair.Pair(5, 5)), 5);
+						assert.same(match(Pair.Pair(7, 7)), 7);
+						assert.propEqual(match(Pair.Pair(5, 7)), [5, 7]);
+						assert.propEqual(match(Pair.Pair(7, 5)), [7, 5]);
+						assert.propEqual(
+							match(Pair.Pair(Pair.Pair(5, 7), 9)), 
+							[Pair.Pair(5, 7), 9]);
+						assert.propEqual(
+							match(Pair.Pair(Pair.Pair(5, 5), 9)), 
+							[Pair.Pair(5, 5), 9]);
+						assert.propEqual(
+							match(Pair.Pair(Pair.Pair(5, 7), 9)), 
+							[Pair.Pair(5, 7), 9]);
+						assert.propEqual(
+							match(Pair.Pair(Pair.Pair(5, 5), 5)), 
+							[5]);
+						assert.propEqual(
+							match(Pair.Pair(Pair.Pair(7, 7), 7)), 
+							[7]);
+						assert.propEqual(
+							match(Pair.Pair(5, Pair.Pair(5, 5))), 
+							[5, Pair.Pair(5, 5)]);
+					});				
+				}); // end module "Pair patterns"
+			}); // end module "clauses"
 			
 		}); // end module "pattern matching"
 
