@@ -655,14 +655,17 @@ require(["scripts/fn", "scripts/Datatype"], (fn, Datatype) => {
 						// Pair x y -> [x, y]
 						match = pushClause(
 							patData(Pair.Pair, patVar("x"), patVar("y")),
-							e => [e.x, e.y],
+							e => 
+								[e.x, e.y],
 							catchAll
 						);
 						match = pushClause(
 							patData(Pair.Pair, patVar("x"), patVar("x")),
-							e => e.x,
+							e => 
+								e.x,
 							match
-						);
+						);						
+
 						assert.same(
 							match(Pair.Pair(5, 5)),
 							5

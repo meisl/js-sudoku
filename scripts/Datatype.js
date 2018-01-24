@@ -274,7 +274,46 @@ define(["./fn"], (fn) => {
 
 */
 
+	const err = msg => { throw msg };
 
+	const Env = {
+		empty: // :: Env
+			Object.freeze({}),
+		return: // :: Str -> a -> Env
+			(key, val) => Env.addBinding(key, val, Env.empty),
+		addBinding: // :: Str -> a -> Env -> Env
+			// addBinding k v e = (return k v) >>= \_.e
+			// addBinding k v = extend (return k v)
+			// addBinding k v e = \cT cF k'.if (k' = k) then (cT v) (e cT cF k)
+			(key, val, e) => {
+				return Object.create(e, { [key]: { value: val, enumerable: true } })
+			},
+		lookup: // :: Str -> Env -> (a -> c) -> (Str -> c) -> c
+			(key, e, cT, cF) => {
+				const v = e[key];
+				if (v === undefined) {
+					return cF(key);
+				} else {
+					return cT(v);
+				}
+			},
+		extend: // :: Env -> Env -> Env
+			(e1, e2) => {
+				const res = Object.create(e2);
+				for (const k in e1)
+					res[k] = e1[k];
+				return res;
+			},
+		bind: // :: Env -> (() -> Env) -> Env
+			(e, f) => Env.extend(e, f()),
+		get: // :: Str -> Env -> c ; or error if key is not bound
+			(key, e) => Env.lookup(
+				key,
+				e,
+				v => v,
+				() => err("unbound " + stringify(key))
+			),
+	};
 
 /* todo
 	// type Cont a c = a -> Env -> c
@@ -291,7 +330,6 @@ define(["./fn"], (fn) => {
 	;
 */
 
-	const err = msg => { throw msg };
 
 	// type Pattern a c = (Env -> c) -> (() -> c) -> Env -> a -> c
 
@@ -321,19 +359,15 @@ define(["./fn"], (fn) => {
 		return res;
 	};
 
-	const emptyEnv = {};
-
 
 	// patVar :: Str -> Pattern a c
 	const patVar = name => {
-		const res = (cT, cF) => (x, e) => {
-			const v = e[name];
-			if (v !== undefined) {
-				return (x === v) ? cT(x, e) : cF(x, e);
-			}
-			const newEnv = Object.create(e, { [name]: { value: x, enumerable: true }});
-			return cT(x, newEnv);
-		};
+		const res = (cT, cF) => (x, e) => Env.lookup(
+			name,
+			e,
+			v => (x === v) ? cT(x, e) : cF(x, e),
+			() => cT(x, Env.addBinding(name, x, e))
+		);
 		res.toString = () => name;
 		return res;
 	};
@@ -402,7 +436,7 @@ define(["./fn"], (fn) => {
 			pat(
 				(_, e) => rhs(e),
 				(_, _e) => onFail(x)
-			)(x, emptyEnv)
+			)(x, Env.empty)
 		;
 		res.toString = () => pat.toString() + " -> ..."
 			+ "\n" + onFail.toString();
