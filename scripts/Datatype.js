@@ -311,17 +311,28 @@ define(["./fn"], (fn) => {
 	;
 */
 
+	const err = msg => { throw msg };
+
+	// type Pattern a c = (Env -> c) -> (() -> c) -> Env -> a -> c
+
+	// type Env c = (Any -> c) -> (Str -> c) -> Str -> c
+	// type Cont c = Env c -> c
+	// type Pattern a c = Cont c -> Cont c -> Cont (a -> c)
+
 
 	// type Cont a c = a -> Env -> c
 	// type Pattern a c = (Cont a c) -> (Cont a c) -> (Cont a c)
 
 	// patAny :: Pattern a c
-	const patAny = (cT, cF) => (x, e) => {
-		return cT(x, e);
-	};
+	// = \cT cF.cT
+	// ~Lam("cT", Lam("cF", Var("cT")))
+	// ~Expr.make(["cF", "cT"], "cT")
+	const patAny = (cT, cF) => (x, e) => cT(x, e);
 	patAny.toString = () => "_";
 
 	// patConst :: a -> Pattern a c
+	// = \v cT cF x e.if (x = v) then (cT x e) else (cF x e)
+	// ~ Expr.make(["v", "cT" "cF" "x", "e"], Expr.If([eq, "x", "v"], ["cT", "x", "e"], ["cT", "x", "e"]))
 	const patConst = v => {
 		const res = (cT, cF) => (x, e) => {
 			return (x === v) ? cT(x, e) : cF(x, e)
@@ -331,6 +342,7 @@ define(["./fn"], (fn) => {
 	};
 
 	const emptyEnv = {};
+
 
 	// patVar :: Str -> Pattern a c
 	const patVar = name => {
@@ -373,32 +385,21 @@ define(["./fn"], (fn) => {
 			throw "wrong arity " + n + " !== " + argPatterns.length;
 		const patCtor = patProp("datactor", patConst(ctor))
 		if (n === 0) {
-			patCtor.toString = () => ctor.name;
 			return patCtor;
 		}
-		let res;
 		/*
-		let res = argPatterns.reduce(
+		const res = argPatterns.reduce(
 			(acc, pat, i) => patChain(acc, patProp(i, pat)),
 			patCtor
 		);
 		*/
-		let i = n - 1;
-		let pat = argPatterns[i];
-		let chained = patProp(i, pat);
-		let str = " " + pat.toString() + ")";
-		while (i > 0) {
-			i--;
-			const pat = argPatterns[i];
-			str = " " + pat.toString() + str;
-			chained = patChain(patProp(i, pat), chained);
-		}
-		chained = patChain(patCtor, chained);
-		//str = "(" + ctor.name + str;
-		const inner_toString = chained.toString;
-		res = chained;
-		//res = (cT, cF) => (x, e) => chained(cT, (x2, _) => cF(x, e))(x, e);
-		
+		const res = patChain(
+			patCtor, 
+			argPatterns
+				.map((pat, i) => patProp(i, pat))
+				.reduceRight((acc, pat) => patChain(pat, acc))
+		);
+		const inner_toString = res.toString;
 		res.toString = () => "(" + inner_toString() + ")";
 		return res;
 	};
@@ -411,18 +412,22 @@ define(["./fn"], (fn) => {
 	;
 
 	// catchAll :: a -> c
-	const catchAll = x => {
-		throw "inexhaustive patterns: " + stringify(x)
-	};
+	const catchAll = x => err("inexhaustive patterns: " + stringify(x));
+	catchAll.toString = () => '_ -> error "inexhaustive patterns"';
 
 
 	// pushClause :: (Pattern a c) -> (Env -> c) -> (a -> c) -> (a -> c)
-	const pushClause = (pat, rhs, onFail) => x =>
-		pat(
-			(_, e) => rhs(e),
-			(_, _e) => onFail(x)
-		)(x, emptyEnv)
-	;
+	const pushClause = (pat, rhs, onFail) => {
+		const res = x =>
+			pat(
+				(_, e) => rhs(e),
+				(_, _e) => onFail(x)
+			)(x, emptyEnv)
+		;
+		res.toString = () => pat.toString() + " -> ..."
+			+ "\n" + onFail.toString();
+		return res;
+	};
 
 
 	Datatype.pattern = {

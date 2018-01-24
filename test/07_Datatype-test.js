@@ -699,6 +699,8 @@ require(["scripts/fn", "scripts/Datatype"], (fn, Datatype) => {
 							e => e.x,
 							match
 						);
+						console.log(match.toString());
+						
 						assert.same(match(Pair.Pair(5, 5)), 5);
 						assert.same(match(Pair.Pair(7, 7)), 7);
 						assert.propEqual(match(Pair.Pair(5, 7)), [5, 7]);
