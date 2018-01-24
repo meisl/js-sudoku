@@ -222,26 +222,6 @@ define(["./fn"], (fn) => {
 	});
 
 
-	function isList(v) {
-		return isDatavalue(v) && (v.datatype === List);
-	}
-	const List = new Datatype("List", {
-		Nil: {},
-		Cons: {
-			head: x => true,
-			tail: isList
-		}
-	});
-	function _List_length (xs, acc) {
-		return (xs.datactor === List.Nil)
-			? acc
-			: _List_length(xs.tail, acc + 1);	// tail-recursive
-	}
-	List.length = function (xs) {
-		if (!isList(xs))
-			throw new TypeError("List.length: not a list: " + xs);
-		return _List_length(xs, 0);
-	}
 /*
 	const SimplePattern = new Datatype("Pattern", {
 		Any:   {},
