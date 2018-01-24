@@ -276,9 +276,10 @@ define(["./fn"], (fn) => {
 
 	const err = msg => { throw msg };
 
+	// type Env c = (Any -> c) -> (Str -> c) -> Str -> c
 	const Env = {
 		empty: // :: Env
-			Object.freeze({}),
+			(cT, cF) => cF,
 		return: // :: Str -> a -> Env
 			(key, val) => Env.addBinding(key, val, Env.empty),
 		addBinding: // :: Str -> a -> Env -> Env
@@ -286,22 +287,19 @@ define(["./fn"], (fn) => {
 			// addBinding k v = extend (return k v)
 			// addBinding k v e = \cT cF k'.if (k' = k) then (cT v) (e cT cF k)
 			(key, val, e) => {
-				return Object.create(e, { [key]: { value: val, enumerable: true } })
+				const res = (cT, cF) => k => (k === key ? cT(val) : e(cT, cF)(k));
+				for (const k in e) res[k] = e[k];
+				res[key] = val;
+				return res;
 			},
 		lookup: // :: Str -> Env -> (a -> c) -> (Str -> c) -> c
-			(key, e, cT, cF) => {
-				const v = e[key];
-				if (v === undefined) {
-					return cF(key);
-				} else {
-					return cT(v);
-				}
-			},
+			(key, e, cT, cF) =>
+				e(cT, cF)(key),
 		extend: // :: Env -> Env -> Env
 			(e1, e2) => {
-				const res = Object.create(e2);
-				for (const k in e1)
-					res[k] = e1[k];
+				const res = (cT, cF) => e1(cT, e2(cT, cF));
+				for (const k in e2) res[k] = e2[k];
+				for (const k in e1) res[k] = e1[k];
 				return res;
 			},
 		bind: // :: Env -> (() -> Env) -> Env
