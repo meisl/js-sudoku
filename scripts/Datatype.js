@@ -276,28 +276,42 @@ define(["./fn"], (fn) => {
 
 	const err = msg => { throw msg };
 
-	// type Env c = (Any -> c) -> (Str -> c) -> Str -> c
+	// An Env ("environment") is a fn that takes a string and *maybe* returns
+	// a value. So Env :: Str -> Maybe a, where Maybe is a data type with two
+	// ctors: None | Some a.
+	// Now, let's' represent the data type Maybe as a *function* f which takes
+	// two other fns cNone and cSome and does the following:
+	// - if f is to represent a None value: applies cNone to ()
+	// - if f is to represent a Some x value: applies cSome to x
+	// If we require both, cNone and cSome to have the same return type, we get
+	// type Maybe_CPS a c = (() -> c) -> (a -> c) -> c
+	// and
+	// type Env_CPS c = Str -> Maybe_CPS Any c
+	//                = Str -> (() -> c) -> (Any -> c) -> c
 	const Env = {
 		empty: // :: Env
-			(cT, cF) => cF,
-		return: // :: Str -> a -> Env
+			(key, cNone, cSome) => cNone(),
+		return: // :: Str -> Any -> Env
 			(key, val) => Env.addBinding(key, val, Env.empty),
-		addBinding: // :: Str -> a -> Env -> Env
+		addBinding: // :: Str -> Any -> Env -> Env
 			// addBinding k v e = (return k v) >>= \_.e
 			// addBinding k v = extend (return k v)
-			// addBinding k v e = \cT cF k'.if (k' = k) then (cT v) (e cT cF k)
+			// addBinding k = extend ° (return k)
+			// addBinding k v e = \k' cN cS.if (k' = k) then (cS v) (e k cN cS k)
 			(key, val, e) => {
-				const res = (cT, cF) => k => (k === key ? cT(val) : e(cT, cF)(k));
+				const res = (k, cN, cS) => k === key ? cS(val) : e(k, cN, cS);
 				for (const k in e) res[k] = e[k];
 				res[key] = val;
 				return res;
 			},
-		lookup: // :: Str -> Env -> (a -> c) -> (Str -> c) -> c
-			(key, e, cT, cF) =>
-				e(cT, cF)(key),
+		lookup: // :: Str -> Env -> (Any -> c) -> (() -> c) -> c
+			(key, e, cSome, cNone) =>
+				e(key, cNone, cSome),
 		extend: // :: Env -> Env -> Env
+			// = \e1 e2.\k cN cS.lookup k e1 cS \_.lookup k e2 cS cN
+			// = \e1 e2.\k cN cS.e1 k (\_.e2 k cN cS) cS
 			(e1, e2) => {
-				const res = (cT, cF) => e1(cT, e2(cT, cF));
+				const res = (k, cN, cS) => e1(k, () => e2(k, cN, cS), cS);
 				for (const k in e2) res[k] = e2[k];
 				for (const k in e1) res[k] = e1[k];
 				return res;
@@ -305,10 +319,11 @@ define(["./fn"], (fn) => {
 		bind: // :: Env -> (() -> Env) -> Env
 			(e, f) => Env.extend(e, f()),
 		get: // :: Str -> Env -> c ; or error if key is not bound
+			// \k e.e k (\_.err "unbound '" + k + "'") \x.x
 			(key, e) => Env.lookup(
 				key,
 				e,
-				v => v,
+				fn.id,
 				() => err("unbound " + stringify(key))
 			),
 	};
