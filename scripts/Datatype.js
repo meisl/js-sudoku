@@ -336,21 +336,19 @@ define(["./fn"], (fn) => {
 */
 
 
+
+	// type Maybe_CPS a c = (() -> c) -> (a -> c) -> c
+	// type Env_CPS c = Str -> Maybe_CPS Any c
+	// type Pattern_CPS a c = a -> (Env_CPS c) -> (Maybe_CPS (Env_CPS c) c)
+	// = a -> (Str -> Maybe_CPS Any c) -> (() -> c) -> (Str -> Maybe_CPS Any c -> c) -> c
+	// = a -> (Str -> (() -> c) -> (Any -> c) -> c) -> (() -> c) -> (Str -> ((() -> c) -> (Any -> c) -> c) -> c) -> c
+
+
 	// type Pattern a c = (Env -> c) -> (() -> c) -> Env -> a -> c
 
-	// type Env c = (Any -> c) -> (Str -> c) -> Str -> c
-	// type Cont c = Env c -> c
-	// type Pattern a c = Cont c -> Cont c -> Cont (a -> c)
-
-
-	// type Cont a c = a -> Env -> c
-	// type Pattern a c = (Cont a c) -> (Cont a c) -> (Cont a c)
-
 	// patAny :: Pattern a c
-	// = \cT cF.cT
-	// ~Lam("cT", Lam("cF", Var("cT")))
-	// ~Expr.make(["cF", "cT"], "cT")
-	const patAny = (cT, cF) => (x, e) => cT(x, e);
+	// = \cT cF.\x.cT
+	const patAny = (cT, cF) => (x, e) => cT(e);
 	patAny.toString = () => "_";
 
 	// patConst :: a -> Pattern a c
@@ -358,7 +356,7 @@ define(["./fn"], (fn) => {
 	// ~ Expr.make(["v", "cT" "cF" "x", "e"], Expr.If([eq, "x", "v"], ["cT", "x", "e"], ["cT", "x", "e"]))
 	const patConst = v => {
 		const res = (cT, cF) => (x, e) => {
-			return (x === v) ? cT(x, e) : cF(x, e)
+			return (x === v) ? cT(e) : cF()
 		};
 		res.toString = () => stringify(v);
 		return res;
@@ -370,8 +368,8 @@ define(["./fn"], (fn) => {
 		const res = (cT, cF) => (x, e) => Env.lookup(
 			name,
 			e,
-			v => (x === v) ? cT(x, e) : cF(x, e),
-			() => cT(x, Env.addBinding(name, x, e))
+			v => (x === v) ? cT(e) : cF(),
+			() => cT(Env.addBinding(name, x, e))
 		);
 		res.toString = () => name;
 		return res;
@@ -380,7 +378,7 @@ define(["./fn"], (fn) => {
 	// patProp :: Key -> (Pattern b c) -> (Pattern a c)
 	const patProp = (key, p) => {
 		const res = (cT, cF) => (x, e) => 
-			p((_, e2) => cT(x, e2), () => cF(x, e))(x[key], e)
+			p(cT, cF)(x[key], e)
 		;
 		res.toString = p.toString;
 		return res;
@@ -390,8 +388,7 @@ define(["./fn"], (fn) => {
 	//const patChain = (p, q) => (cT, cF) => p(q(cT, cF), cF)
 	const patChain = (p, q) => {
 		const res = (cT, cF) => (x, e) => {
-			const onFail = () => cF(x, e);
-			return p(q(cT, onFail), onFail)(x, e);
+			return p(e2 => q(cT, cF)(x, e2), cF)(x, e);
 		};
 		res.toString = () => p.toString() + " " + q.toString();
 		return res;
@@ -439,8 +436,8 @@ define(["./fn"], (fn) => {
 	const pushClause = (pat, rhs, onFail) => {
 		const res = x =>
 			pat(
-				(_, e) => rhs(new Proxy(e, { get: Env.get })),
-				(_, _e) => onFail(x)
+				e => rhs(new Proxy(e, { get: Env.get })),
+				() => onFail(x)
 			)(x, Env.empty)
 		;
 		res.toString = () => pat.toString() + " -> ..."
