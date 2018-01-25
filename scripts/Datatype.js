@@ -298,33 +298,25 @@ define(["./fn"], (fn) => {
 			// addBinding k v = extend (return k v)
 			// addBinding k = extend ° (return k)
 			// addBinding k v e = \k' cN cS.if (k' = k) then (cS v) (e k cN cS k)
-			(key, val, e) => {
-				const res = (k, cN, cS) => k === key ? cS(val) : e(k, cN, cS);
-				for (const k in e) res[k] = e[k];
-				res[key] = val;
-				return res;
-			},
+			(key, val, e) => 
+				(k, cNone, cSome) => k === key ? cSome(val) : e(k, cNone, cSome),
 		lookup: // :: Str -> Env -> (Any -> c) -> (() -> c) -> c
 			(key, e, cSome, cNone) =>
 				e(key, cNone, cSome),
 		extend: // :: Env -> Env -> Env
 			// = \e1 e2.\k cN cS.lookup k e1 cS \_.lookup k e2 cS cN
 			// = \e1 e2.\k cN cS.e1 k (\_.e2 k cN cS) cS
-			(e1, e2) => {
-				const res = (k, cN, cS) => e1(k, () => e2(k, cN, cS), cS);
-				for (const k in e2) res[k] = e2[k];
-				for (const k in e1) res[k] = e1[k];
-				return res;
-			},
+			(e1, e2) =>
+				(k, cN, cS) => e1(k, () => e2(k, cN, cS), cS),
 		bind: // :: Env -> (() -> Env) -> Env
 			(e, f) => Env.extend(e, f()),
-		get: // :: Str -> Env -> c ; or error if key is not bound
-			// \k e.e k (\_.err "unbound '" + k + "'") \x.x
-			(key, e) => Env.lookup(
+		get: // :: Env -> Str -> c ; or error if key is not bound
+			// \e k.e k (\_.err "unbound '" + k + "'") \x.x
+			(e, key) => Env.lookup(
 				key,
 				e,
 				fn.id,
-				() => err("unbound " + stringify(key))
+				() => err("unbound var " + stringify(key))
 			),
 	};
 
@@ -447,7 +439,7 @@ define(["./fn"], (fn) => {
 	const pushClause = (pat, rhs, onFail) => {
 		const res = x =>
 			pat(
-				(_, e) => rhs(e),
+				(_, e) => rhs(new Proxy(e, { get: Env.get })),
 				(_, _e) => onFail(x)
 			)(x, Env.empty)
 		;

@@ -578,7 +578,11 @@ require(["scripts/fn", "scripts/Datatype"], (fn, Datatype) => {
 					assert.same(match(2), out1,
 						"matching 2 against `x -> out1` yields out1");
 
-					match = pushClause(patVar("x"), e => e.x, catchAll);
+					match = pushClause(patVar("x"), 
+						e => {
+							return e.x
+						}, 
+						catchAll);
 					assert.same(match(1), 1,
 						"matching 1 against `x -> e.x` yields 1");
 					assert.same(match(2), 2,
