@@ -276,6 +276,8 @@ define(["./fn"], (fn) => {
 
 	const err = msg => { throw msg };
 
+	const errUnbound = name => err("unbound var " + stringify(name));
+
 	// An Env ("environment") is a fn that takes a string and *maybe* returns
 	// a value. So Env :: Str -> Maybe a, where Maybe is a data type with two
 	// ctors: None | Some a.
@@ -316,7 +318,7 @@ define(["./fn"], (fn) => {
 				key,
 				e,
 				fn.id,
-				() => err("unbound var " + stringify(key))
+				() => errUnbound(key)
 			),
 	};
 
@@ -351,10 +353,20 @@ define(["./fn"], (fn) => {
 	const patAny = (cT, cF) => (x, e) => cT(e);
 	patAny.toString = () => "_";
 
-	// patConst :: a -> Pattern a c
+	// patMap :: (a -> b) -> Pattern b c -> Pattern a c
+	const patMap = (f, p) => {
+		const res = (cT, cF) => (x, e) => p(cT, cF)(f(x), e);
+		res.toString = p.toString;
+		return res;
+	};
+
+	// patProp :: Key -> (Pattern b c) -> (Pattern a c)
+	const patProp = (key, p) => patMap(x => x[key], p);
+
+	// patEq :: a -> Pattern a c
 	// = \v cT cF x e.if (x = v) then (cT x e) else (cF x e)
 	// ~ Expr.make(["v", "cT" "cF" "x", "e"], Expr.If([eq, "x", "v"], ["cT", "x", "e"], ["cT", "x", "e"]))
-	const patConst = v => {
+	const patEq = v => {
 		const res = (cT, cF) => (x, e) => {
 			return (x === v) ? cT(e) : cF()
 		};
@@ -362,28 +374,41 @@ define(["./fn"], (fn) => {
 		return res;
 	};
 
+	// patConst :: a -> Pattern a c ; a simple value (nor ctor, neither data value)
+	const patConst = c => {
+		if (isDatavalue(c) || isDatactor(c))
+			throw "invalid const pattern - use patData(..) instead: " + stringify(c);
+		return patEq(c);
+	};
 
-	// patVar :: Str -> Pattern a c
-	const patVar = name => {
-		const res = (cT, cF) => (x, e) => Env.lookup(
-			name,
-			e,
-			v => (x === v) ? cT(e) : cF(),
-			() => cT(Env.addBinding(name, x, e))
-		);
+	// patVarIntro :: Str -> Pattern a c
+	const patVarIntro = name => {
+		const res = (cT, cF) => (x, e) => cT(Env.addBinding(name, x, e));
+		res.toString = () => name + "!";
+		return res;
+	};
+
+	// patVarLookup :: Str -> (a -> Pattern a c) -> (() -> Pattern a c) -> Pattern a c
+	const patVarLookup = (name, f, cUnbound) => {
+		const res = (cT, cF) => (x, e) =>
+			Env.lookup(name, e, f, cUnbound)(cT, cF)(x, e);
+		//const res = e => e(name, cUnbound, f)(e)
 		res.toString = () => name;
 		return res;
 	};
 
-	// patProp :: Key -> (Pattern b c) -> (Pattern a c)
-	const patProp = (key, p) => {
-		const res = (cT, cF) => (x, e) => 
-			p(cT, cF)(x[key], e)
-		;
-		res.toString = p.toString;
+	// patVar :: Str -> Pattern a c
+	const patVar = name => patVarLookup(name, patEq, () => patVarIntro(name));
+
+	// patVarGet :: Str -> (a -> Pattern a c) -> Pattern a c
+	//const patVarGet = (name, f) => patVarLookup(name, patEq, () => errUnbound(name));
+	const patVarGet = (name, f) => {
+		const res = (cT, cF) => (x, e) =>
+			patEq(Env.get(e, name))(cT, cF)(x, e);
+		res.toString = () => name + "?";
 		return res;
 	};
-	
+
 	// patChain :: (Pattern a c) -> (Pattern a c) -> (Pattern a c)
 	//const patChain = (p, q) => (cT, cF) => p(q(cT, cF), cF)
 	const patChain = (p, q) => {
@@ -394,12 +419,13 @@ define(["./fn"], (fn) => {
 		return res;
 	};
 
+
 	// patData :: DataCtor -> [Pattern b c] -> (Pattern a c)
 	const patData = (ctor, ...argPatterns) => {
 		const n = ctor.length;
 		if (argPatterns.length !== n)
 			throw "wrong arity " + n + " !== " + argPatterns.length;
-		const patCtor = patProp("datactor", patConst(ctor))
+		const patCtor = patProp("datactor", patEq(ctor))
 		if (n === 0) {
 			return patCtor;
 		}
@@ -448,11 +474,7 @@ define(["./fn"], (fn) => {
 
 	Datatype.pattern = {
 		patAny,
-		patConst: c => {
-			if (isDatavalue(c) || isDatactor(c))
-				throw "invalid const pattern - use patData(..) instead";
-			return patConst(c);
-		},
+		patConst: patConst,
 		patVar,
 		patData: (ctor, ...argPatterns) => {
 			if (!isDatactor(ctor))
