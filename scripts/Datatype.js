@@ -430,14 +430,15 @@ define(["./fn"], (fn) => {
 
 	// mReturn :: Pattern -> Env -> <Pattern, Env>
 	// mReturn :: Pattern -> Env -> (Pattern -> Env -> c) -> c
-	const mReturn = (p, e) => [p, e];
-	//const mReturn = (p, e) => f => f(p, e);
+	//const mReturn = (p, e) => [p, e];
+	const mReturn = (p, e) => f => f(p, e);
 
 	// mExtract :: <Pattern, Env> -> (Pattern -> Env -> c) -> c
-	const mExtract = (m, f) => f(...m);
+	// mExtract :: ((Pattern -> Env -> c) -> c) -> (Pattern -> Env -> c) -> c
+	const mExtract = (m, f) => m(f);
 
 	// bindPatX :: Pattern -> Env -> (Env -> <Pattern, Env>) -> <Pattern, Env>
-	// bindPatX :: Pattern -> Env -> (Env -> <Pattern, Env>) -> (Pattern -> Env -> c) -> c
+	// bindPatX :: Pattern -> Env -> (Env -> (Pattern -> Env -> c) -> c) -> (Pattern -> Env -> c) -> c
 	const bindPatX = (m, f) =>
 		// e_ct and e_ct2 are *compile-time* envs!
 		mExtract(m, (p, e_ct) =>
