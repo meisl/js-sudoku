@@ -447,12 +447,14 @@ define(["./fn"], (fn) => {
 		);
 	;
 
-
-	const mkPropEq = (propKey, value) =>
+	// retPropEq :: Str -> Any -> Env -> <Pattern, Env>
+	// retPropEq :: Str -> Any -> Env -> (Pattern -> Env -> c) -> c
+	const retPropEq = (propKey, value) =>
 		e_ct => mReturn(patProp(propKey, patEq(value)), e_ct)
 	;
 
-	const mkPropVar = (propKey, varName) => e_ct => {
+	// retPropVar :: Str -> Str -> Env -> <Pattern, Env>
+	const retPropVar = (propKey, varName) => e_ct => {
 		return Env.lookup(
 			varName,
 			e_ct,
@@ -467,21 +469,26 @@ define(["./fn"], (fn) => {
 		);
 	};
 
+	// retPropSub :: Str -> (<Pattern, Env> -> <Pattern, Env>) -> Env -> <Pattern, Env>
+	const retPropSub = (propKey, f) => e_ct =>
+		mExtract(
+			f(mReturn(patAny, e_ct)), 
+			(pat, e_ct2) => mReturn(patProp(propKey, pat), e_ct2)
+		);
+
+
 	const foo = mReturn(patProp("datactor", patEq("Ctor1")), Env.empty);
 
-	const bar = bindPatX(foo, mkPropVar(0, "x"));
+	const bar = bindPatX(foo, retPropVar(0, "x"));
 
-	const baz = bindPatX(bar, e_ct => {
-		const m = mReturn(patAny, e_ct);
-		const p = bindPatX(m, mkPropEq("datactor", "Ctor2"));
-		const q = bindPatX(p, mkPropEq(0, "1.0"));
-		const r = bindPatX(q, mkPropVar(1, "x"));
-		return mExtract(r, (pat, e_ct2) =>
-			mReturn(patProp(1, pat), e_ct2)
-		);
-	});
+	const baz = bindPatX(bar, retPropSub(1, m => {
+		const p = bindPatX(m, retPropEq("datactor", "Ctor2"));
+		const q = bindPatX(p, retPropEq(0, "1.0"));
+		const r = bindPatX(q, retPropVar(1, "x"));
+		return r;
+	}));
 
-	const qmbl = bindPatX(baz, mkPropVar(2, "x"));
+	const qmbl = bindPatX(baz, retPropVar(2, "x"));
 
 	mExtract(qmbl, (p, e_ct) => {
 		console.log(p.toString());
