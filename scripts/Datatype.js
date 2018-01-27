@@ -433,13 +433,23 @@ define(["./fn"], (fn) => {
 	const mReturn = (e, p) => [e, p];
 	//const mReturn = (e, p) => f => f(e, p);
 
+	// mExtract :: <Env, Pattern> -> (Env -> Pattern -> c) -> c
+	const mExtract = (m, f) => f(...m);
+
 	// bindPatX :: Env -> Pattern -> (Env -> <Env, Pattern>) -> <Env, Pattern>
 	// bindPatX :: Env -> Pattern -> (Env -> <Env, Pattern>) -> (Env -> Pattern -> c) -> c
 	const bindPatX = (m, f) => {
-		const [e_ct, p] = m;
 		// e_ct and e_ct2 are *compile-time* envs!
+		return mExtract(m, (e_ct, p) =>
+			mExtract(f(e_ct), (e_ct2, p2) =>
+				mReturn(e_ct2, patChain(p, p2))
+			)
+		);
+		/*
+		const [e_ct, p] = m;
 		const [e_ct2, p2] = f(e_ct);
 		return mReturn(e_ct2, patChain(p, p2));
+		*/
 	};
 
 
@@ -467,9 +477,9 @@ define(["./fn"], (fn) => {
 		const p = bindPatX(m, mkPropEq("datactor", "Ctor2"));
 		const q = bindPatX(p, mkPropEq(0, "1.0"));
 		const r = bindPatX(q, mkPropVar(1, "x"));
-		const [e_ct2, pat] = r;
-		console.log("pat: " + pat)
-		return mReturn(e_ct2, patProp(1, pat));
+		return mExtract(r, (e_ct2, pat) =>
+			mReturn(e_ct2, patProp(1, pat))
+		);
 	});
 
 	const qmbl = bindPatX(baz, mkPropVar(2, "x"));
