@@ -439,14 +439,17 @@ define(["./fn"], (fn) => {
 
 	// bindPatX :: Pattern -> Env -> (Env -> <Pattern, Env>) -> <Pattern, Env>
 	// bindPatX :: Pattern -> Env -> (Env -> (Pattern -> Env -> c) -> c) -> (Pattern -> Env -> c) -> c
-	const bindPatX = (m, f) =>
+	const bindPatX = (p, e_ct) =>
 		// e_ct and e_ct2 are *compile-time* envs!
-		mExtract(m, (p, e_ct) =>
-			mExtract(f(e_ct), (p2, e_ct2) =>
+		f =>
+			f(e_ct)((p2, e_ct2) =>
 				mReturn(patChain(p, p2), e_ct2)
 			)
-		);
+		;
 	;
+	// = \m f.m \p e_ct.f e_ct \p2 e_ct2.mReturn (patChain p p2) e_ct2
+	// = \m f.m \p e_ct.f e_ct \p2.mReturn (patChain p p2)
+	// = \m f.m \p e_ct.f e_ct (mReturn ° (patChain p))
 
 	// retPropEq :: Str -> Any -> Env -> <Pattern, Env>
 	// retPropEq :: Str -> Any -> Env -> (Pattern -> Env -> c) -> c
@@ -472,24 +475,23 @@ define(["./fn"], (fn) => {
 
 	// retPropSub :: Str -> (<Pattern, Env> -> <Pattern, Env>) -> Env -> <Pattern, Env>
 	const retPropSub = (propKey, f) => e_ct =>
-		mExtract(
-			f(mReturn(patAny, e_ct)), 
+		f(mReturn(patAny, e_ct))(
 			(pat, e_ct2) => mReturn(patProp(propKey, pat), e_ct2)
 		);
 
 
 	const foo = mReturn(patProp("datactor", patEq("Ctor1")), Env.empty);
 
-	const bar = bindPatX(foo, retPropVar(0, "x"));
+	const bar = foo(bindPatX)(retPropVar(0, "x"));
 
-	const baz = bindPatX(bar, retPropSub(1, m => {
-		const p = bindPatX(m, retPropEq("datactor", "Ctor2"));
-		const q = bindPatX(p, retPropEq(0, "1.0"));
-		const r = bindPatX(q, retPropVar(1, "x"));
+	const baz = bar(bindPatX)(retPropSub(1, m => {
+		const p = m(bindPatX)(retPropEq("datactor", "Ctor2"));
+		const q = p(bindPatX)(retPropEq(0, "1.0"));
+		const r = q(bindPatX)(retPropVar(1, "x"));
 		return r;
 	}));
 
-	const qmbl = bindPatX(baz, retPropVar(2, "x"));
+	const qmbl = baz(bindPatX)(retPropVar(2, "x"));
 
 	mExtract(qmbl, (p, e_ct) => {
 		console.log(p.toString());
