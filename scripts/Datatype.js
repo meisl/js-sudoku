@@ -420,6 +420,55 @@ define(["./fn"], (fn) => {
 	};
 
 
+
+
+
+	// mReturn :: Env -> Pattern -> <Env, Pattern>
+	// mReturn :: Env -> Pattern -> (Env -> Pattern -> c) -> c
+	const mReturn = (e, p) => [e, p];
+	//const mReturn = (e, p) => f => f(e, p);
+
+	// bindPatX :: Env -> Pattern -> (Env -> <Env, Pattern>) -> <Env, Pattern>
+	// bindPatX :: Env -> Pattern -> (Env -> <Env, Pattern>) -> (Env -> Pattern -> c) -> c
+	const bindPatX = (m, f) => {
+		const [e_ct, p] = m;
+		// e_ct and e_ct2 are *compile-time* envs!
+		const [e_ct2, p2] = f(e_ct);
+		return mReturn(e_ct2, patChain(p, p2));
+	};
+
+
+	const mkPropEq = (propKey, value) =>
+		e_ct => mReturn(e_ct, patProp(propKey, patEq(value)))
+	;
+
+	const mkPropVar = (propKey, varName) => e_ct => {
+		return Env.lookup(
+			varName,
+			e_ct,
+			_ => mReturn(e_ct,
+				patProp(propKey, patVarGet(varName))),
+			() => mReturn(Env.addBinding(varName, 1, e_ct),
+				patProp(propKey, patVarIntro(varName)))
+		);
+	};
+
+	const foo = mReturn(Env.empty, patProp("datactor", patEq("Ctor1")));
+
+	const bar = bindPatX(foo, mkPropVar(0, "x"));
+
+	const baz = bindPatX(bar, mkPropEq(1, "one"));
+
+	const qmbl = bindPatX(baz, mkPropVar(2, "x"));
+
+	const [_, p] = qmbl;
+	console.log(p.toString());
+	const cT = e => { console.log("success - e: " + e); return e; };
+	const cF = () => console.log("failure");
+	const match = x => p(cT, cF)(x, Env.empty);
+
+
+
 	// patData :: DataCtor -> [Pattern b c] -> (Pattern a c)
 	const patData = (ctor, ...argPatterns) => {
 		const n = ctor.length;
