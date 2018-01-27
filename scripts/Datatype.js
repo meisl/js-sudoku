@@ -428,68 +428,69 @@ define(["./fn"], (fn) => {
 
 
 
-	// mReturn :: Env -> Pattern -> <Env, Pattern>
-	// mReturn :: Env -> Pattern -> (Env -> Pattern -> c) -> c
-	const mReturn = (e, p) => [e, p];
-	//const mReturn = (e, p) => f => f(e, p);
+	// mReturn :: Pattern -> Env -> <Pattern, Env>
+	// mReturn :: Pattern -> Env -> (Pattern -> Env -> c) -> c
+	const mReturn = (p, e) => [p, e];
+	//const mReturn = (p, e) => f => f(p, e);
 
-	// mExtract :: <Env, Pattern> -> (Env -> Pattern -> c) -> c
+	// mExtract :: <Pattern, Env> -> (Pattern -> Env -> c) -> c
 	const mExtract = (m, f) => f(...m);
 
-	// bindPatX :: Env -> Pattern -> (Env -> <Env, Pattern>) -> <Env, Pattern>
-	// bindPatX :: Env -> Pattern -> (Env -> <Env, Pattern>) -> (Env -> Pattern -> c) -> c
-	const bindPatX = (m, f) => {
+	// bindPatX :: Pattern -> Env -> (Env -> <Pattern, Env>) -> <Pattern, Env>
+	// bindPatX :: Pattern -> Env -> (Env -> <Pattern, Env>) -> (Pattern -> Env -> c) -> c
+	const bindPatX = (m, f) =>
 		// e_ct and e_ct2 are *compile-time* envs!
-		return mExtract(m, (e_ct, p) =>
-			mExtract(f(e_ct), (e_ct2, p2) =>
-				mReturn(e_ct2, patChain(p, p2))
+		mExtract(m, (p, e_ct) =>
+			mExtract(f(e_ct), (p2, e_ct2) =>
+				mReturn(patChain(p, p2), e_ct2)
 			)
 		);
-		/*
-		const [e_ct, p] = m;
-		const [e_ct2, p2] = f(e_ct);
-		return mReturn(e_ct2, patChain(p, p2));
-		*/
-	};
+	;
 
 
 	const mkPropEq = (propKey, value) =>
-		e_ct => mReturn(e_ct, patProp(propKey, patEq(value)))
+		e_ct => mReturn(patProp(propKey, patEq(value)), e_ct)
 	;
 
 	const mkPropVar = (propKey, varName) => e_ct => {
 		return Env.lookup(
 			varName,
 			e_ct,
-			_ => mReturn(e_ct,
-				patProp(propKey, patVarGet(varName))),
-			() => mReturn(Env.addBinding(varName, 1, e_ct),
-				patProp(propKey, patVarIntro(varName)))
+			_ => mReturn(
+				patProp(propKey, patVarGet(varName)),
+				e_ct
+			),
+			() => mReturn(
+				patProp(propKey, patVarIntro(varName)),
+				Env.addBinding(varName, 1, e_ct)
+			)
 		);
 	};
 
-	const foo = mReturn(Env.empty, patProp("datactor", patEq("Ctor1")));
+	const foo = mReturn(patProp("datactor", patEq("Ctor1")), Env.empty);
 
 	const bar = bindPatX(foo, mkPropVar(0, "x"));
 
 	const baz = bindPatX(bar, e_ct => {
-		const m = mReturn(e_ct, patAny);
+		const m = mReturn(patAny, e_ct);
 		const p = bindPatX(m, mkPropEq("datactor", "Ctor2"));
 		const q = bindPatX(p, mkPropEq(0, "1.0"));
 		const r = bindPatX(q, mkPropVar(1, "x"));
-		return mExtract(r, (e_ct2, pat) =>
-			mReturn(e_ct2, patProp(1, pat))
+		return mExtract(r, (pat, e_ct2) =>
+			mReturn(patProp(1, pat), e_ct2)
 		);
 	});
 
 	const qmbl = bindPatX(baz, mkPropVar(2, "x"));
 
-	const [_, p] = qmbl;
-	console.log(p.toString());
-	const cT = e => { console.log("success - e: " + e); return e; };
-	const cF = () => console.log("failure");
-	const match = x => p(cT, cF)(x, Env.empty);
+	mExtract(qmbl, (p, e_ct) => {
+		console.log(p.toString());
+		const cT = e => { console.log("success - e: " + e); return e; };
+		const cF = () => console.log("failure");
+		const match = x => p(cT, cF)(x, Env.empty);
 
+		return;
+	});
 
 
 	// patData :: DataCtor -> [Pattern b c] -> (Pattern a c)
