@@ -484,12 +484,11 @@ define(["./fn"], (fn) => {
 
 	const bar = foo(bindPatX)(retPropVar(0, "x"));
 
-	const baz = bar(bindPatX)(retPropSub(1, m => {
-		const p = m(bindPatX)(retPropEq("datactor", "Ctor2"));
-		const q = p(bindPatX)(retPropEq(0, "1.0"));
-		const r = q(bindPatX)(retPropVar(1, "x"));
-		return r;
-	}));
+	const baz = bar(bindPatX)(retPropSub(1, m =>
+		m(bindPatX)(retPropEq("datactor", "Ctor2"))
+		 (bindPatX)(retPropEq(0, "1.0"))
+		 (bindPatX)(retPropVar(1, "x"))
+	));
 
 	const qmbl = baz(bindPatX)(retPropVar(2, "x"));
 
