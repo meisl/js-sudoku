@@ -356,7 +356,9 @@ define(["./fn"], (fn) => {
 	// patMap :: (a -> b) -> Pattern b c -> Pattern a c
 	const patMap = (f, p) => {
 		const res = (cT, cF) => (x, e) => p(cT, cF)(f(x), e);
-		res.toString = p.toString;
+		res.toString = p.isCompound
+			? () => "(" + p.toString() + ")"
+			: p.toString;
 		return res;
 	};
 
@@ -412,10 +414,13 @@ define(["./fn"], (fn) => {
 	// patChain :: (Pattern a c) -> (Pattern a c) -> (Pattern a c)
 	//const patChain = (p, q) => (cT, cF) => p(q(cT, cF), cF)
 	const patChain = (p, q) => {
+		if (p === patAny) return q;
+		if (q === patAny) return p;
 		const res = (cT, cF) => (x, e) => {
 			return p(e2 => q(cT, cF)(x, e2), cF)(x, e);
 		};
 		res.toString = () => p.toString() + " " + q.toString();
+		res.isCompound = true;
 		return res;
 	};
 
@@ -457,7 +462,15 @@ define(["./fn"], (fn) => {
 
 	const bar = bindPatX(foo, mkPropVar(0, "x"));
 
-	const baz = bindPatX(bar, mkPropEq(1, "one"));
+	const baz = bindPatX(bar, e_ct => {
+		const m = mReturn(e_ct, patAny);
+		const p = bindPatX(m, mkPropEq("datactor", "Ctor2"));
+		const q = bindPatX(p, mkPropEq(0, "1.0"));
+		const r = bindPatX(q, mkPropVar(1, "x"));
+		const [e_ct2, pat] = r;
+		console.log("pat: " + pat)
+		return mReturn(e_ct2, patProp(1, pat));
+	});
 
 	const qmbl = bindPatX(baz, mkPropVar(2, "x"));
 
@@ -491,7 +504,7 @@ define(["./fn"], (fn) => {
 				.reduceRight((acc, pat) => patChain(pat, acc))
 		);
 		const inner_toString = res.toString;
-		res.toString = () => "(" + inner_toString() + ")";
+		//res.toString = () => "(" + inner_toString() + ")";
 		return res;
 	};
 

@@ -479,20 +479,20 @@ require(["scripts/fn", "scripts/Datatype"], (fn, Datatype) => {
 						"patData(List.Nil).toString()");
 					
 					assert.same(pSingle_42.toString(),
-						"(Cons 42 Nil)",
-						"patData(List.Cons, patConst(42), patData(List.Nil))");
+						"Cons 42 Nil",
+						"patData(List.Cons, patConst(42), patData(List.Nil)).toString()");
 					
 					assert.same(pSingle.toString(),
-						"(Cons x Nil)",
-						'patData(List.Cons, patVar("x"), patData(List.Nil))');
+						"Cons x Nil",
+						'patData(List.Cons, patVar("x"), patData(List.Nil)).toString()');
 					
 					assert.same(pNonNil.toString(),
-						"(Cons x xs)",
-						'patData(List.Cons, patVar("x"), patVar("xs"))');
+						"Cons x xs",
+						'patData(List.Cons, patVar("x"), patVar("xs")).toString()');
 					
 					assert.same(pComplicated.toString(),
-						"(Cons (Cons x Nil) (Cons x xs))",
-						'patData(List.Cons, patData(List.Cons, patVar("x"), patData(List.Nil)), patData(List.Cons, patVar("x"), patVar("xs")))');
+						"Cons (Cons x Nil) (Cons x xs)",
+						'patData(List.Cons, patData(List.Cons, patVar("x"), patData(List.Nil)), patData(List.Cons, patVar("x"), patVar("xs"))).toString()');
 				});
 			
 				test("with invalid args", function (assert) {
