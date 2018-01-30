@@ -353,25 +353,12 @@ define(["./fn"], (fn) => {
 	const patAny = (cT, cF) => (x, e) => cT(e);
 	patAny.toString = () => "_";
 
-	// patMap :: (a -> b) -> Pattern b c -> Pattern a c
-	const patMap = (f, p) => {
-		const res = (cT, cF) => (x, e) => p(cT, cF)(f(x), e);
-		res.toString = p.isCompound
-			? () => "(" + p.toString() + ")"
-			: p.toString;
-		return res;
-	};
-
-	// patProp :: Key -> (Pattern b c) -> (Pattern a c)
-	const patProp = (key, p) => patMap(x => x[key], p);
-
 	// patEq :: a -> Pattern a c
 	// = \v cT cF x e.if (x = v) then (cT x e) else (cF x e)
 	// ~ Expr.make(["v", "cT" "cF" "x", "e"], Expr.If([eq, "x", "v"], ["cT", "x", "e"], ["cT", "x", "e"]))
 	const patEq = v => {
-		const res = (cT, cF) => (x, e) => {
-			return (x === v) ? cT(e) : cF()
-		};
+		const res = (cT, cF) => (x, e) =>
+			(x === v) ? cT(e) : cF();
 		res.toString = () => stringify(v);
 		return res;
 	};
@@ -381,6 +368,23 @@ define(["./fn"], (fn) => {
 		if (isDatavalue(c) || isDatactor(c))
 			throw "invalid const pattern - use patData(..) instead: " + stringify(c);
 		return patEq(c);
+	};
+
+	// patMap :: (a -> b) -> Pattern b c -> Pattern a c
+	const patMap = (f, p) => {
+		const res = (cT, cF) => {
+			return (x, e) => p(cT, cF)(f(x), e)
+		};
+		res.toString = p.isCompound
+			? () => "(" + p.toString() + ")"
+			: p.toString;
+		return res;
+	};
+
+	// patProp :: Key -> (Pattern b c) -> (Pattern a c)
+	// patProp = patMatp(fn.flip(Reflect.get))
+	const patProp = (key, p) => {
+		return patMap(x => x[key], p);
 	};
 
 	// patVarIntro :: Str -> Pattern a c
@@ -430,8 +434,20 @@ define(["./fn"], (fn) => {
 
 	// mReturn :: Pattern -> Env -> <Pattern, Env>
 	// mReturn :: Pattern -> Env -> (Pattern -> Env -> c) -> c
-	//const mReturn = (p, e) => [p, e];
-	const mReturn = (p, e) => f => f(p, e);
+	const mReturn = (p, ...rest) => {
+		if (p === undefined)
+			throw new TypeError("mReturn cannot be applied to undefined");
+		switch (rest.length) {
+			case 0:
+				return e => f => f.length === 2 ? f(p, e) : f(p)(e);
+			case 1:
+				const e = rest[0];
+				return f => f.length === 2 ? f(p, e) : f(p)(e);
+			default:
+				throw "mReturn cannot take more than 2 args (at once)"
+		}
+	};
+
 
 	// mExtract :: <Pattern, Env> -> (Pattern -> Env -> c) -> c
 	// mExtract :: ((Pattern -> Env -> c) -> c) -> (Pattern -> Env -> c) -> c
@@ -439,11 +455,11 @@ define(["./fn"], (fn) => {
 
 	// bindPatX :: Pattern -> Env -> (Env -> <Pattern, Env>) -> <Pattern, Env>
 	// bindPatX :: Pattern -> Env -> (Env -> (Pattern -> Env -> c) -> c) -> (Pattern -> Env -> c) -> c
-	const bindPatX = (p, e_ct) =>
-		// e_ct and e_ct2 are *compile-time* envs!
+	const bindPatX = (p1, e_ct) =>
+		// e_ct is the *compile-time* env!
 		f =>
-			f(e_ct)((p2, e_ct2) =>
-				mReturn(patChain(p, p2), e_ct2)
+			f(e_ct)(p2 =>
+				mReturn(patChain(p1, p2))
 			)
 		;
 	;
@@ -451,13 +467,13 @@ define(["./fn"], (fn) => {
 	// = \m f.m \p e_ct.f e_ct \p2.mReturn (patChain p p2)
 	// = \m f.m \p e_ct.f e_ct (mReturn ° (patChain p))
 
-	// retPropEq :: Str -> Any -> Env -> <Pattern, Env>
-	// retPropEq :: Str -> Any -> Env -> (Pattern -> Env -> c) -> c
+	// retPropEq :: Key -> Any -> Env -> <Pattern, Env>
+	// retPropEq :: Key -> Any -> Env -> (Pattern -> Env -> c) -> c
 	const retPropEq = (propKey, value) =>
-		e_ct => mReturn(patProp(propKey, patEq(value)), e_ct)
+		mReturn(patProp(propKey, patEq(value)))
 	;
 
-	// retPropVar :: Str -> Str -> Env -> <Pattern, Env>
+	// retPropVar :: Key -> Str -> Env -> <Pattern, Env>
 	const retPropVar = (propKey, varName) => e_ct => {
 		return Env.lookup(
 			varName,
@@ -473,30 +489,81 @@ define(["./fn"], (fn) => {
 		);
 	};
 
-	// retPropSub :: Str -> (<Pattern, Env> -> <Pattern, Env>) -> Env -> <Pattern, Env>
+	// retPropPat :: Key -> Pattern -> Env -> <Pattern, Env>
+	const retPropPat = key => pat => 
+		mReturn(patProp(key, pat))
+	;
+
+	// retPropSub :: Key -> (<Pattern, Env> -> <Pattern, Env>) -> Env -> <Pattern, Env>
 	const retPropSub = (propKey, f) => e_ct =>
 		f(mReturn(patAny, e_ct))(
-			(pat, e_ct2) => mReturn(patProp(propKey, pat), e_ct2)
-		);
+			pat => mReturn(patProp(propKey, pat))
+		)
+	;
+
+	// bindProp :: Key -> <Pattern, Env> -> <Pattern, Env>
+	const bindProp = (key, f) => (p, e_ct) =>
+		bindPatX(p, e_ct)(e_ct =>
+			f(mReturn(patAny, e_ct))
+			(q => mReturn(patProp(key, q)))
+		)
+	;
 
 
-	const foo = mReturn(patProp("datactor", patEq("Ctor1")), Env.empty);
+	//const foo = mReturn(patProp("datactor", patEq("Ctor1")), Env.empty);
 
-	const bar = foo(bindPatX)(retPropVar(0, "x"));
+	const baz =    retPropEq("datactor", "Ctor1")(Env.empty)
+		(bindPatX)(retPropVar(0, "x"))
+		
+		(bindPatX)(retPropSub(1, m => m
+			(bindPatX)(retPropEq("datactor", "Ctor2"))
+			(bindPatX)(retPropEq(0, "1.0"))
+			(bindPatX)(retPropVar(1, "y"))
+		))
+		
+		((p, e_ct) => mReturn(patChain(p, patProp(1,
+			mReturn(patAny, e_ct)
+			(bindPatX)(retPropEq("datactor", "Ctor2"))
+			((q, e_ct2) => q)
+		)), e_ct)) // NO - should be e_ct2!
+		/*
+		(bindPatX)(e_ct => mReturn(patAny, e_ct)
+			(bindPatX)(retPropEq("datactor", "Ctor2"))
+			(bindPatX)(retPropEq(0, "1.0"))
+			(bindPatX)(retPropVar(1, "x"))
+			(retPropPat(2))
+			//(p => mReturn(patProp(1, p)))
+		)
 
-	const baz = bar(bindPatX)(retPropSub(1, m =>
-		m(bindPatX)(retPropEq("datactor", "Ctor2"))
-		 (bindPatX)(retPropEq(0, "1.0"))
-		 (bindPatX)(retPropVar(1, "x"))
-	));
+		(bindProp(3, m => m
+			(bindPatX)(retPropEq("datactor", "Ctor2"))
+			(bindPatX)(retPropEq(0, "1.0"))
+			(bindPatX)(retPropVar(1, "x"))
+		))
+		
+		(bindProp(5, m => m
+			(bindPatX)(mReturn(patEq(42)))
+		))
+		*/
+	;
 
 	const qmbl = baz(bindPatX)(retPropVar(2, "x"));
 
-	mExtract(qmbl, (p, e_ct) => {
+	const out = mExtract(qmbl, (p, e_ct) => {
 		console.log(p.toString());
 		const cT = e => { console.log("success - e: " + e); return e; };
-		const cF = () => console.log("failure");
+		const cF = desc => console.log("failure: " + QUnit.dump.parse(desc));
 		const match = x => p(cT, cF)(x, Env.empty);
+
+		match({
+			datactor: "Ctor1",
+			0: "foo",
+			1: {
+				datactor: "Ctor2",
+				0: "1.0",
+				1: "bar"
+			}
+		});
 
 		return;
 	});
