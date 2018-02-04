@@ -1,8 +1,8 @@
 define([], () => {
 
-	const id = function id(x) { return x };
 
-	const typeofIs   = function typeofIs(tpStr, x) { return (typeof x) === tpStr }
+
+	function typeofIs(tpStr, x) { return (typeof x) === tpStr }
 
 	const isBoolean  = function isBoolean(x)  { return typeofIs("boolean", x) }
 	const isNumber   = function isNumber(x)   { return typeofIs("number", x) }
@@ -10,7 +10,9 @@ define([], () => {
 	const isSymbol   = function isSymbol(x)   { return typeofIs("symbol", x) };
 	const isObject   = function isObject(x)   { return typeofIs("object", x) };
 	const isArray    = function isArray(x)    { return Array.isArray(x) };
-	const isFunction = function isFunction(x) { return typeofIs("function", x) };
+	
+	//function isFunction(x) { return typeofIs("function", x) };
+	let isFunction = x => "function" === typeof x;
 
 	const toStrLiteral = function (s, outerQuote) {
 		if (!isString(s))
@@ -96,12 +98,87 @@ define([], () => {
 				: "?";
 		} else if (isSymbol(v)) {
 			return v.toString();
+		} else if (isArray(v)) {
+			return "[" + v.map(stringify).toString() + "]";
 		} else {
 			return "" + v;	// TODO: stringify(Object.create(null)) throws "TypeError: Cannot convert object to primitive value"
 		}
 	};
 
+
+	function _applyCurried(f, n, thisVal, ...boundArgs) {
+		if (f.isCurried) // TODO: prove that it cannot happen
+			throw "should not happen: _applyCurried on already curried " + f;
+		const k = boundArgs.length;
+		const m = n - k;
+		if (m === 0) {
+			const res = f.apply(thisVal, boundArgs);
+			return (res instanceof Function) // do NOT use isFunction here!
+					? curry(res)
+					: res;
+		} else if (m < 0) { // over-application
+			const res = f.apply(thisVal, boundArgs.slice(0, n));
+			return curry(res)(...boundArgs.slice(n));
+		} else { // m > 0, need more args
+			const res = (...moreArgs) => moreArgs.length
+				? _applyCurried(f, n, thisVal, ...boundArgs, ...moreArgs)
+				: _applyCurried(f, n, thisVal, ...boundArgs, void 0);
+			Object.defineProperties(res, {
+				length: { value: m },
+				name:   { value: "curried" + m + " " + (f.name || f.toString()) },
+				isCurried: { value: true },
+				targetFunction: { value: f },
+				toString: { value: function toString() { return this.name } },
+			});
+			return res;
+		}
+	}
+
+	function curry(f) {
+		if (!(f instanceof Function)) // do NOT use isFunction here!
+			throw new TypeError(stringify(f) + " is not a function");
+		if (f.isCurried) 
+			return f;
+		if (f.length === 0)
+			throw new TypeError("cannot curry nullary or varargs function - use dummy parameter _ instead")
+		const n = f.length || 1;
+		const res = function (...moreArgs) {
+			return moreArgs.length // bind `this` whenever first arg arrives
+				? _applyCurried(f, n, this, ...moreArgs)
+				: _applyCurried(f, n, this, void 0);
+		};
+		Object.defineProperties(res, {
+			length: { value: n },
+			name:   { value: "curried" + n + " " + (f.name || f.toString()) },
+			isCurried: { value: true },
+			targetFunction: { value: f },
+			toString: { value: function toString() { return this.name } },
+		});
+		return res;
+	}
+
+	const id = Object.defineProperty(curry(x => x), "name", { value: "id" });
+
+	o = { foo: curry( function (a,b,c) { return [this, a, b,  c]; } ) };
+	const blah = o.foo(1)(2,3);
+
+	const f2 = curry(function foo(a,b) { return [a, b]; });
+ 	const f3 = curry( (a,b,c) => [a,b,c]);
+
+	const f = curry(_ => _ => id);
+	const x = f();
+
+	const flip = curry(f => (a, b) => f(b, a));
+	const compose = curry((f, g) => x => f(g(x)));
+	const same = curry((a, b) => a === b);
+	const opTypeOf = x => typeof x;
+	//const isTypeof = compose(flip(compose, opTypeOf), same);
+
+	const isTypeof = curry((s, x) => same(s, opTypeOf(x)));
+	isFunction = isTypeof(typeof Function);
+
 	const module = {
+		curry,
 		id,
 
 		typeofIs,
