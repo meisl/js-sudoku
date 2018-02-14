@@ -3,6 +3,15 @@ require(["scripts/fn"], (fn) => {
 
     module("fn", () => { // ----------------------------------------
 
+        test("arrow function .bind", function (assert) {
+        	let actualThis, actual;
+        	const lexicalThis = this;
+        	const otherThis = {};
+        	const f = (() => { actual = this }).bind(otherThis);
+        	f();
+        	assert.same(actual, lexicalThis);
+        });
+
 		module("id", () => { // ----------------------------------------
 			test("std call", function (assert) {
 				assert.same(fn.id(), undefined, "id()");
@@ -76,15 +85,6 @@ require(["scripts/fn"], (fn) => {
 			});
 		});  // end module "fn.insist_nonNegativeInt"
 
-
-        test("arrow function .bind", function (assert) {
-        	let actualThis, actual;
-        	const lexicalThis = this;
-        	const otherThis = {};
-        	const f = (() => { actual = this }).bind(otherThis);
-        	f();
-        	assert.same(actual, lexicalThis);
-        });
 
 		module("getDescriptors", () => { // ----------------------------------------
 			test("non-existent property", function (assert) {
