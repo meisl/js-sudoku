@@ -341,6 +341,92 @@ require(["scripts/fn"], (fn) => {
 
 		});  // end module "stringify"
 
+		module("curry", () => { // ----------------------------------------
+			test("partial app", function (assert) {
+				const f = fn.curry(function (a,b,c) { return [a, b, c] });
+				assert.all.same(f(1)(2, 3), [1, 2, 3]);
+				assert.all.same(f(1, 2)(3), [1, 2, 3]);
+				assert.all.same(f(1)(2)(3), [1, 2, 3]);
+				assert.all.same(f(1, 2, 3), [1, 2, 3]);
+			});
+			test("partial app with this", function (assert) {
+				const o = {
+					f: fn.curry(function (a,b,c) { return [this, a, b, c] })
+				};
+				assert.all.same(o.f(1)(2, 3), [o, 1, 2, 3]);
+				assert.all.same(o.f(1, 2)(3), [o, 1, 2, 3]);
+				assert.all.same(o.f(1)(2)(3), [o, 1, 2, 3]);
+				assert.all.same(o.f(1, 2, 3), [o, 1, 2, 3]);
+			});
+		});  // end module "curry"
+
+		module("op", () => { // ----------------------------------------
+			const op = fn.op;
+			module("in", () => { // ----------------------------------------
+				test("own property", function (assert) {
+					const o = {x: 42};
+					assert.same(op.in("x", o), true);
+					assert.same(op.in("y", o), false);
+					assert.same(op.in("x")(o), true, "it's curried");
+					assert.same(op.in("y")(o), false, "it's curried");
+				});
+				test("inherited property", function (assert) {
+					const o = Object.create({x: 42});
+					assert.same(op.in("x", o), true);
+					assert.same(op.in("y", o), false);
+					assert.same(op.in("x")(o), true, "it's curried");
+					assert.same(op.in("y")(o), false, "it's curried");
+				});
+			});  // end module "in"
+			module("prop", () => { // ----------------------------------------
+				test("own property", function (assert) {
+					const o = {x: 42};
+					assert.same(op.prop("x", o), 42);
+					assert.same(op.prop("y", o), undefined);
+					assert.same(op.prop("x")(o), 42, "it's curried");
+					assert.same(op.prop("y")(o), undefined, "it's curried");
+				});
+				test("inherited property", function (assert) {
+					const o = Object.create({x: 42});
+					assert.same(op.prop("x", o), 42);
+					assert.same(op.prop("y", o), undefined);
+					assert.same(op.prop("x")(o), 42, "it's curried");
+					assert.same(op.prop("y")(o), undefined, "it's curried");
+				});
+			});  // end module "prop"
+			test("same", function (assert) {
+				assert.same(op.same(42, 42), true);
+				assert.same(op.same(42, 24), false);
+				assert.same(op.same(42, "42"), false);
+				const o = {};
+				assert.same(op.same(o, 42), false);
+				assert.same(op.same(o, o), true);
+				assert.same(op.same(o, {}), false);	
+			});
+			test("equal", function (assert) {
+				assert.same(op.equal(42, 42), true);
+				assert.same(op.equal(42, 24), false);
+				assert.same(op.equal(42, "42"), true);
+				const o = {};
+				assert.same(op.equal(o, 42), false);
+				assert.same(op.equal(o, o), true);
+				assert.same(op.equal(o, {}), false);				
+			});
+			test("compose", function (assert) {
+				const f = x => x*2;
+				const g = x => x+1;
+				assert.same(op.compose(f, g)(3), 8);
+				assert.same(op.compose(f)(g)(3), 8);
+				assert.same(op.compose(f)(g, 3), 8);
+				assert.same(op.compose(f, g, 3), 8);
+				
+				assert.same(op.compose(g, f)(3), 7);
+				assert.same(op.compose(g)(f)(3), 7);
+				assert.same(op.compose(g)(f, 3), 7);
+				assert.same(op.compose(g, f, 3), 7);
+			});
+		});  // end module "op"
+
     }); // end module "fn"
 
 }); // end require

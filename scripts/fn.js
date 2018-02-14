@@ -140,15 +140,6 @@ define([], () => {
 	};
 	const id = def_c("id", x => x);
 
-	o = { foo: curry( function (a,b,c) { return [this, a, b,  c]; } ) };
-	const blah = o.foo(1)(2,3);
-
-	const f2 = curry(function foo(a,b) { return [a, b]; });
- 	const f3 = curry( (a,b,c) => [a,b,c]);
-
-	const f = curry(_ => _ => id);
-	const x = f();
-
 
 	const getDescriptors = (f, o) => {
 		const result = [];
