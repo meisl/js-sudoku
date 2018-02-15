@@ -425,6 +425,13 @@ require(["scripts/fn"], (fn) => {
 				assert.same(op.compose(g)(f, 3), 7);
 				assert.same(op.compose(g, f, 3), 7);
 			});
+			test("flip", function (assert) {
+				const f = (x, y) => x - y;
+				assert.same(op.flip(f)(3, 8), f(8, 3));
+				assert.same(op.flip(f, 3)(8), f(8, 3));
+				assert.same(op.flip(f)(3)(8), f(8, 3));
+				assert.same(op.flip(f, 3, 8), f(8, 3));
+			});
 		});  // end module "op"
 
     }); // end module "fn"

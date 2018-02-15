@@ -115,18 +115,23 @@ define([], () => {
 		return res;
 	}
 
-	function def_op(opName, fnName, f) {
-		return def_c("(" + opName + ")", f);
+	function def_op(opName, minArity, f) {
+		const res = def_c("(" + opName + ")", f);
+
+		return res;
 	}
 
 	const op = {
-		typeof:   def_op("typeof",     null,       x => typeof x),
-		isTypeof: def_op("=== typeof", null,      (t, x) => t === typeof x),
-		in:       def_op("in",         null,      (k, o) => k in o),
-		prop:     def_op("@",          "prop",    (k, o) => o[k]),
-		same:     def_op("===",        "same",    (a, b) => a === b),
-		equal:    def_op("==",         "equal",   (a, b) => a == b),
-		compose:  def_op("°",          "compose", (f, g) => x => f(g(x))),
+		typeof:   def_op("typeof",     1,  x => typeof x),
+		isTypeof: def_op("=== typeof", 2, (t, x) => t === typeof x),
+		in:       def_op("in",         2, (k, o) => k in o),
+		prop:     def_op("@",          2, (k, o) => o[k]),
+		same:     def_op("===",        2, (a, b) => a === b),
+		equal:    def_op("==",         2, (a, b) => a == b),
+		// compose :: (b -> c) -> (a -> b) -> (a -> c)
+		compose:  def_op("°",          3, (f, g) => x => f(g(x))),
+		// flip :: (a -> b -> c) -> b -> a -> c
+		flip:     def_op("flip",       3, f => (a, b) => f(b, a)),
 	};
 
 	
