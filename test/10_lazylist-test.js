@@ -228,7 +228,7 @@ require(["scripts/lazylist"], (lzy) => {
 				
 				function Kfalse(_) { return false }
 				function even(x) { return (x % 2) === 0 }
-				let x, x_expr, y;
+				let x, x_expr, y, y_expr;
 				x = t.concat(t);
 				x_expr = x.expr;
 				assert.same(x_expr, "(" + t_expr + " +++ " + t_expr + ")");
@@ -258,7 +258,7 @@ require(["scripts/lazylist"], (lzy) => {
 				f = x => x + 1;
 				f.expr = "\\x.x+1";
 				xs = LazyList.iterate(f, 0);
-				desc = "(iterate (" + f.expr + ") 0)";
+				let desc = "(iterate (" + f.expr + ") 0)";
 				assert.same(xs.expr, desc, desc + ".expr right after creation");
 				assert.same(xs.isEmpty, false, desc + ".isEmpty");
 				assert.same(xs.expr, desc, desc + ".expr after .isEmpty");
